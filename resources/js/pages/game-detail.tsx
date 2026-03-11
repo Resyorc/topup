@@ -40,7 +40,11 @@ interface GameDetailProps {
     };
 }
 
-export default function GameDetail({ game, productGroups, paymentMethods }: GameDetailProps) {
+export default function GameDetail({
+    game,
+    productGroups,
+    paymentMethods,
+}: GameDetailProps) {
     // Form State
     const { data, setData, post, processing, errors } = useForm({
         user_id: '',
@@ -52,8 +56,10 @@ export default function GameDetail({ game, productGroups, paymentMethods }: Game
         promo_code: '',
     });
 
-
-    const [calculatedFees, setCalculatedFees] = useState<Record<string, number> | null>(null);
+    const [calculatedFees, setCalculatedFees] = useState<Record<
+        string,
+        number
+    > | null>(null);
     const [isCalculatingFee, setIsCalculatingFee] = useState(false);
 
     const getImageUrl = (image: string | null) => {
@@ -63,39 +69,51 @@ export default function GameDetail({ game, productGroups, paymentMethods }: Game
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(game?.name || 'Topup')}&color=ffffff&background=8327d8&size=512&rounded=true&font-size=0.33`;
     };
 
-    const [activeTab, setActiveTab] = useState<string>(Object.keys(productGroups)[0] || '');
+    const [activeTab, setActiveTab] = useState<string>(
+        Object.keys(productGroups)[0] || '',
+    );
     const [showModal, setShowModal] = useState(false);
-    
-    // Collapse State for Payment Methods
-    const [openCategories, setOpenCategories] = useState<Record<string, boolean>>({});
+
+    // Collapse State for Payment Methods — all open by default
+    const [openCategories, setOpenCategories] = useState<
+        Record<string, boolean>
+    >(() =>
+        Object.fromEntries(Object.keys(paymentMethods).map((k) => [k, true])),
+    );
 
     const toggleCategory = (category: string) => {
-        setOpenCategories(prev => ({
+        setOpenCategories((prev) => ({
             ...prev,
-            [category]: !prev[category]
+            [category]: !prev[category],
         }));
     };
 
     // Derived States
-    const selectedProduct = productGroups[activeTab]?.find(p => p.id === data.product_id);
-    const selectedPayment = Object.values(paymentMethods).flat().find(pm => pm.id === data.payment_method); // Assuming paymentMethods might be grouped
+    const selectedProduct = productGroups[activeTab]?.find(
+        (p) => p.id === data.product_id,
+    );
+    const selectedPayment = Object.values(paymentMethods)
+        .flat()
+        .find((pm) => pm.id === data.payment_method); // Assuming paymentMethods might be grouped
 
     // Calculate total including Tripay fees
     const calculateTotal = (pm: PaymentMethod) => {
         if (!selectedProduct) return 0;
         const subtotal = selectedProduct.price * data.qty;
-        
+
         let totalFee = pm.fee_flat;
         if (pm.fee_percent > 0) {
             totalFee += Math.ceil((subtotal * pm.fee_percent) / 100);
         }
-        
+
         return subtotal + totalFee;
     };
 
     // State for username validation
     const [isValidating, setIsValidating] = useState(false);
-    const [validatedUsername, setValidatedUsername] = useState<string | null>(null);
+    const [validatedUsername, setValidatedUsername] = useState<string | null>(
+        null,
+    );
 
     const MIHOYO_GAMES = ['hsr', 'genshin', 'zzz'];
     const isMihoyoGame = MIHOYO_GAMES.includes(game.slug);
@@ -103,14 +121,19 @@ export default function GameDetail({ game, productGroups, paymentMethods }: Game
     const detectMihoyoServer = (uid: string) => {
         if (!uid) return null;
         switch (uid[0]) {
-            case '6': return { name: 'America', zone: 'prod_official_usa' };
-            case '7': return { name: 'Europe', zone: 'prod_official_eur' };
-            case '8': return { name: 'Asia', zone: 'prod_official_asia' };
-            case '9': return { name: 'SAR (TW/HK/MO)', zone: 'prod_official_cht' };
-            default: return null;
+            case '6':
+                return { name: 'America', zone: 'prod_official_usa' };
+            case '7':
+                return { name: 'Europe', zone: 'prod_official_eur' };
+            case '8':
+                return { name: 'Asia', zone: 'prod_official_asia' };
+            case '9':
+                return { name: 'SAR (TW/HK/MO)', zone: 'prod_official_cht' };
+            default:
+                return null;
         }
     };
-    
+
     // Auto-detect Mihoyo Server from UID
     useEffect(() => {
         if (!isMihoyoGame || !data.user_id) return;
@@ -122,7 +145,9 @@ export default function GameDetail({ game, productGroups, paymentMethods }: Game
 
     // Debounced Username Check API
     useEffect(() => {
-        const ready = data.user_id.length > 0 && (isMihoyoGame || data.server_id.length > 0);
+        const ready =
+            data.user_id.length > 0 &&
+            (isMihoyoGame || data.server_id.length > 0);
 
         if (!ready) {
             setValidatedUsername(null);
@@ -135,16 +160,22 @@ export default function GameDetail({ game, productGroups, paymentMethods }: Game
                 const response = await axios.post('/api/check-username', {
                     game: game.slug,
                     user_id: data.user_id,
-                    zone_id: isMihoyoGame ? null : data.server_id
+                    zone_id: isMihoyoGame ? null : data.server_id,
                 });
-                
+
                 if (response.data.success) {
                     setValidatedUsername(response.data.nickname);
                 } else {
-                    setValidatedUsername('❌ ' + (response.data.message || 'ID Tidak Valid'));
+                    setValidatedUsername(
+                        '❌ ' + (response.data.message || 'ID Tidak Valid'),
+                    );
                 }
             } catch (error: any) {
-                setValidatedUsername('❌ ' + (error.response?.data?.message || 'Gagal memeriksa ID.'));
+                setValidatedUsername(
+                    '❌ ' +
+                        (error.response?.data?.message ||
+                            'Gagal memeriksa ID.'),
+                );
             } finally {
                 setIsValidating(false);
             }
@@ -170,12 +201,12 @@ export default function GameDetail({ game, productGroups, paymentMethods }: Game
                     const response = await axios.post('/api/calculate-fee', {
                         amount: subtotalAmount,
                     });
-                    
+
                     if (response.data.success) {
                         setCalculatedFees(response.data.data);
                     }
                 } catch (error) {
-                    console.error("Failed to bulk calculate fees", error);
+                    console.error('Failed to bulk calculate fees', error);
                     setCalculatedFees(null);
                 } finally {
                     setIsCalculatingFee(false);
@@ -190,24 +221,33 @@ export default function GameDetail({ game, productGroups, paymentMethods }: Game
     // Calculate cheapest payment method taking into account dynamic fees and subtotal
     const cheapestPaymentMethodId = React.useMemo(() => {
         if (!selectedProduct) return null;
-        
+
         let lowestTotal = Infinity;
         let cheapestId: string | null = null;
         const subtotal = selectedProduct.price * data.qty;
 
-        Object.values(paymentMethods).flat().forEach((method) => {
-            if (subtotal >= method.minimum_amount) {
-                const staticAdminFee = Math.ceil(method.fee_flat + (subtotal * method.fee_percent) / 100);
-                const fetchedFee = calculatedFees ? calculatedFees[method.id] : null;
-                const displayAdminFee = fetchedFee !== null && fetchedFee !== undefined ? fetchedFee : staticAdminFee;
-                const total = subtotal + displayAdminFee;
+        Object.values(paymentMethods)
+            .flat()
+            .forEach((method) => {
+                if (subtotal >= method.minimum_amount) {
+                    const staticAdminFee = Math.ceil(
+                        method.fee_flat + (subtotal * method.fee_percent) / 100,
+                    );
+                    const fetchedFee = calculatedFees
+                        ? calculatedFees[method.id]
+                        : null;
+                    const displayAdminFee =
+                        fetchedFee !== null && fetchedFee !== undefined
+                            ? fetchedFee
+                            : staticAdminFee;
+                    const total = subtotal + displayAdminFee;
 
-                if (total < lowestTotal) {
-                    lowestTotal = total;
-                    cheapestId = method.id;
+                    if (total < lowestTotal) {
+                        lowestTotal = total;
+                        cheapestId = method.id;
+                    }
                 }
-            }
-        });
+            });
 
         return cheapestId;
     }, [selectedProduct, data.qty, calculatedFees, paymentMethods]);
@@ -257,11 +297,17 @@ export default function GameDetail({ game, productGroups, paymentMethods }: Game
             alert('Silakan pilih metode pembayaran.');
             return;
         }
-        if (isValidating || !validatedUsername || validatedUsername.startsWith('❌')) {
-            alert('ID belum diisi atau tidak valid/ditemukan. Mohon periksa kembali.');
+        if (
+            isValidating ||
+            !validatedUsername ||
+            validatedUsername.startsWith('❌')
+        ) {
+            alert(
+                'ID belum diisi atau tidak valid/ditemukan. Mohon periksa kembali.',
+            );
             return;
         }
-        
+
         setShowModal(true);
     };
 
@@ -283,13 +329,22 @@ export default function GameDetail({ game, productGroups, paymentMethods }: Game
         try {
             setIsValidating(true);
             const response = await axios.post('/api/checkout', payload);
-            if (response.data.success && response.data.data.transaction.invoice_id) {
-                router.visit('/invoice?invoice_id=' + response.data.data.transaction.invoice_id);
+            if (
+                response.data.success &&
+                response.data.data.transaction.invoice_id
+            ) {
+                router.visit(
+                    '/invoice?invoice_id=' +
+                        response.data.data.transaction.invoice_id,
+                );
             } else {
                 alert('Gagal membuat pesanan. Silakan coba lagi.');
             }
         } catch (error: any) {
-            alert(error.response?.data?.message || 'Terjadi kesalahan saat memproses pesanan.');
+            alert(
+                error.response?.data?.message ||
+                    'Terjadi kesalahan saat memproses pesanan.',
+            );
         } finally {
             setIsValidating(false);
             setShowModal(false);
@@ -320,66 +375,118 @@ export default function GameDetail({ game, productGroups, paymentMethods }: Game
 
             {/* Background Texture & Hero Graphic */}
             <div className="relative min-h-screen pb-32">
-
-
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-10">
-                    
+                <div className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
                     {/* Breadcrumbs */}
-                    <div className="text-gray-400 text-sm mb-6 flex items-center gap-2">
+                    <div className="mb-6 flex items-center gap-2 text-sm text-gray-400">
                         <span>Beranda</span>
                         <span>›</span>
                         <span>Top Up</span>
                         <span>›</span>
-                        <span className="text-white font-semibold">{game.name}</span>
-                        
+                        <span className="font-semibold text-white">
+                            {game.name}
+                        </span>
+
                         <div className="ml-auto">
-                            <button className="flex items-center gap-2 border border-[#31334c] rounded-full px-4 py-1.5 text-xs text-gray-300 hover:text-white hover:bg-white/5 transition">
-                                Cara Pembelian <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+                            <button className="flex items-center gap-2 rounded-full border border-[#31334c] px-4 py-1.5 text-xs text-gray-300 transition hover:bg-white/5 hover:text-white">
+                                Cara Pembelian{' '}
+                                <svg
+                                    width="14"
+                                    height="14"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                    strokeLinecap="round"
+                                    strokeLinejoin="round"
+                                >
+                                    <circle cx="12" cy="12" r="10" />
+                                    <path d="M12 16v-4" />
+                                    <path d="M12 8h.01" />
+                                </svg>
                             </button>
                         </div>
                     </div>
 
                     {/* Header Banner (Replicated from ClientTpProductInfo) */}
                     <div className="flex-start relative mt-12 flex h-fit w-full flex-col flex-wrap items-center justify-between gap-8 px-8 pb-8 lg:flex-row lg:items-end">
-                        
                         {/* Game Card Thumbnail */}
-                        <GameCard 
+                        <GameCard
                             id={game.id}
                             title={game.name}
                             subTitle={game.publisher}
                             imgSrc={getImageUrl(game.image)}
-                            slug={game.slug} 
+                            slug={game.slug}
                             active={true}
                             customClass="z-1"
                             cardSize="sm"
                         />
 
                         {/* Product Info */}
-                        <div className="z-10 flex w-fit flex-1 flex-col flex-wrap items-start gap-8 md:flex-row" id="client-product-info">
+                        <div
+                            className="z-10 flex w-fit flex-1 flex-col flex-wrap items-start gap-8 md:flex-row"
+                            id="client-product-info"
+                        >
                             {/* Product Detail */}
-                            <div className="flex w-fit flex-1 flex-col items-start justify-between" id="client-product-detail">
-                                <h3 className="mb-1 text-2xl font-semibold text-white">{game.name}</h3>
-                                <h4 className="mb-2.5 text-lg text-client-warning text-[#FFC107]">
+                            <div
+                                className="flex w-fit flex-1 flex-col items-start justify-between"
+                                id="client-product-detail"
+                            >
+                                <h3 className="mb-1 text-2xl font-semibold text-white">
+                                    {game.name}
+                                </h3>
+                                <h4 className="mb-2.5 text-lg text-[#FFC107] text-client-warning">
                                     {game.publisher}
                                 </h4>
-                                
+
                                 {/* Badges */}
-                                <div id="client-product-detail-badges" className="item-center flex flex-wrap gap-2">
-                                    <div className="bg-[#1e6fdb]/20 text-[#3b82f6] border border-[#3b82f6]/30 px-3 py-1 rounded-full text-[0.7rem] font-semibold flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/></svg>
+                                <div
+                                    id="client-product-detail-badges"
+                                    className="item-center flex flex-wrap gap-2"
+                                >
+                                    <div className="flex cursor-pointer items-center gap-1.5 rounded-full border border-[#3b82f6]/30 bg-[#1e6fdb]/20 px-3 py-1 text-[0.7rem] font-semibold whitespace-nowrap text-[#3b82f6]">
+                                        <svg
+                                            width="12"
+                                            height="12"
+                                            viewBox="0 0 24 24"
+                                            fill="currentColor"
+                                        >
+                                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                                        </svg>
                                         Proses Cepat
                                     </div>
-                                    <div className="bg-[#1e6fdb]/20 text-[#3b82f6] border border-[#3b82f6]/30 px-3 py-1 rounded-full text-[0.7rem] font-semibold flex items-center gap-1.5 whitespace-nowrap cursor-pointer">
-                                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/></svg>
+                                    <div className="flex cursor-pointer items-center gap-1.5 rounded-full border border-[#3b82f6]/30 bg-[#1e6fdb]/20 px-3 py-1 text-[0.7rem] font-semibold whitespace-nowrap text-[#3b82f6]">
+                                        <svg
+                                            width="12"
+                                            height="12"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                        >
+                                            <path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z" />
+                                        </svg>
                                         Customer Service 24/7
                                     </div>
                                 </div>
                             </div>
 
                             {/* Separator Line (Vertical) md and up */}
-                            <div className="hidden md:flex h-full items-center justify-center">
-                                <svg width="1" height="100" viewBox="0 0 1 100" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-[1px] stroke-white/20">
-                                    <line x1="0.5" y1="2.18557e-08" x2="0.499994" y2="141" stroke="currentColor" />
+                            <div className="hidden h-full items-center justify-center md:flex">
+                                <svg
+                                    width="1"
+                                    height="100"
+                                    viewBox="0 0 1 100"
+                                    fill="none"
+                                    xmlns="http://www.w3.org/2000/svg"
+                                    className="w-[1px] stroke-white/20"
+                                >
+                                    <line
+                                        x1="0.5"
+                                        y1="2.18557e-08"
+                                        x2="0.499994"
+                                        y2="141"
+                                        stroke="currentColor"
+                                    />
                                 </svg>
                             </div>
 
@@ -388,62 +495,102 @@ export default function GameDetail({ game, productGroups, paymentMethods }: Game
 
                             {/* Rating */}
                             <div className="w-fit" id="client-product-rating">
-                                <h5 className="text-md mb-2 text-nowrap md:mb-1 md:text-[0.6rem] text-gray-400">Ulasan & Penilaian</h5>
+                                <h5 className="text-md mb-2 text-nowrap text-gray-400 md:mb-1 md:text-[0.6rem]">
+                                    Ulasan & Penilaian
+                                </h5>
                                 <div className="flex items-center gap-3 md:flex-col md:items-start md:gap-0">
-                                    <p className="text-4xl font-bold md:text-[1.26rem] text-white">{game.rating}</p>
+                                    <p className="text-4xl font-bold text-white md:text-[1.26rem]">
+                                        {game.rating}
+                                    </p>
                                     <div className="flex text-[#FFC107] md:mt-1 md:mb-1">
-                                        {[1,2,3,4,5].map(star => (
-                                            <svg key={star} width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+                                        {[1, 2, 3, 4, 5].map((star) => (
+                                            <svg
+                                                key={star}
+                                                width="16"
+                                                height="16"
+                                                viewBox="0 0 24 24"
+                                                fill="currentColor"
+                                            >
+                                                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2" />
+                                            </svg>
                                         ))}
                                     </div>
                                 </div>
-                                <p className="text-xs text-nowrap md:text-[0.6rem] text-gray-500 mt-1 md:mt-0">Berdasarkan {game.reviews_count} penilaian</p>
+                                <p className="mt-1 text-xs text-nowrap text-gray-500 md:mt-0 md:text-[0.6rem]">
+                                    Berdasarkan {game.reviews_count} penilaian
+                                </p>
                             </div>
                         </div>
 
                         {/* Background Card Effect (Bunder2 di mobile) */}
                         <div className="absolute top-1/3 right-0 bottom-0 left-0 z-0 overflow-hidden rounded-2xl bg-[#242533] p-20 lg:top-[30%]">
-                            <div className="absolute -right-42 -bottom-62 rotate-45 md:hidden w-[150%] h-[150%] bg-[radial-gradient(#c26eff_2px,transparent_2px)] [background-size:16px_16px] opacity-10"></div>
+                            <div className="absolute -right-42 -bottom-62 h-[150%] w-[150%] rotate-45 bg-[radial-gradient(#c26eff_2px,transparent_2px)] [background-size:16px_16px] opacity-10 md:hidden"></div>
                         </div>
                     </div>
 
-                    
                     {/* Forms Content */}
-                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-10">
-                        
+                    <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3">
                         {/* Left Column (Inputs) */}
-                        <div className="lg:col-span-2 flex flex-col gap-6">
-                            
+                        <div className="flex flex-col gap-6 lg:col-span-2">
                             {/* SECTION 1: Informasi Akun */}
-                            <div className="bg-[#1e1f29] rounded-xl border border-[#31334c] overflow-hidden shadow-lg mt-0">
+                            <div className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg">
                                 {/* Header (Refactored from StepAccountInfo) */}
-                                <div className="flex h-12 rounded-t-xl overflow-hidden border-b border-[#31334c]">
-                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] font-bold text-white text-lg">1</div>
+                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
+                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
+                                        1
+                                    </div>
                                     <div className="flex flex-1 items-center bg-[#31334c] px-4">
-                                        <h4 className="text-sm font-semibold text-white">Informasi Akun</h4>
+                                        <h4 className="text-sm font-semibold text-white">
+                                            Informasi Akun
+                                        </h4>
                                     </div>
                                 </div>
                                 <div className="space-y-4 p-5">
-                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                                         <div>
-                                            <label className="mb-1 block text-xs text-white/70">User ID</label>
-                                            <input 
-                                                type="text" 
+                                            <label className="mb-1 block text-xs text-white/70">
+                                                User ID
+                                            </label>
+                                            <input
+                                                type="text"
                                                 placeholder="Masukkan User ID"
                                                 value={data.user_id}
-                                                onChange={e => setData('user_id', e.target.value)}
-                                                className="w-full rounded-md bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 border-none outline-none focus:ring-1 focus:ring-primary" 
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'user_id',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
                                             />
                                         </div>
                                         <div>
-                                            <label className="mb-1 block text-xs text-white/70">Server</label>
-                                            <input 
-                                                type="text" 
+                                            <label className="mb-1 block text-xs text-white/70">
+                                                Server
+                                            </label>
+                                            <input
+                                                type="text"
                                                 disabled={isMihoyoGame}
-                                                placeholder={isMihoyoGame ? 'Otomatis dari UID' : 'Masukkan Server'}
-                                                value={isMihoyoGame ? detectMihoyoServer(data.user_id)?.name || '' : data.server_id}
-                                                onChange={e => !isMihoyoGame && setData('server_id', e.target.value)}
-                                                className="w-full rounded-md bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 border-none outline-none focus:ring-1 focus:ring-primary disabled:text-white/60 disabled:bg-[#1a1a24]" 
+                                                placeholder={
+                                                    isMihoyoGame
+                                                        ? 'Otomatis dari UID'
+                                                        : 'Masukkan Server'
+                                                }
+                                                value={
+                                                    isMihoyoGame
+                                                        ? detectMihoyoServer(
+                                                              data.user_id,
+                                                          )?.name || ''
+                                                        : data.server_id
+                                                }
+                                                onChange={(e) =>
+                                                    !isMihoyoGame &&
+                                                    setData(
+                                                        'server_id',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary disabled:bg-[#1a1a24] disabled:text-white/60"
                                             />
                                         </div>
                                     </div>
@@ -451,7 +598,10 @@ export default function GameDetail({ game, productGroups, paymentMethods }: Game
                                         className={`rounded-md px-4 py-2 text-xs ${
                                             isValidating
                                                 ? 'bg-blue-500/15 text-blue-400'
-                                                : validatedUsername && !validatedUsername.startsWith('❌')
+                                                : validatedUsername &&
+                                                    !validatedUsername.startsWith(
+                                                        '❌',
+                                                    )
                                                   ? 'bg-green-500/15 text-green-400'
                                                   : validatedUsername
                                                     ? 'bg-red-500/15 text-red-400'
@@ -459,374 +609,658 @@ export default function GameDetail({ game, productGroups, paymentMethods }: Game
                                         }`}
                                     >
                                         {isValidating && 'Mengecek akun...'}
-                                        {!isValidating && !validatedUsername && 'Pastikan Anda mengisi data akun dengan benar'}
-                                        {!isValidating && validatedUsername && !validatedUsername.startsWith('❌') && (
-                                            <>✅ Nickname: <b className="text-white ml-1">{validatedUsername}</b></>
-                                        )}
-                                        {!isValidating && validatedUsername && validatedUsername.startsWith('❌') && (
-                                            <>{validatedUsername}</>
-                                        )}
+                                        {!isValidating &&
+                                            !validatedUsername &&
+                                            'Pastikan Anda mengisi data akun dengan benar'}
+                                        {!isValidating &&
+                                            validatedUsername &&
+                                            !validatedUsername.startsWith(
+                                                '❌',
+                                            ) && (
+                                                <>
+                                                    ✅ Nickname:{' '}
+                                                    <b className="ml-1 text-white">
+                                                        {validatedUsername}
+                                                    </b>
+                                                </>
+                                            )}
+                                        {!isValidating &&
+                                            validatedUsername &&
+                                            validatedUsername.startsWith(
+                                                '❌',
+                                            ) && <>{validatedUsername}</>}
                                     </div>
                                 </div>
                             </div>
 
                             {/* SECTION 2: Detail Kontak */}
-                            <div className="bg-[#1e1f29] rounded-xl border border-[#31334c] overflow-hidden shadow-lg mt-0 md:mt-6">
+                            <div className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg md:mt-6">
                                 {/* Header */}
-                                <div className="flex h-12 rounded-t-xl overflow-hidden border-b border-[#31334c]">
-                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] font-bold text-white text-lg">2</div>
+                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
+                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
+                                        2
+                                    </div>
                                     <div className="flex flex-1 items-center bg-[#31334c] px-4">
-                                        <h4 className="text-sm font-semibold text-white">Detail Kontak</h4>
+                                        <h4 className="text-sm font-semibold text-white">
+                                            Detail Kontak
+                                        </h4>
                                     </div>
                                 </div>
                                 <div className="space-y-4 p-5">
                                     <div>
-                                        <label className="mb-1 block text-xs text-white/70">No. WhatsApp</label>
-                                        <input 
-                                            type="tel" 
+                                        <label className="mb-1 block text-xs text-white/70">
+                                            No. WhatsApp
+                                        </label>
+                                        <input
+                                            type="tel"
                                             placeholder="+62 8xxx xxxx xxxx"
                                             value={formattedWa}
                                             onChange={handleWaChange}
-                                            className="w-full rounded-md bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 border-none outline-none focus:ring-1 focus:ring-primary" 
+                                            className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
                                         />
-                                        <p className="mt-2 text-xs text-white/50">Contoh: +62 867 0XXX XXXX</p>
+                                        <p className="mt-2 text-xs text-white/50">
+                                            Contoh: +62 867 0XXX XXXX
+                                        </p>
                                     </div>
                                     <div className="rounded-md bg-client-warning/15 px-4 py-2 text-xs text-[#FFC107]">
-                                        Nomor ini akan kami hubungi jika terjadi masalah
+                                        Nomor ini akan kami hubungi jika terjadi
+                                        masalah
                                     </div>
                                 </div>
                             </div>
 
                             {/* SECTION 3: Pilih Nominal */}
-                            <div className="bg-[#1e1f29] rounded-xl border border-[#31334c] overflow-hidden shadow-lg mt-0 md:mt-6">
+                            <div className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg md:mt-6">
                                 {/* Header */}
-                                <div className="flex h-12 rounded-t-xl overflow-hidden border-b border-[#31334c]">
-                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] font-bold text-white text-lg">3</div>
+                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
+                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
+                                        3
+                                    </div>
                                     <div className="flex flex-1 items-center bg-[#31334c] px-4">
-                                        <h4 className="text-sm font-semibold text-white">Pilih Nominal</h4>
+                                        <h4 className="text-sm font-semibold text-white">
+                                            Pilih Nominal
+                                        </h4>
                                     </div>
                                 </div>
                                 <div className="p-4">
                                     {/* Tabs */}
-                                    <div className="flex flex-wrap gap-2 mb-4">
-                                        {Object.keys(productGroups).map((tab) => (
-                                            <button 
-                                                key={tab}
-                                                onClick={() => setActiveTab(tab)}
-                                                className={`rounded-lg px-4 py-1.5 text-sm transition border ${activeTab === tab ? 'bg-primary text-white border-primary shadow-[0_0_10px_rgba(168,85,247,0.4)]' : 'border-[#31334c] text-white hover:bg-white/10'}`}
-                                            >
-                                                {tab}
-                                            </button>
-                                        ))}
+                                    <div className="mb-4 flex flex-wrap gap-2">
+                                        {Object.keys(productGroups).map(
+                                            (tab) => (
+                                                <button
+                                                    key={tab}
+                                                    onClick={() =>
+                                                        setActiveTab(tab)
+                                                    }
+                                                    className={`rounded-lg border px-4 py-1.5 text-sm transition ${activeTab === tab ? 'border-primary bg-primary text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]' : 'border-[#31334c] text-white hover:bg-white/10'}`}
+                                                >
+                                                    {tab}
+                                                </button>
+                                            ),
+                                        )}
                                     </div>
 
                                     {/* Grid Products */}
-                                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 md:gap-4">
-                                        {(productGroups[activeTab] || []).map((product) => (
-                                            <div 
-                                                key={product.id}
-                                                onClick={() => setData('product_id', product.id)}
-                                                className={`relative rounded-xl border p-4 cursor-pointer transition-all overflow-hidden bg-[#1A1A24] group hover:border-[#6a359c] ${data.product_id === product.id ? 'border-primary ring-1 ring-primary shadow-[0_0_15px_rgba(168,85,247,0.2)]' : 'border-[#31334c]'}`}
-                                            >
-                                                {/* Card Content */}
-                                                <div className="relative z-10 flex flex-col h-full justify-between">
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <div>
-                                                            <div className="text-[#FFC107] font-bold text-sm leading-tight">{product.clean_name}</div>
-                                                            {product.extra && <div className="text-gray-400 text-[10px] mt-0.5">{product.extra}</div>}
+                                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4">
+                                        {(productGroups[activeTab] || []).map(
+                                            (product) => (
+                                                <div
+                                                    key={product.id}
+                                                    onClick={() =>
+                                                        setData(
+                                                            'product_id',
+                                                            product.id,
+                                                        )
+                                                    }
+                                                    className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[#1A1A24] p-4 transition-all hover:border-[#6a359c] ${data.product_id === product.id ? 'border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)] ring-1 ring-primary' : 'border-[#31334c]'}`}
+                                                >
+                                                    {/* Card Content */}
+                                                    <div className="relative z-10 flex h-full flex-col justify-between">
+                                                        <div className="mb-2 flex items-start justify-between">
+                                                            <div>
+                                                                <div className="text-sm leading-tight font-bold text-[#FFC107]">
+                                                                    {
+                                                                        product.clean_name
+                                                                    }
+                                                                </div>
+                                                                {product.extra && (
+                                                                    <div className="mt-0.5 text-[10px] text-gray-400">
+                                                                        {
+                                                                            product.extra
+                                                                        }
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            <div className="flex h-6 w-6 shrink-0 items-center justify-center">
+                                                                <img
+                                                                    src="https://cdns.iconmonstr.com/wp-content/releases/preview/2012/240/iconmonstr-diamond-1.png"
+                                                                    alt="Diamond"
+                                                                    className="h-5 w-5 hue-rotate-[180deg] invert-[0.8] saturate-[3] sepia-[1]"
+                                                                />
+                                                            </div>
                                                         </div>
-                                                        <div className="shrink-0 w-6 h-6 flex justify-center items-center">
-                                                            <img src="https://cdns.iconmonstr.com/wp-content/releases/preview/2012/240/iconmonstr-diamond-1.png" alt="Diamond" className="w-5 h-5 invert-[0.8] sepia-[1] hue-rotate-[180deg] saturate-[3]" />
+                                                        <div className="mt-2 font-bold text-white">
+                                                            Rp{' '}
+                                                            {product.price.toLocaleString(
+                                                                'id-ID',
+                                                            )}
                                                         </div>
                                                     </div>
-                                                    <div className="mt-2 text-white font-bold">
-                                                        Rp {product.price.toLocaleString('id-ID')}
-                                                    </div>
-                                                </div>
-                                                
-                                                {/* Active state gradient background */}
-                                                {data.product_id === product.id && (
-                                                    <div className="absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none"></div>
-                                                )}
-                                            </div>
-                                        ))}
-                                    </div>
-                                    {(productGroups[activeTab] || []).length === 0 && (
-                                        <div className="text-center py-10 text-gray-500">Belum ada produk untuk kategori ini.</div>
-                                    )}
 
+                                                    {/* Active state gradient background */}
+                                                    {data.product_id ===
+                                                        product.id && (
+                                                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
+                                                    )}
+                                                </div>
+                                            ),
+                                        )}
+                                    </div>
+                                    {(productGroups[activeTab] || []).length ===
+                                        0 && (
+                                        <div className="py-10 text-center text-gray-500">
+                                            Belum ada produk untuk kategori ini.
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
                             {/* SECTION 4: Detail Pembelian */}
-                            <div className="bg-[#1e1f29] rounded-xl border border-[#31334c] overflow-hidden shadow-lg mt-0">
+                            <div className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg">
                                 {/* Header */}
-                                <div className="flex h-12 rounded-t-xl overflow-hidden border-b border-[#31334c]">
-                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] font-bold text-white text-lg">4</div>
+                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
+                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
+                                        4
+                                    </div>
                                     <div className="flex flex-1 items-center bg-[#31334c] px-4">
-                                        <h4 className="text-sm font-semibold text-white">Detail Pembelian</h4>
+                                        <h4 className="text-sm font-semibold text-white">
+                                            Detail Pembelian
+                                        </h4>
                                     </div>
                                 </div>
                                 <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
                                     <div>
-                                        <label className="mb-1 block text-xs text-white/70">Jumlah Pembelian</label>
+                                        <label className="mb-1 block text-xs text-white/70">
+                                            Jumlah Pembelian
+                                        </label>
                                         <div className="flex items-center gap-2">
-                                            <input 
-                                                type="number" 
+                                            <input
+                                                type="number"
                                                 value={data.qty}
                                                 readOnly
-                                                className="w-14 rounded-lg bg-[#2b2735] px-3 py-2 text-white border-none outline-none" 
+                                                className="w-14 rounded-lg border-none bg-[#2b2735] px-3 py-2 text-white outline-none"
                                             />
-                                            <button 
-                                                onClick={() => setData('qty', Math.max(1, data.qty - 1))}
+                                            <button
+                                                onClick={() =>
+                                                    setData(
+                                                        'qty',
+                                                        Math.max(
+                                                            1,
+                                                            data.qty - 1,
+                                                        ),
+                                                    )
+                                                }
                                                 className="rounded-lg bg-primary px-3 py-2 font-bold text-white transition hover:bg-primary/80"
-                                            >−</button>
-                                            <button 
-                                                onClick={() => setData('qty', data.qty + 1)}
+                                            >
+                                                −
+                                            </button>
+                                            <button
+                                                onClick={() =>
+                                                    setData('qty', data.qty + 1)
+                                                }
                                                 className="rounded-lg bg-primary px-3 py-2 font-bold text-white transition hover:bg-primary/80"
-                                            >+</button>
+                                            >
+                                                +
+                                            </button>
                                         </div>
                                     </div>
                                     <div>
-                                        <label className="mb-1 block text-xs text-white/70">Kode Promo</label>
+                                        <label className="mb-1 block text-xs text-white/70">
+                                            Kode Promo
+                                        </label>
                                         <div className="flex gap-2">
-                                            <input 
-                                                type="text" 
+                                            <input
+                                                type="text"
                                                 placeholder="Masukkan kode promo"
                                                 value={data.promo_code}
-                                                onChange={e => setData('promo_code', e.target.value)}
-                                                className="w-full min-w-0 flex-1 rounded-lg bg-[#2f2a3a] px-3 py-2 text-sm text-white outline-none border-none placeholder-gray-500 focus:ring-1 focus:ring-primary" 
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'promo_code',
+                                                        e.target.value,
+                                                    )
+                                                }
+                                                className="w-full min-w-0 flex-1 rounded-lg border-none bg-[#2f2a3a] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
                                             />
-                                            <button className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white hover:bg-primary/80 transition">Pakai</button>
+                                            <button className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary/80">
+                                                Pakai
+                                            </button>
                                         </div>
                                     </div>
                                 </div>
                             </div>
-
                         </div>
 
                         {/* Right Column (Details & Payments) */}
                         <div className="flex flex-col gap-6">
-
                             {/* SECTION 5: Metode Pembayaran */}
-                            <div className="bg-[#1e1f29] rounded-xl border border-[#31334c] overflow-hidden shadow-lg mt-0">
+                            <div className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg">
                                 {/* Header */}
-                                <div className="flex h-12 rounded-t-xl overflow-hidden border-b border-[#31334c]">
-                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] font-bold text-white text-lg">5</div>
+                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
+                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
+                                        5
+                                    </div>
                                     <div className="flex flex-1 items-center bg-[#31334c] px-4">
-                                        <h4 className="text-sm font-semibold text-white">Metode Pembayaran</h4>
+                                        <h4 className="text-sm font-semibold text-white">
+                                            Metode Pembayaran
+                                        </h4>
                                     </div>
                                 </div>
                                 <div className="space-y-4 p-4">
-                                    
                                     {/* Iterating Categories */}
-                                    {Object.entries(paymentMethods).map(([category, methods]) => {
-                                        const isOpen = openCategories[category] === true; 
-                                        const isQRIS = category.toUpperCase() === 'QRIS' || category.toUpperCase().includes('QRIS');
+                                    {Object.entries(paymentMethods).map(
+                                        ([category, methods]) => {
+                                            const isOpen =
+                                                openCategories[category] !==
+                                                false;
+                                            const isQRIS =
+                                                category.toUpperCase() ===
+                                                    'QRIS' ||
+                                                category
+                                                    .toUpperCase()
+                                                    .includes('QRIS');
 
-                                        return (
-                                        <div key={category} className="overflow-hidden rounded-lg bg-[#3a3545]">
-                                            {/* ===== GROUP HEADER ===== */}
-                                            <button
-                                                type="button"
-                                                onClick={() => toggleCategory(category)}
-                                                className="flex w-full cursor-pointer items-center justify-between px-4 py-3"
-                                            >
-                                                <span className="text-sm font-semibold text-white">{category}</span>
+                                            return (
+                                                <div
+                                                    key={category}
+                                                    className="overflow-hidden rounded-lg bg-[#3a3545]"
+                                                >
+                                                    {/* ===== GROUP HEADER ===== */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            toggleCategory(
+                                                                category,
+                                                            )
+                                                        }
+                                                        className="flex w-full cursor-pointer items-center justify-between px-4 py-3"
+                                                    >
+                                                        <span className="text-sm font-semibold text-white">
+                                                            {category}
+                                                        </span>
 
-                                                <div className="flex items-center gap-3">
-                                                    {!isQRIS && (
-                                                        <div className="flex gap-2">
-                                                            {methods.slice(0, 4).map((pm, i) => (
-                                                                <div key={i} className="h-6 w-10 md:w-12 rounded bg-white p-0.5 flex items-center justify-center shrink-0 overflow-hidden">
-                                                                    {pm.icon_url ? (
-                                                                        <img src={pm.icon_url} alt={pm.name} className="max-w-full max-h-full object-contain" />
-                                                                    ) : (
-                                                                        <span className="text-[8px] font-bold text-gray-500">LOGO</span>
-                                                                    )}
+                                                        <div className="flex items-center gap-3">
+                                                            {!isQRIS && (
+                                                                <div className="flex gap-2">
+                                                                    {methods
+                                                                        .slice(
+                                                                            0,
+                                                                            4,
+                                                                        )
+                                                                        .map(
+                                                                            (
+                                                                                pm,
+                                                                                i,
+                                                                            ) => (
+                                                                                <div
+                                                                                    key={
+                                                                                        i
+                                                                                    }
+                                                                                    className="flex h-6 w-10 shrink-0 items-center justify-center overflow-hidden rounded bg-white p-0.5 md:w-12"
+                                                                                >
+                                                                                    {pm.icon_url ? (
+                                                                                        <img
+                                                                                            src={
+                                                                                                pm.icon_url
+                                                                                            }
+                                                                                            alt={
+                                                                                                pm.name
+                                                                                            }
+                                                                                            className="max-h-full max-w-full object-contain"
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <span className="text-[8px] font-bold text-gray-500">
+                                                                                            LOGO
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                            ),
+                                                                        )}
                                                                 </div>
-                                                            ))}
+                                                            )}
+                                                            {!isQRIS && (
+                                                                <span
+                                                                    className={`text-white transition ${isOpen ? 'rotate-180' : ''}`}
+                                                                >
+                                                                    ▼
+                                                                </span>
+                                                            )}
+                                                        </div>
+                                                    </button>
+
+                                                    {/* ===== CONTENT ===== */}
+                                                    {isOpen && (
+                                                        <div className="space-y-2 bg-[#2f2a3a] p-3">
+                                                            {methods.map(
+                                                                (
+                                                                    method,
+                                                                    index,
+                                                                ) => {
+                                                                    const isChecked =
+                                                                        data.payment_method ===
+                                                                        method.id;
+
+                                                                    const subtotal =
+                                                                        (selectedProduct?.price ||
+                                                                            0) *
+                                                                        data.qty;
+                                                                    const isValidAmount =
+                                                                        subtotal >=
+                                                                        method.minimum_amount;
+                                                                    const valid =
+                                                                        selectedProduct !=
+                                                                            null &&
+                                                                        isValidAmount;
+
+                                                                    // Fallback static calculation
+                                                                    const staticAdminFee =
+                                                                        Math.ceil(
+                                                                            method.fee_flat +
+                                                                                (subtotal *
+                                                                                    method.fee_percent) /
+                                                                                    100,
+                                                                        );
+
+                                                                    // Use API calculation ONLY if available in the dictionary
+                                                                    const fetchedFee =
+                                                                        calculatedFees
+                                                                            ? calculatedFees[
+                                                                                  method
+                                                                                      .id
+                                                                              ]
+                                                                            : null;
+                                                                    const displayAdminFee =
+                                                                        fetchedFee !==
+                                                                            null &&
+                                                                        fetchedFee !==
+                                                                            undefined
+                                                                            ? fetchedFee
+                                                                            : staticAdminFee;
+                                                                    const displayTotal =
+                                                                        subtotal +
+                                                                        displayAdminFee;
+
+                                                                    return (
+                                                                        <button
+                                                                            key={
+                                                                                method.id
+                                                                            }
+                                                                            disabled={
+                                                                                !valid
+                                                                            }
+                                                                            onClick={() =>
+                                                                                setData(
+                                                                                    'payment_method',
+                                                                                    method.id,
+                                                                                )
+                                                                            }
+                                                                            className={`flex w-full cursor-pointer items-center justify-between rounded-lg p-3 transition ${isChecked ? 'ring-2 ring-primary' : 'bg-[#3a3545]'} ${!valid && 'cursor-not-allowed opacity-50'}`}
+                                                                        >
+                                                                            <div className="flex items-center gap-3">
+                                                                                <div className="flex h-6 w-12 shrink-0 items-center justify-center overflow-hidden rounded bg-white p-0.5">
+                                                                                    {method.icon_url ? (
+                                                                                        <img
+                                                                                            src={
+                                                                                                method.icon_url
+                                                                                            }
+                                                                                            alt={
+                                                                                                method.name
+                                                                                            }
+                                                                                            className="max-h-full max-w-full object-contain"
+                                                                                        />
+                                                                                    ) : (
+                                                                                        <span className="text-[10px] font-bold text-gray-500">
+                                                                                            LOGO
+                                                                                        </span>
+                                                                                    )}
+                                                                                </div>
+                                                                                <div className="text-left">
+                                                                                    <p className="text-sm font-semibold text-white">
+                                                                                        {
+                                                                                            method.name
+                                                                                        }
+                                                                                    </p>
+
+                                                                                    {!selectedProduct ? (
+                                                                                        <p className="text-xs text-red-400">
+                                                                                            Pilih
+                                                                                            Produk
+                                                                                        </p>
+                                                                                    ) : !isValidAmount ? (
+                                                                                        <p className="text-xs text-red-400">
+                                                                                            Min.
+                                                                                            Rp{' '}
+                                                                                            {method.minimum_amount.toLocaleString(
+                                                                                                'id-ID',
+                                                                                            )}
+                                                                                        </p>
+                                                                                    ) : isValidAmount ? (
+                                                                                        <p className="text-xs text-gray-300">
+                                                                                            Admin
+                                                                                            Rp{' '}
+                                                                                            {isCalculatingFee ? (
+                                                                                                <span className="animate-pulse italic">
+                                                                                                    Menghitung...
+                                                                                                </span>
+                                                                                            ) : (
+                                                                                                displayAdminFee.toLocaleString(
+                                                                                                    'id-ID',
+                                                                                                )
+                                                                                            )}
+                                                                                        </p>
+                                                                                    ) : null}
+                                                                                </div>
+                                                                            </div>
+
+                                                                            <div className="text-right">
+                                                                                <p className="text-sm font-semibold text-white">
+                                                                                    Rp{' '}
+                                                                                    {isCalculatingFee ? (
+                                                                                        <span className="animate-pulse italic">
+                                                                                            ...
+                                                                                        </span>
+                                                                                    ) : (
+                                                                                        displayTotal.toLocaleString(
+                                                                                            'id-ID',
+                                                                                        )
+                                                                                    )}
+                                                                                </p>
+
+                                                                                {method.id ===
+                                                                                    cheapestPaymentMethodId && (
+                                                                                    <span className="mt-1 inline-block rounded bg-purple-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]">
+                                                                                        BEST
+                                                                                        PRICE
+                                                                                    </span>
+                                                                                )}
+                                                                            </div>
+                                                                        </button>
+                                                                    );
+                                                                },
+                                                            )}
                                                         </div>
                                                     )}
-                                                    {!isQRIS && <span className={`text-white transition ${isOpen ? 'rotate-180' : ''}`}>▼</span>}
                                                 </div>
-                                            </button>
-
-                                            {/* ===== CONTENT ===== */}
-                                            {isOpen && (
-                                                <div className="space-y-2 bg-[#2f2a3a] p-3">
-                                                    {methods.map((method, index) => {
-                                                        const isChecked = data.payment_method === method.id;
-                                                        
-                                                        const subtotal = (selectedProduct?.price || 0) * data.qty;
-                                                        const isValidAmount = subtotal >= method.minimum_amount;
-                                                        const valid = selectedProduct != null && isValidAmount;
-                                                        
-                                                        // Fallback static calculation
-                                                        const staticAdminFee = Math.ceil(method.fee_flat + (subtotal * method.fee_percent) / 100);
-                                                        
-                                                        // Use API calculation ONLY if available in the dictionary
-                                                        const fetchedFee = calculatedFees ? calculatedFees[method.id] : null;
-                                                        const displayAdminFee = fetchedFee !== null && fetchedFee !== undefined ? fetchedFee : staticAdminFee;
-                                                        const displayTotal = subtotal + displayAdminFee;
-
-                                                        return (
-                                                            <button
-                                                                key={method.id}
-                                                                disabled={!valid}
-                                                                onClick={() => setData('payment_method', method.id)}
-                                                                className={`flex w-full cursor-pointer items-center justify-between rounded-lg p-3 transition ${isChecked ? 'ring-2 ring-primary' : 'bg-[#3a3545]'} ${!valid && 'cursor-not-allowed opacity-50'}`}
-                                                            >
-                                                                <div className="flex items-center gap-3">
-                                                                    <div className="h-6 w-12 bg-white rounded flex items-center justify-center p-0.5 shrink-0 overflow-hidden">
-                                                                        {method.icon_url ? (
-                                                                            <img src={method.icon_url} alt={method.name} className="max-w-full max-h-full object-contain" />
-                                                                        ) : (
-                                                                            <span className="text-[10px] font-bold text-gray-500">LOGO</span>
-                                                                        )}
-                                                                    </div>
-                                                                    <div className="text-left">
-                                                                        <p className="text-sm font-semibold text-white">{method.name}</p>
-
-                                                                        {!selectedProduct ? (
-                                                                            <p className="text-xs text-red-400">
-                                                                                Pilih Produk
-                                                                            </p>
-                                                                        ) : !isValidAmount ? (
-                                                                            <p className="text-xs text-red-400">
-                                                                                Min. Rp {method.minimum_amount.toLocaleString('id-ID')}
-                                                                            </p>
-                                                                        ) : isValidAmount ? (
-                                                                            <p className="text-xs text-gray-300">
-                                                                                Admin Rp {
-                                                                                    isCalculatingFee 
-                                                                                        ? <span className="italic animate-pulse">Menghitung...</span> 
-                                                                                        : displayAdminFee.toLocaleString('id-ID')
-                                                                                }
-                                                                            </p>
-                                                                        ) : null}
-                                                                    </div>
-                                                                </div>
-
-                                                                <div className="text-right">
-                                                                    <p className="text-sm font-semibold text-white">
-                                                                        Rp {
-                                                                            isCalculatingFee
-                                                                                ? <span className="italic animate-pulse">...</span>
-                                                                                : displayTotal.toLocaleString('id-ID')
-                                                                        }
-                                                                    </p>
-
-                                                                    {method.id === cheapestPaymentMethodId && (
-                                                                        <span className="mt-1 inline-block rounded bg-purple-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]">
-                                                                            BEST PRICE
-                                                                        </span>
-                                                                    )}
-                                                                </div>
-                                                            </button>
-                                                        );
-                                                    })}
-                                                </div>
-                                            )}
-                                        </div>
-                                        );
-                                    })}
-
+                                            );
+                                        },
+                                    )}
                                 </div>
                             </div>
 
                             {/* SECTION 6: Rincian Pembayaran */}
                             {selectedProduct && selectedPayment && (
-                                <div className="bg-[#1e1f29] rounded-xl border border-[#31334c] overflow-hidden shadow-lg mt-0 mb-20 md:mb-0">
-                                    <div className="flex h-12 rounded-t-xl overflow-hidden border-b border-[#31334c]">
-                                        <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] font-bold text-white text-lg">6</div>
+                                <div className="mt-0 mb-20 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg md:mb-0">
+                                    <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
+                                        <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
+                                            6
+                                        </div>
                                         <div className="flex flex-1 items-center bg-[#31334c] px-4">
-                                            <h4 className="text-sm font-semibold text-white">Rincian Pembayaran</h4>
+                                            <h4 className="text-sm font-semibold text-white">
+                                                Rincian Pembayaran
+                                            </h4>
                                         </div>
                                     </div>
-                                    <div className="p-5 space-y-3">
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span className="text-gray-400">Harga Produk</span>
-                                            <span className="text-white font-medium">Rp {(selectedProduct.price * data.qty).toLocaleString('id-ID')}</span>
+                                    <div className="space-y-3 p-5">
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-gray-400">
+                                                Harga Produk
+                                            </span>
+                                            <span className="font-medium text-white">
+                                                Rp{' '}
+                                                {(
+                                                    selectedProduct.price *
+                                                    data.qty
+                                                ).toLocaleString('id-ID')}
+                                            </span>
                                         </div>
-                                        <div className="flex justify-between items-center text-sm">
-                                            <span className="text-gray-400">Biaya Admin ({selectedPayment.name})</span>
+                                        <div className="flex items-center justify-between text-sm">
+                                            <span className="text-gray-400">
+                                                Biaya Admin (
+                                                {selectedPayment.name})
+                                            </span>
                                             {isCalculatingFee ? (
-                                                <span className="text-gray-400 italic text-xs animate-pulse">Menghitung...</span>
+                                                <span className="animate-pulse text-xs text-gray-400 italic">
+                                                    Menghitung...
+                                                </span>
                                             ) : (
-                                                <span className="text-white font-medium">
-                                                    Rp {(calculatedFees?.[selectedPayment.id] !== undefined 
-                                                        ? calculatedFees[selectedPayment.id] 
-                                                        : Math.ceil(selectedPayment.fee_flat + ((selectedProduct.price * data.qty * selectedPayment.fee_percent) / 100))
+                                                <span className="font-medium text-white">
+                                                    Rp{' '}
+                                                    {(calculatedFees?.[
+                                                        selectedPayment.id
+                                                    ] !== undefined
+                                                        ? calculatedFees[
+                                                              selectedPayment.id
+                                                          ]
+                                                        : Math.ceil(
+                                                              selectedPayment.fee_flat +
+                                                                  (selectedProduct.price *
+                                                                      data.qty *
+                                                                      selectedPayment.fee_percent) /
+                                                                      100,
+                                                          )
                                                     ).toLocaleString('id-ID')}
                                                 </span>
                                             )}
                                         </div>
                                         {data.promo_code && (
-                                            <div className="flex justify-between items-center text-sm">
-                                                <span className="text-green-400">Diskon Promo</span>
-                                                <span className="text-green-400 font-medium">- Rp 0</span>
+                                            <div className="flex items-center justify-between text-sm">
+                                                <span className="text-green-400">
+                                                    Diskon Promo
+                                                </span>
+                                                <span className="font-medium text-green-400">
+                                                    - Rp 0
+                                                </span>
                                             </div>
                                         )}
-                                        <hr className="border-[#31334c] my-3 border-dashed opacity-50" />
-                                        <div className="flex justify-between items-center">
-                                            <span className="text-white font-bold text-base">Total Keseluruhan</span>
-                                            <span className="text-[#FFC107] font-black text-lg">
-                                                Rp {(
-                                                    (selectedProduct.price * data.qty) + 
-                                                    (calculatedFees?.[selectedPayment.id] !== undefined
-                                                        ? calculatedFees[selectedPayment.id]
-                                                        : Math.ceil(selectedPayment.fee_flat + ((selectedProduct.price * data.qty * selectedPayment.fee_percent) / 100))
-                                                    )
+                                        <hr className="my-3 border-dashed border-[#31334c] opacity-50" />
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-base font-bold text-white">
+                                                Total Keseluruhan
+                                            </span>
+                                            <span className="text-lg font-black text-[#FFC107]">
+                                                Rp{' '}
+                                                {(
+                                                    selectedProduct.price *
+                                                        data.qty +
+                                                    (calculatedFees?.[
+                                                        selectedPayment.id
+                                                    ] !== undefined
+                                                        ? calculatedFees[
+                                                              selectedPayment.id
+                                                          ]
+                                                        : Math.ceil(
+                                                              selectedPayment.fee_flat +
+                                                                  (selectedProduct.price *
+                                                                      data.qty *
+                                                                      selectedPayment.fee_percent) /
+                                                                      100,
+                                                          ))
                                                 ).toLocaleString('id-ID')}
                                             </span>
                                         </div>
                                     </div>
                                 </div>
                             )}
-
                         </div>
                     </div>
                 </div>
             </div>
 
             {/* Floating Action Menu (Bottom Docked) */}
-            <div className="fixed bottom-0 left-0 w-full bg-[#1e1f29] border-t border-[#31334c] z-40 shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-                <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex flex-col sm:flex-row justify-between items-center gap-4">
-                    <div className="text-white w-full sm:w-auto text-center sm:text-left">
-                        <div className="text-sm text-gray-400">Total Pembayaran</div>
+            <div className="fixed bottom-0 left-0 z-40 w-full border-t border-[#31334c] bg-[#1e1f29] shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+                <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-4 sm:flex-row sm:px-6 lg:px-8">
+                    <div className="w-full text-center text-white sm:w-auto sm:text-left">
+                        <div className="text-sm text-gray-400">
+                            Total Pembayaran
+                        </div>
                         <div className="text-xl font-black text-[#FFC107]">
                             {selectedProduct && selectedPayment
                                 ? `Rp ${(
-                                    (selectedProduct.price * data.qty) + 
-                                    (calculatedFees?.[selectedPayment.id] !== undefined
-                                        ? calculatedFees[selectedPayment.id]
-                                        : Math.ceil(selectedPayment.fee_flat + ((selectedProduct.price * data.qty * selectedPayment.fee_percent) / 100))
-                                    )
-                                ).toLocaleString('id-ID')}`
-                                : 'Rp 0'
-                            }
+                                      selectedProduct.price * data.qty +
+                                      (calculatedFees?.[selectedPayment.id] !==
+                                      undefined
+                                          ? calculatedFees[selectedPayment.id]
+                                          : Math.ceil(
+                                                selectedPayment.fee_flat +
+                                                    (selectedProduct.price *
+                                                        data.qty *
+                                                        selectedPayment.fee_percent) /
+                                                        100,
+                                            ))
+                                  ).toLocaleString('id-ID')}`
+                                : 'Rp 0'}
                         </div>
                     </div>
-                    
+
                     {/* Animated Button */}
-                    <button 
+                    <button
                         onClick={handlePurchase}
-                        className="w-full sm:w-auto relative group overflow-hidden bg-gradient-to-r from-primary to-[#9b4dec] text-white font-bold text-lg py-3 px-12 rounded-xl shadow-[0_0_20px_rgba(168,85,247,0.3)] hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] transition flex items-center justify-center gap-2"
+                        className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-primary to-[#9b4dec] px-12 py-3 text-lg font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] sm:w-auto"
                     >
                         {/* Particles effect (simulated CSS) */}
-                        <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-300">
+                        <div className="absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100">
                             {[...Array(6)].map((_, i) => (
-                                <div key={i} className={`absolute w-1 h-1 bg-white rounded-full animate-ping opacity-70`} style={{
-                                    top: `${Math.random() * 100}%`,
-                                    left: `${Math.random() * 100}%`,
-                                    animationDelay: `${Math.random() * 0.5}s`,
-                                    animationDuration: `${0.5 + Math.random()}s`
-                                }}></div>
+                                <div
+                                    key={i}
+                                    className={`absolute h-1 w-1 animate-ping rounded-full bg-white opacity-70`}
+                                    style={{
+                                        top: `${Math.random() * 100}%`,
+                                        left: `${Math.random() * 100}%`,
+                                        animationDelay: `${Math.random() * 0.5}s`,
+                                        animationDuration: `${0.5 + Math.random()}s`,
+                                    }}
+                                ></div>
                             ))}
                         </div>
-                        
-                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="relative z-10"><path d="m5 11 4-7"/><path d="m19 11-4-7"/><path d="M2 11h20"/><path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8c.9 0 1.8-.7 2-1.6l1.7-7.4"/><path d="m9 11 1 9"/><path d="M4.5 15.5h15"/><path d="m15 11-1 9"/></svg>
+
+                        <svg
+                            width="20"
+                            height="20"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            className="relative z-10"
+                        >
+                            <path d="m5 11 4-7" />
+                            <path d="m19 11-4-7" />
+                            <path d="M2 11h20" />
+                            <path d="m3.5 11 1.6 7.4a2 2 0 0 0 2 1.6h9.8c.9 0 1.8-.7 2-1.6l1.7-7.4" />
+                            <path d="m9 11 1 9" />
+                            <path d="M4.5 15.5h15" />
+                            <path d="m15 11-1 9" />
+                        </svg>
                         <span className="relative z-10">Buat Pesanan!</span>
                     </button>
                 </div>
@@ -834,19 +1268,42 @@ export default function GameDetail({ game, productGroups, paymentMethods }: Game
 
             {/* Modal Konfirmasi Pesanan */}
             {showModal && (
-                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm px-4 animate-fade-in">
-                    <div className="bg-[#242533] rounded-3xl w-full max-w-md border border-[#31334c] shadow-2xl overflow-hidden animate-slide-up">
-                        
+                <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
+                    <div className="animate-slide-up w-full max-w-md overflow-hidden rounded-3xl border border-[#31334c] bg-[#242533] shadow-2xl">
                         {/* Modal Header & Graphic */}
-                        <div className="p-8 pb-4 flex flex-col items-center text-center">
-                             <div className="relative w-32 h-32 mb-6 pointer-events-none">
+                        <div className="flex flex-col items-center p-8 pb-4 text-center">
+                            <div className="pointer-events-none relative mb-6 h-32 w-32">
                                 {/* Success Circle Check - Replicating mockup graphic */}
-                                <div className="absolute inset-0 bg-gradient-to-tr from-[#1e1f29] to-[#31334c] rounded-full flex items-center justify-center border-4 border-[#242533] shadow-[0_0_30px_rgba(74,222,128,0.2)]">
-                                    <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                                <div className="absolute inset-0 flex items-center justify-center rounded-full border-4 border-[#242533] bg-gradient-to-tr from-[#1e1f29] to-[#31334c] shadow-[0_0_30px_rgba(74,222,128,0.2)]">
+                                    <svg
+                                        width="60"
+                                        height="60"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="#4ade80"
+                                        strokeWidth="3"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <polyline points="20 6 9 17 4 12" />
+                                    </svg>
                                 </div>
                                 {/* Small bag badge */}
-                                <div className="absolute -bottom-2 -right-2 bg-white rounded-full p-2 border-4 border-[#242533] shadow-lg">
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z"/><path d="M3 6h18"/><path d="M16 10a4 4 0 0 1-8 0"/></svg>
+                                <div className="absolute -right-2 -bottom-2 rounded-full border-4 border-[#242533] bg-white p-2 shadow-lg">
+                                    <svg
+                                        width="18"
+                                        height="18"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="#a855f7"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
+                                        <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                                        <path d="M3 6h18" />
+                                        <path d="M16 10a4 4 0 0 1-8 0" />
+                                    </svg>
                                 </div>
                                 {/* Scattered particles in BG */}
                                 <style>{`
@@ -855,79 +1312,172 @@ export default function GameDetail({ game, productGroups, paymentMethods }: Game
                                     @keyframes float-p3 { 0%, 100% { transform: translate(0, 0) rotate(0deg); } 50% { transform: translate(-6px, 6px) rotate(45deg); } }
                                     @keyframes float-p4 { 0%, 100% { transform: translate(0, 0) scale(1); opacity: 0.5; } 50% { transform: translate(8px, 10px) scale(1.3); opacity: 1; } }
                                 `}</style>
-                                <div className="absolute top-2 left-0 w-2.5 h-2.5 rounded bg-yellow-500/80" style={{ animation: 'float-p1 3s ease-in-out infinite' }}></div>
-                                <div className="absolute bottom-6 -left-5 w-2 h-2 rounded-full bg-blue-400/80" style={{ animation: 'float-p2 4s ease-in-out infinite' }}></div>
-                                <div className="absolute top-8 -right-5 w-2 h-2 rounded-sm border-2 border-gray-400/60" style={{ animation: 'float-p3 3.5s ease-in-out infinite' }}></div>
-                                <div className="absolute bottom-2 -right-8 w-1.5 h-1.5 rounded-full bg-purple-400/80" style={{ animation: 'float-p4 4.5s ease-in-out infinite' }}></div>
-                                <div className="absolute -top-3 right-6 w-1.5 h-1.5 rounded-full bg-green-400/80" style={{ animation: 'float-p2 3.8s ease-in-out infinite reverse' }}></div>
+                                <div
+                                    className="absolute top-2 left-0 h-2.5 w-2.5 rounded bg-yellow-500/80"
+                                    style={{
+                                        animation:
+                                            'float-p1 3s ease-in-out infinite',
+                                    }}
+                                ></div>
+                                <div
+                                    className="absolute bottom-6 -left-5 h-2 w-2 rounded-full bg-blue-400/80"
+                                    style={{
+                                        animation:
+                                            'float-p2 4s ease-in-out infinite',
+                                    }}
+                                ></div>
+                                <div
+                                    className="absolute top-8 -right-5 h-2 w-2 rounded-sm border-2 border-gray-400/60"
+                                    style={{
+                                        animation:
+                                            'float-p3 3.5s ease-in-out infinite',
+                                    }}
+                                ></div>
+                                <div
+                                    className="absolute -right-8 bottom-2 h-1.5 w-1.5 rounded-full bg-purple-400/80"
+                                    style={{
+                                        animation:
+                                            'float-p4 4.5s ease-in-out infinite',
+                                    }}
+                                ></div>
+                                <div
+                                    className="absolute -top-3 right-6 h-1.5 w-1.5 rounded-full bg-green-400/80"
+                                    style={{
+                                        animation:
+                                            'float-p2 3.8s ease-in-out infinite reverse',
+                                    }}
+                                ></div>
                             </div>
-                            
-                            <h2 className="text-2xl font-bold text-white mb-2">Konfirmasi Pesanan</h2>
-                            <p className="text-gray-400 text-sm px-2">
-                                Pastikan data akun dan produk yang dipilih valid dan sesuai.
+
+                            <h2 className="mb-2 text-2xl font-bold text-white">
+                                Konfirmasi Pesanan
+                            </h2>
+                            <p className="px-2 text-sm text-gray-400">
+                                Pastikan data akun dan produk yang dipilih valid
+                                dan sesuai.
                             </p>
                         </div>
 
                         {/* Order Summary Form */}
                         <div className="p-6 pt-2">
-                            <div className="bg-[#1a1a24] rounded-2xl p-5 border border-[#31334c] mb-6 shadow-inner">
+                            <div className="mb-6 rounded-2xl border border-[#31334c] bg-[#1a1a24] p-5 shadow-inner">
                                 <div className="flex flex-col gap-3 text-sm">
                                     <div className="flex">
-                                        <span className="text-white font-bold w-24 shrink-0">Username</span>
-                                        <span className={`font-medium min-h-[20px] ${validatedUsername?.startsWith('❌') ? 'text-red-400' : 'text-green-400'}`}>
-                                            <span className="text-gray-300 font-normal mr-2">:</span>
+                                        <span className="w-24 shrink-0 font-bold text-white">
+                                            Username
+                                        </span>
+                                        <span
+                                            className={`min-h-[20px] font-medium ${validatedUsername?.startsWith('❌') ? 'text-red-400' : 'text-green-400'}`}
+                                        >
+                                            <span className="mr-2 font-normal text-gray-300">
+                                                :
+                                            </span>
                                             {isValidating ? (
-                                                <span className="inline-flex items-center gap-2 animate-pulse text-gray-400">
-                                                    <svg className="w-3.5 h-3.5 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle><path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                <span className="inline-flex animate-pulse items-center gap-2 text-gray-400">
+                                                    <svg
+                                                        className="h-3.5 w-3.5 animate-spin"
+                                                        xmlns="http://www.w3.org/2000/svg"
+                                                        fill="none"
+                                                        viewBox="0 0 24 24"
+                                                    >
+                                                        <circle
+                                                            className="opacity-25"
+                                                            cx="12"
+                                                            cy="12"
+                                                            r="10"
+                                                            stroke="currentColor"
+                                                            strokeWidth="4"
+                                                        ></circle>
+                                                        <path
+                                                            className="opacity-75"
+                                                            fill="currentColor"
+                                                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                                                        ></path>
+                                                    </svg>
                                                     Memeriksa...
                                                 </span>
-                                            ) : validatedUsername || '-'}
+                                            ) : (
+                                                validatedUsername || '-'
+                                            )}
                                         </span>
                                     </div>
                                     <div className="flex">
-                                        <span className="text-white font-bold w-24 shrink-0">Server</span>
-                                        <span className="text-gray-300"><span className="mr-2">:</span>{data.server_id || '-'}</span>
+                                        <span className="w-24 shrink-0 font-bold text-white">
+                                            Server
+                                        </span>
+                                        <span className="text-gray-300">
+                                            <span className="mr-2">:</span>
+                                            {data.server_id || '-'}
+                                        </span>
                                     </div>
                                     <div className="flex">
-                                        <span className="text-white font-bold w-24 shrink-0">ID</span>
-                                        <span className="text-gray-300"><span className="mr-2">:</span>{data.user_id || '-'}</span>
+                                        <span className="w-24 shrink-0 font-bold text-white">
+                                            ID
+                                        </span>
+                                        <span className="text-gray-300">
+                                            <span className="mr-2">:</span>
+                                            {data.user_id || '-'}
+                                        </span>
                                     </div>
-                                    <div className="flex mt-2 pt-2 border-t border-[#31334c]">
-                                        <span className="text-white font-bold w-24 shrink-0">Product</span>
-                                        <span className="text-gray-300"><span className="mr-2">:</span>{game.name}</span>
+                                    <div className="mt-2 flex border-t border-[#31334c] pt-2">
+                                        <span className="w-24 shrink-0 font-bold text-white">
+                                            Product
+                                        </span>
+                                        <span className="text-gray-300">
+                                            <span className="mr-2">:</span>
+                                            {game.name}
+                                        </span>
                                     </div>
                                     <div className="flex">
-                                        <span className="text-white font-bold w-24 shrink-0">Item</span>
-                                        <span className="text-gray-300"><span className="mr-2">:</span>{selectedProduct?.name || '-'}</span>
+                                        <span className="w-24 shrink-0 font-bold text-white">
+                                            Item
+                                        </span>
+                                        <span className="text-gray-300">
+                                            <span className="mr-2">:</span>
+                                            {selectedProduct?.name || '-'}
+                                        </span>
                                     </div>
                                     <div className="flex">
-                                        <span className="text-white font-bold w-24 shrink-0">Payment</span>
-                                        <span className="text-gray-300 line-clamp-2"><span className="mr-2">:</span>{Object.values(paymentMethods).flat().find(m => m.id === data.payment_method)?.name || '-'}</span>
+                                        <span className="w-24 shrink-0 font-bold text-white">
+                                            Payment
+                                        </span>
+                                        <span className="line-clamp-2 text-gray-300">
+                                            <span className="mr-2">:</span>
+                                            {Object.values(paymentMethods)
+                                                .flat()
+                                                .find(
+                                                    (m) =>
+                                                        m.id ===
+                                                        data.payment_method,
+                                                )?.name || '-'}
+                                        </span>
                                     </div>
                                 </div>
                             </div>
 
                             <div className="grid grid-cols-2 gap-4">
-                                <button 
+                                <button
                                     onClick={() => setShowModal(false)}
-                                    className="py-3.5 px-4 rounded-xl font-bold text-red-500 bg-transparent border border-red-500/30 hover:bg-red-500/10 transition"
+                                    className="rounded-xl border border-red-500/30 bg-transparent px-4 py-3.5 font-bold text-red-500 transition hover:bg-red-500/10"
                                 >
                                     Batalkan Pesanan!
                                 </button>
-                                <button 
+                                <button
                                     onClick={submitOrder}
                                     disabled={isValidating || isCalculatingFee}
-                                    className={`py-3.5 px-4 rounded-xl font-bold text-white transition shadow-[0_0_15px_rgba(168,85,247,0.4)] ${isValidating || isCalculatingFee ? 'bg-gray-500 cursor-not-allowed shadow-none' : 'bg-primary hover:bg-primary/90'}`}
+                                    className={`rounded-xl px-4 py-3.5 font-bold text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] transition ${isValidating || isCalculatingFee ? 'cursor-not-allowed bg-gray-500 shadow-none' : 'bg-primary hover:bg-primary/90'}`}
                                 >
-                                    {isValidating || isCalculatingFee ? (isCalculatingFee ? 'Menghitung...' : 'Memproses...') : 'Buat Pesanan!'}
+                                    {isValidating || isCalculatingFee
+                                        ? isCalculatingFee
+                                            ? 'Menghitung...'
+                                            : 'Memproses...'
+                                        : 'Buat Pesanan!'}
                                 </button>
                             </div>
                         </div>
-
                     </div>
                 </div>
             )}
-
         </GuestLayout>
     );
 }

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use App\Models\Transaction;
 use App\Services\DigiflazzService;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class TripayCallbackController extends Controller
 {
@@ -21,7 +22,7 @@ class TripayCallbackController extends Controller
 
         $signature = hash_hmac('sha256', $json, $privateKey);
 
-        if ($signature !== $callbackSignature) {
+        if (!hash_equals($signature, (string) $callbackSignature)) {
             Log::warning('Tripay Callback Invalid Signature', ['received' => $callbackSignature, 'calculated' => $signature]);
             return response()->json([
                 'success' => false,
@@ -45,6 +46,7 @@ class TripayCallbackController extends Controller
             ], 400);
         }
 
+        // Check existence first before acquiring lock
         $transaction = Transaction::where('invoice_id', $data->merchant_ref)->first();
 
         if (!$transaction) {
@@ -55,44 +57,40 @@ class TripayCallbackController extends Controller
             ], 404);
         }
 
-        // If the transaction is already paid or success, we don't process it again to prevent double topup
-        if (in_array($transaction->status, ['paid', 'success', 'failed'])) {
-            return response()->json([
-                'success' => true,
-                'message' => 'Transaction already processed',
-            ]);
-        }
+        // lockForUpdate must be inside DB::transaction to hold the row lock
+        DB::transaction(function () use ($data, $digiflazzService) {
+            $transaction = Transaction::where('invoice_id', $data->merchant_ref)
+                ->lockForUpdate()
+                ->first();
 
-        // Handle Payment Status
-        if ($data->status === 'PAID') {
-            $transaction->update(['status' => 'paid']);
-            
-            Log::info("Tripay Callback PAID for Invoice: {$transaction->invoice_id}. Prompting Digiflazz topup.");
+            // If the transaction is already paid or success, we don't process it again to prevent double topup
+            if (in_array($transaction->status, ['paid', 'success', 'failed'])) {
+                return;
+            }
 
-            try {
-                // Instantly request the topup to Digiflazz
-                $targetCustomerNo = $transaction->customer_zone_id 
-                    ? $transaction->customer_game_id . $transaction->customer_zone_id 
-                    : $transaction->customer_game_id;
-
-                $digiflazzResponse = $digiflazzService->createTransaction(
-                    $transaction->product->provider_sku,
-                    $targetCustomerNo,
-                    $transaction->invoice_id
+            // Handle Payment Status
+            if ($data->status === 'PAID') {
+                $product = $transaction->product;
+                $topupResult = $digiflazzService->createTransaction(
+                    $product->provider_sku,
+                    $transaction->customer_game_id . $transaction->customer_zone_id,
+                    $transaction->invoice_id,
                 );
 
-                Log::info("Digiflazz Topup Executed for Invoice: {$transaction->invoice_id}", $digiflazzResponse);
+                $transaction->update([
+                    'payment_status' => 'paid',
+                    'status'         => 'processing',
+                ]);
 
-            } catch (\Exception $e) {
-                // If the topup request fails to reach Digiflazz entirely, we can set it to FAILED or leave it for manual checking
-                Log::error("Digiflazz Topup Failed for Invoice: {$transaction->invoice_id} - " . $e->getMessage());
-                // Notice we DO NOT change the transaction back to unpaid. The user paid, but our topup engine failed.
+                Log::info('Digiflazz Topup Result', ['ref' => $transaction->invoice_id, 'result' => $topupResult]);
+
+            } elseif (in_array($data->status, ['EXPIRED', 'FAILED'])) {
+                $transaction->update([
+                    'payment_status' => 'expired',
+                    'status'         => 'failed',
+                ]);
             }
-            
-        } elseif (in_array($data->status, ['EXPIRED', 'FAILED'])) {
-            $transaction->update(['status' => 'failed']);
-            Log::info("Tripay Callback FAILED for Invoice: {$transaction->invoice_id}.");
-        }
+        });
 
         return response()->json(['success' => true]);
     }

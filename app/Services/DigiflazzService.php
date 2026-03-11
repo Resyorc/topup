@@ -97,7 +97,17 @@ class DigiflazzService
 
         $response = $this->client()->post('/transaction', $payload);
 
-        return $response->json('data') ?? [];
+        if (!$response->successful()) {
+            throw new Exception('Digiflazz API Error: ' . $response->body());
+        }
+
+        $data = $response->json('data') ?? [];
+
+        if (isset($data['status']) && strtolower($data['status']) === 'gagal') {
+            throw new Exception('Digiflazz Transaction Error: ' . ($data['message'] ?? 'Unknown error'));
+        }
+
+        return $data;
     }
 
     /**

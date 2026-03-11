@@ -13,10 +13,13 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // Checkout API
-Route::post('/checkout', [CheckoutController::class, 'store']);
-Route::post('/calculate-fee', [CheckoutController::class, 'calculateFee']);
-Route::post('/check-username', [UsernameCheckController::class, 'check']);
+Route::middleware('throttle:10,1')->group(function () {
+    Route::post('/checkout', [CheckoutController::class, 'store']);
+    Route::post('/calculate-fee', [CheckoutController::class, 'calculateFee']);
+});
+
+Route::middleware('throttle:30,1')->post('/check-username', [UsernameCheckController::class, 'check']);
 
 // Webhook / Callbacks Integration
-Route::post('/callback/tripay', [TripayCallbackController::class, 'handle']);
-Route::post('/callback/digiflazz', [DigiflazzCallbackController::class, 'handle']);
+Route::post('/callback/tripay', [TripayCallbackController::class, 'handle'])->middleware('throttle:60,1');;
+Route::post('/callback/digiflazz', [DigiflazzCallbackController::class, 'handle'])->middleware('throttle:60,1');;
