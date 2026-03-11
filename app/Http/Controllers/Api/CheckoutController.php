@@ -8,6 +8,8 @@ use App\Models\Product;
 use App\Models\Transaction;
 use App\Services\TripayService;
 use Illuminate\Support\Str;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class CheckoutController extends Controller
 {
@@ -20,11 +22,11 @@ class CheckoutController extends Controller
             'product_id' => 'required|exists:products,id',
             'customer_game_id' => 'required|string',
             'customer_zone_id' => 'nullable|string',
-            'customer_whatsapp' => 'required|string',
+            'customer_whatsapp' => 'required|string|regex:/^\+?[0-9]{8,15}$/',
             'payment_method' => 'required|string',
-            'customer_name' => 'nullable|string',
+            'customer_name' => 'nullable|string|max:100',
             'customer_email' => 'nullable|email',
-            'qty' => 'nullable|integer|min:1',
+            'qty' => 'nullable|integer|min:1|max:100',
         ]);
 
         $qty = $validated['qty'] ?? 1;
@@ -37,7 +39,7 @@ class CheckoutController extends Controller
             return response()->json(['error' => 'Product is currently unavailable.'], 400);
         }
 
-        $merchantRef = 'INV-' . strtoupper(Str::random(10));
+        $merchantRef = 'INV-' . strtoupper(Str::ulid());
         
         $amount = (int) $product->price_sell * $qty;
 
@@ -52,44 +54,55 @@ class CheckoutController extends Controller
         ];
 
         try {
-            // Request transaction creation to Tripay
-            $paymentResponse = $tripayService->createTransaction(
-                $validated['payment_method'],
-                $merchantRef,
-                $amount,
-                $customerName,
-                $customerEmail,
-                $validated['customer_whatsapp'],
-                $orderItems
-            );
+            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $orderItems, $customerName, $customerEmail, $tripayService) {
+                // Request transaction creation to Tripay
+                $paymentResponse = $tripayService->createTransaction(
+                    $validated['payment_method'],
+                    $merchantRef,
+                    $amount,
+                    $customerName,
+                    $customerEmail,
+                    $validated['customer_whatsapp'],
+                    $orderItems
+                );
 
-            // Record transaction locally as UNPAID
-            $transaction = Transaction::create([
-                'invoice_id' => $merchantRef,
-                'user_id' => auth('web')->id() ?? auth()->id() ?? null,
-                'product_id' => $product->id,
-                'customer_game_id' => $validated['customer_game_id'],
-                'customer_zone_id' => $validated['customer_zone_id'] ?? null,
-                'customer_whatsapp' => $validated['customer_whatsapp'],
-                'customer_name' => $customerName,
-                'amount' => $amount,
-                'profit' => ($product->price_sell - $product->price_cost) * $qty,
-                'status' => 'pending', // Menunggu Pembayaran
-                'sn' => null,
-                'payment_url' => $paymentResponse['checkout_url'] ?? null,
-                'reference_id_provider' => $paymentResponse['reference'] ?? null,
-            ]);
+                // Record transaction locally as UNPAID
+                $transaction = Transaction::create([
+                    'invoice_id' => $merchantRef,
+                    'user_id' => auth('web')->id() ?? auth()->id() ?? null,
+                    'product_id' => $product->id,
+                    'customer_game_id' => $validated['customer_game_id'],
+                    'customer_zone_id' => $validated['customer_zone_id'] ?? null,
+                    'customer_whatsapp' => $validated['customer_whatsapp'],
+                    'customer_name' => $customerName,
+                    'amount' => $amount,
+                    'profit' => ($product->price_sell - $product->price_cost) * $qty,
+                    'status' => 'pending', // Menunggu Pembayaran
+                    'sn' => null,
+                    'payment_url' => $paymentResponse['checkout_url'] ?? null,
+                    'reference_id_provider' => $paymentResponse['reference'] ?? null,
+                ]);
+
+                return [
+                    'transaction' => $transaction,
+                    'paymentResponse' => $paymentResponse
+                ];
+            });
+
 
             return response()->json([
                 'success' => true,
                 'message' => 'Checkout successful.',
                 'data' => [
-                    'transaction' => $transaction,
-                    'payment' => $paymentResponse // Contains checkout_url, pay_code, etc.
+                    'transaction' => $result['transaction'],
+                    'payment' => $result['paymentResponse'], // Contains checkout_url, pay_code, etc.
+                    'pay_code' => $result['paymentResponse']['pay_code'] ?? null,
+                    'amount' => $amount,
                 ]
             ]);
 
         } catch (\Exception $e) {
+            Log::error('Checkout Error: ' . $e->getMessage(), ['request' => $validated]);
             return response()->json([
                 'success' => false,
                 'message' => 'Checkout failed.',

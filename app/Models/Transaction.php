@@ -12,7 +12,23 @@ class Transaction extends Model
 {
     use HasUuids;
 
-    protected $guarded = [];
+    protected $fillable = [
+        'invoice_id',
+        'user_id',
+        'product_id',
+        'customer_game_id',
+        'customer_zone_id',
+        'customer_whatsapp',
+        'customer_name',
+        'amount',
+        'profit',
+        'status',
+        'sn',
+        'payment_url',
+        'payment_status',
+        'reference_id_provider',
+        'api_logs',
+    ];
 
     protected $casts = [
         'api_logs' => 'array',

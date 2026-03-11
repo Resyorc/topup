@@ -16,11 +16,11 @@ class DigiflazzCallbackController extends Controller
     {
         $payload = $request->getContent();
         $signature = $request->header('x-hub-signature');
-        $secret = config('services.digiflazz.api_key'); // Secret used by Digiflazz as HMAC key
+        $secret = config('services.digiflazz.webhook_secret'); // Secret used by Digiflazz as HMAC key
 
         $computedSignature = 'sha1=' . hash_hmac('sha1', $payload, $secret);
 
-        if ($signature !== $computedSignature) {
+        if (!hash_equals($computedSignature, (string) $signature)) {
             Log::warning('Digiflazz Callback Invalid Signature', ['received' => $signature, 'calculated' => $computedSignature]);
             return response()->json([
                 'success' => false,
@@ -50,18 +50,25 @@ class DigiflazzCallbackController extends Controller
             ], 404);
         }
 
+        if (in_array($transaction->status, ['success', 'failed'])) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Transaction already processed',
+            ]);
+        }
+
         // Processing the final top-up status from Provider
         $status = strtolower($trxData['status']);
         
         if ($status === 'sukses') {
             $transaction->update([
-                'status' => 'SUCCESS',
+                'status' => 'success',
                 'sn' => $trxData['sn'] ?? null,
             ]);
             Log::info("Digiflazz Topup SUKSES for Invoice: {$refId}");
         } elseif ($status === 'gagal') {
             $transaction->update([
-                'status' => 'FAILED',
+                'status' => 'failed',
             ]);
             Log::info("Digiflazz Topup GAGAL for Invoice: {$refId} - " . ($trxData['rc'] ?? 'Unknown RC'));
         }

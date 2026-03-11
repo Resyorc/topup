@@ -18,12 +18,15 @@ class InvoiceController extends Controller
                 ->where('invoice_id', $invoiceId)
                 ->first();
 
+
             if ($transaction) {
                 // Map the database format to what the frontend expects
                 $invoiceData = [
                     'invoice_no' => $transaction->invoice_id,
+                    'whatsapp' => maskPhoneNumber($transaction->customer_whatsapp),
                     'status' => $transaction->status, // pending, paid, processing, success, failed
-                    'method' => $transaction->payment_url ? 'Gateway / Payment URL' : 'Manual',
+                    'payment_status' => $transaction->payment_status,
+                    'method' => $transaction->payment_method ? 'Gateway / Payment URL' : 'Manual',
                     'created_at' => $transaction->created_at->format('d M Y H:i:s'),
                     'paid_at' => $transaction->updated_at->format('Y/m/d H:i:s T'),
                     'game' => [
@@ -49,8 +52,8 @@ class InvoiceController extends Controller
                 ];
             }
         }
-
         // dd($invoiceData);
+
 
         return Inertia::render('invoice', [
             'initialInvoiceData' => $invoiceData,

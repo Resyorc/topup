@@ -38,6 +38,7 @@ return [
     'digiflazz' => [
         'username' => env('DIGIFLAZZ_USERNAME'),
         'api_key' => env('DIGIFLAZZ_API_KEY'),
+        'webhook_secret' => env('DIGIFLAZZ_WEBHOOK_SECRET'),
         'base_url' => env('DIGIFLAZZ_BASE_URL', 'https://api.digiflazz.com/v1'),
     ],
 
