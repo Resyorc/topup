@@ -20,18 +20,27 @@ class Transaction extends Model
         'customer_zone_id',
         'customer_whatsapp',
         'customer_name',
+        'customer_email',      // ✅ tambah
         'amount',
         'profit',
         'status',
         'sn',
+        'failure_reason',      // ✅ tambah
         'payment_url',
         'payment_status',
+        'payment_method',      // ✅ tambah
+        'payment_name',        // ✅ tambah
+        'pay_code',            // ✅ tambah
+        'qr_url',              // ✅ tambah
+        'pay_url',             // ✅ tambah
         'reference_id_provider',
+        'expired_at',          // ✅ tambah
         'api_logs',
     ];
 
     protected $casts = [
         'api_logs' => 'array',
+        'expired_at' => 'datetime',
     ];
 
     public function product(): BelongsTo

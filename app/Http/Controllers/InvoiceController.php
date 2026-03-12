@@ -23,6 +23,8 @@ class InvoiceController extends Controller
             }
         }
 
+        // dd($invoiceData);
+
         return Inertia::render('invoice', [
             'initialInvoiceData' => $invoiceData,
             'searchedInvoiceId' => $invoiceId
@@ -55,33 +57,46 @@ class InvoiceController extends Controller
     private function mapTransactionToInvoiceData(Transaction $transaction): array
     {
         return [
-            'invoice_no' => $transaction->invoice_id,
-            'whatsapp' => maskPhoneNumber($transaction->customer_whatsapp),
-            'status' => $transaction->status,
+            'invoice_no'     => $transaction->invoice_id,
+            'whatsapp'       => maskPhoneNumber($transaction->customer_whatsapp),
+            'status'         => $transaction->status,
             'payment_status' => $transaction->payment_status,
-            'method' => $transaction->payment_method ? 'Gateway / Payment URL' : 'Manual',
-            'created_at' => $transaction->created_at->format('d M Y H:i:s'),
-            'paid_at' => $transaction->updated_at->format('Y/m/d H:i:s T'),
+            'method'         => $transaction->payment_name ?? $transaction->payment_method ?? 'Manual',
+            'created_at'     => $transaction->created_at->format('d M Y H:i:s'),
+            'paid_at'        => $transaction->updated_at->format('Y/m/d H:i:s T'),
+            'expired_at'     => $transaction->expired_at?->format('d M Y H:i:s') ?? null,
+            'expired_at_unix'=> $transaction->expired_at?->timestamp,
             'game' => [
-                'name' => $transaction->product->game->name,
+                'name'      => $transaction->product->game->name,
                 'publisher' => $transaction->product->game->publisher ?? 'Nebu Publisher',
-                'image' => $transaction->product->game->image ?? '/storage/games/dummy-ml.jpg',
-                'slug' => $transaction->product->game->slug ?? '',
+                'image'     => $transaction->product->game->image ?? '/storage/games/dummy-ml.jpg',
+                'slug'      => $transaction->product->game->slug ?? '',
             ],
             'account' => [
                 'username' => $transaction->customer_name ?? $transaction->user?->name ?? 'Guest User',
-                'id' => $transaction->customer_game_id,
-                'server' => $transaction->customer_zone_id ?? '-',
+                'id'       => $transaction->customer_game_id,
+                'server'   => $transaction->customer_zone_id ?? '-',
             ],
             'product' => [
-                'name' => $transaction->product->name,
+                'name'  => $transaction->product->name,
                 'extra' => '',
             ],
+
+            // ✅ Data pembayaran — untuk halaman pembayaran kustom
             'payment_url' => $transaction->payment_url,
-            'price' => (float) $transaction->amount,
-            'qty' => 1,
-            'fee' => 0,
-            'total' => (float) $transaction->amount,
+            'pay_code'    => $transaction->pay_code ?? null,   // Virtual Account
+            'qr_url'      => $transaction->qr_url ?? null,     // QRIS
+            'pay_url'     => $transaction->pay_url ?? null,    // eWallet redirect
+
+            // ✅ Instructions dari api_logs — langkah cara bayar per metode
+            'instructions' => isset($transaction->api_logs['instructions'])
+                ? $transaction->api_logs['instructions']
+                : [],
+
+            'price' => (int) $transaction->amount,
+            'qty'   => 1,
+            'fee'   => 0,
+            'total' => (int) $transaction->amount,
         ];
     }
 }

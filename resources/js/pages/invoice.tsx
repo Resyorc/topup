@@ -25,6 +25,9 @@ export default function InvoiceSearch({
     const [invoiceData, setInvoiceData] = useState<any>(initialInvoiceData);
     const [animatedStatus, setAnimatedStatus] = useState<number>(0);
     const [isPaymentOpen, setIsPaymentOpen] = useState<boolean>(true);
+    const [remainingSeconds, setRemainingSeconds] = useState<number | null>(
+        null,
+    );
 
     // Sync newly grabbed server data
     useEffect(() => {
@@ -70,6 +73,80 @@ export default function InvoiceSearch({
             preserveState: true,
             preserveScroll: true,
         });
+    };
+
+    const copyToClipboard = async (value: string | number) => {
+        if (!navigator?.clipboard) return;
+
+        try {
+            await navigator.clipboard.writeText(String(value));
+        } catch {
+            // Ignore clipboard errors silently.
+        }
+    };
+
+    const parseInvoiceDate = (dateString?: string | null): Date | null => {
+        if (!dateString) return null;
+
+        const monthMap: Record<string, number> = {
+            jan: 0,
+            feb: 1,
+            mar: 2,
+            apr: 3,
+            may: 4,
+            mei: 4,
+            jun: 5,
+            jul: 6,
+            aug: 7,
+            agu: 7,
+            sep: 8,
+            oct: 9,
+            okt: 9,
+            nov: 10,
+            dec: 11,
+            des: 11,
+        };
+
+        const normalized = dateString.trim();
+        const match = normalized.match(
+            /^(\d{1,2})\s+([A-Za-z]{3})\s+(\d{4})\s+(\d{2}):(\d{2}):(\d{2})$/,
+        );
+
+        if (!match) {
+            const fallbackDate = new Date(normalized);
+            return Number.isNaN(fallbackDate.getTime()) ? null : fallbackDate;
+        }
+
+        const [, day, monthText, year, hour, minute, second] = match;
+        const monthIndex = monthMap[monthText.toLowerCase()];
+        if (monthIndex === undefined) return null;
+
+        return new Date(
+            Number(year),
+            monthIndex,
+            Number(day),
+            Number(hour),
+            Number(minute),
+            Number(second),
+        );
+    };
+
+    const formatCountdown = (totalSeconds: number) => {
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        return `${hours} Jam ${minutes} Menit ${seconds} Detik`;
+    };
+
+    const formatCountdownCompact = (totalSeconds: number) => {
+        const hours = Math.floor(totalSeconds / 3600);
+        const minutes = Math.floor((totalSeconds % 3600) / 60);
+        const seconds = totalSeconds % 60;
+
+        return [hours, minutes, seconds]
+            .map((value) => String(value).padStart(2, '0'))
+            .join(':');
     };
 
     const lastInvoiceNoRef = React.useRef<string>('');
@@ -163,6 +240,48 @@ export default function InvoiceSearch({
             }
         };
     }, [invoiceData?.status, invoiceData?.invoice_no]);
+
+    useEffect(() => {
+        if (!invoiceData?.status) {
+            setRemainingSeconds(null);
+            return;
+        }
+
+        const statusLower = String(invoiceData.status).toLowerCase();
+        if (['success', 'failed', 'canceled'].includes(statusLower)) {
+            setRemainingSeconds(null);
+            return;
+        }
+
+        const expiredUnix = Number(invoiceData?.expired_at_unix ?? 0);
+        const expiredMs =
+            expiredUnix > 0
+                ? expiredUnix * 1000
+                : (parseInvoiceDate(invoiceData?.expired_at)?.getTime() ?? 0);
+
+        if (!expiredMs) {
+            setRemainingSeconds(null);
+            return;
+        }
+
+        const updateCountdown = () => {
+            const diffSeconds = Math.max(
+                0,
+                Math.floor((expiredMs - Date.now()) / 1000),
+            );
+            setRemainingSeconds(diffSeconds);
+        };
+
+        updateCountdown();
+        const intervalId = setInterval(updateCountdown, 1000);
+
+        return () => clearInterval(intervalId);
+    }, [
+        invoiceData?.expired_at,
+        invoiceData?.expired_at_unix,
+        invoiceData?.status,
+        invoiceData?.invoice_no,
+    ]);
 
     return (
         <GuestLayout>
@@ -383,8 +502,80 @@ export default function InvoiceSearch({
                                 </div>
                             </div>
 
+                            {(() => {
+                                const statusLower = String(
+                                    invoiceData.status,
+                                ).toLowerCase();
+                                const paymentStatusLower = String(
+                                    invoiceData.payment_status,
+                                ).toLowerCase();
+
+                                const showTimerBadge =
+                                    ['pending', 'expired'].includes(
+                                        statusLower,
+                                    ) && remainingSeconds !== null;
+                                const showPaidBadge =
+                                    statusLower === 'success' ||
+                                    paymentStatusLower === 'paid';
+
+                                if (!showTimerBadge && !showPaidBadge) {
+                                    return null;
+                                }
+
+                                return (
+                                    <div className="mt-8 flex w-full justify-end md:mt-10">
+                                        <span
+                                            className={`inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-semibold whitespace-nowrap md:gap-1.5 md:px-4.5 md:py-2 md:text-sm ${showPaidBadge ? 'border-[#4ade80]/40 bg-[#4ade80]/15 text-[#7ff7b1]' : remainingSeconds! > 0 ? 'border-[#ef4b9a]/40 bg-[#ef4b9a]/15 text-[#ffb3d7]' : 'border-red-500/40 bg-red-500/15 text-red-300'}`}
+                                        >
+                                            <svg
+                                                width="12"
+                                                height="12"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                className="md:h-[14px] md:w-[14px]"
+                                            >
+                                                {showPaidBadge ? (
+                                                    <polyline points="20 6 9 17 4 12" />
+                                                ) : (
+                                                    <>
+                                                        <circle
+                                                            cx="12"
+                                                            cy="12"
+                                                            r="10"
+                                                        />
+                                                        <path d="M12 6v6l4 2" />
+                                                    </>
+                                                )}
+                                            </svg>
+                                            {showPaidBadge ? (
+                                                'Sudah Lunas'
+                                            ) : remainingSeconds! > 0 ? (
+                                                <>
+                                                    <span className="md:hidden">
+                                                        {formatCountdownCompact(
+                                                            remainingSeconds!,
+                                                        )}
+                                                    </span>
+                                                    <span className="hidden md:inline">
+                                                        {formatCountdown(
+                                                            remainingSeconds!,
+                                                        )}
+                                                    </span>
+                                                </>
+                                            ) : (
+                                                'Waktu Habis'
+                                            )}
+                                        </span>
+                                    </div>
+                                );
+                            })()}
+
                             {/* Account Info Card */}
-                            <div className="relative z-10 mt-16 flex min-h-[140px] flex-col items-center gap-4 overflow-visible rounded-2xl border border-[#31334c] bg-[#242533] p-4 shadow-lg md:mt-26 md:flex-row md:items-stretch md:gap-8 md:p-6">
+                            <div className="relative z-10 mt-3 flex min-h-[140px] flex-col items-center gap-4 overflow-visible rounded-2xl border border-[#31334c] bg-[#242533] p-4 shadow-lg md:mt-5 md:flex-row md:items-stretch md:gap-8 md:p-6">
                                 {/* Game Card Component - Overlapping Top */}
                                 <div className="relative -mt-16 flex shrink-0 justify-center md:-mt-32 md:mb-0 md:w-40">
                                     <GameCard
@@ -405,7 +596,7 @@ export default function InvoiceSearch({
                                     {/* Success Badge (Top Right) */}
                                     {invoiceData.status.toLowerCase() ===
                                         'success' && (
-                                        <div className="absolute top-0 right-0 z-20 hidden md:block">
+                                        <div className="absolute top-0 right-0 z-20">
                                             <span className="rounded-full border border-[#4ade80]/50 bg-[#2e603a] px-4 py-1.5 text-xs font-bold text-[#4ade80] shadow-[0_0_10px_rgba(74,222,128,0.2)]">
                                                 Pesanan telah selesai.
                                             </span>
@@ -509,8 +700,16 @@ export default function InvoiceSearch({
                                                     Nomor Invoice
                                                 </div>
                                                 <div className="flex items-center gap-2 text-gray-300 sm:justify-end sm:text-right">
-                                                    {invoiceData.invoice_no}
+                                                    <span className="break-all">
+                                                        {invoiceData.invoice_no}
+                                                    </span>
                                                     <button
+                                                        type="button"
+                                                        onClick={() =>
+                                                            copyToClipboard(
+                                                                invoiceData.invoice_no,
+                                                            )
+                                                        }
                                                         className="text-gray-400 transition hover:text-white"
                                                         title="Copy"
                                                     >
@@ -624,7 +823,7 @@ export default function InvoiceSearch({
                             )}
 
                             {/* Total Pembayaran Box */}
-                            <div className="flex items-center justify-between rounded-xl border border-[#31334c] bg-[#1e1f29] px-4 py-3 shadow-lg md:px-6 md:py-4">
+                            <div className="flex flex-col gap-2 rounded-xl border border-[#31334c] bg-[#1e1f29] px-4 py-3 shadow-lg sm:flex-row sm:items-center sm:justify-between md:px-6 md:py-4">
                                 <span className="text-sm font-bold text-white md:text-base">
                                     Total Pembayaran
                                 </span>
@@ -636,6 +835,10 @@ export default function InvoiceSearch({
                                         )}
                                     </span>
                                     <button
+                                        type="button"
+                                        onClick={() =>
+                                            copyToClipboard(invoiceData.total)
+                                        }
                                         className="text-gray-400 transition hover:text-white"
                                         title="Copy"
                                     >
@@ -663,29 +866,322 @@ export default function InvoiceSearch({
                                 </div>
                             </div>
 
-                            {/* Beli Lagi Banner/Button ATAU Bayar Sekarang */}
+                            {/* Panel Pembayaran / Beli Lagi */}
                             {invoiceData.status.toLowerCase() === 'pending' ? (
-                                <a
-                                    href={invoiceData.payment_url}
-                                    className="w-full"
-                                >
-                                    <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#4ade80] px-4 py-3 font-bold text-[#1e1f29] shadow-[0_0_20px_rgba(74,222,128,0.3)] transition hover:bg-[#34d399] md:px-6 md:py-4">
-                                        <svg
-                                            width="20"
-                                            height="20"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        >
-                                            <circle cx="12" cy="12" r="10" />
-                                            <path d="M12 8v4l3 3" />
-                                        </svg>
-                                        Bayar Sekarang
+                                <div className="flex w-full flex-col gap-3">
+                                    {/* Panel Pembayaran Langsung Tampil */}
+                                    <div className="flex flex-col gap-4">
+                                        {/* ===== QRIS ===== */}
+                                        {!invoiceData.pay_url &&
+                                            invoiceData.qr_url && (
+                                                <div className="overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29]">
+                                                    {/* Header */}
+                                                    <div className="border-b border-[#31334c] bg-white/5 px-4 py-3 md:px-6">
+                                                        <p className="font-bold text-gray-300">
+                                                            Cara Pembayaran
+                                                        </p>
+                                                    </div>
+                                                    {/* Body — instruksi kiri, QR kanan */}
+                                                    <div className="flex flex-col gap-6 p-4 md:flex-row md:items-start md:gap-8 md:p-6">
+                                                        {/* Instruksi */}
+                                                        <div className="flex-1">
+                                                            {invoiceData.instructions &&
+                                                                invoiceData.instructions.map(
+                                                                    (
+                                                                        inst: any,
+                                                                        i: number,
+                                                                    ) => (
+                                                                        <div
+                                                                            key={
+                                                                                i
+                                                                            }
+                                                                            className="mb-4"
+                                                                        >
+                                                                            <p className="mb-2 text-sm font-semibold text-gray-300">
+                                                                                {
+                                                                                    inst.title
+                                                                                }
+                                                                            </p>
+                                                                            <ul className="flex flex-col gap-1.5">
+                                                                                {inst.steps.map(
+                                                                                    (
+                                                                                        step: string,
+                                                                                        j: number,
+                                                                                    ) => (
+                                                                                        <li
+                                                                                            key={
+                                                                                                j
+                                                                                            }
+                                                                                            className="flex items-start gap-2 text-xs text-gray-400"
+                                                                                        >
+                                                                                            <span className="mt-0.5 shrink-0 text-[#a855f7]">
+                                                                                                •
+                                                                                            </span>
+                                                                                            <span
+                                                                                                dangerouslySetInnerHTML={{
+                                                                                                    __html: step,
+                                                                                                }}
+                                                                                            />
+                                                                                        </li>
+                                                                                    ),
+                                                                                )}
+                                                                            </ul>
+                                                                        </div>
+                                                                    ),
+                                                                )}
+                                                        </div>
+                                                        {/* QR Code */}
+                                                        <div className="flex shrink-0 flex-col items-center gap-3">
+                                                            <div className="rounded-xl bg-white p-3 shadow-lg">
+                                                                <img
+                                                                    src={
+                                                                        invoiceData.qr_url
+                                                                    }
+                                                                    alt="QR Code Pembayaran"
+                                                                    className="h-44 w-44 object-contain"
+                                                                />
+                                                            </div>
+                                                            <a
+                                                                href={
+                                                                    invoiceData.qr_url
+                                                                }
+                                                                download="qrcode-pembayaran.png"
+                                                                className="w-full rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-4 py-2.5 text-center text-sm font-bold text-white transition hover:opacity-90"
+                                                            >
+                                                                Unduh Kode QR
+                                                            </a>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                        {/* ===== eWallet — ada pay_url ===== */}
+                                        {invoiceData.pay_url && (
+                                            <div className="overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29]">
+                                                <div className="border-b border-[#31334c] bg-white/5 px-4 py-3 md:px-6">
+                                                    <p className="font-bold text-gray-300">
+                                                        Cara Pembayaran
+                                                    </p>
+                                                </div>
+                                                <div className="flex flex-col gap-4 p-4 md:flex-row md:items-start md:gap-8 md:p-6">
+                                                    {/* Instruksi */}
+                                                    <div className="flex-1">
+                                                        {invoiceData.instructions &&
+                                                            invoiceData.instructions.map(
+                                                                (
+                                                                    inst: any,
+                                                                    i: number,
+                                                                ) => (
+                                                                    <div
+                                                                        key={i}
+                                                                        className="mb-4"
+                                                                    >
+                                                                        <p className="mb-2 text-sm font-semibold text-gray-300">
+                                                                            {
+                                                                                inst.title
+                                                                            }
+                                                                        </p>
+                                                                        <ul className="flex flex-col gap-1.5">
+                                                                            {inst.steps.map(
+                                                                                (
+                                                                                    step: string,
+                                                                                    j: number,
+                                                                                ) => (
+                                                                                    <li
+                                                                                        key={
+                                                                                            j
+                                                                                        }
+                                                                                        className="flex items-start gap-2 text-xs text-gray-400"
+                                                                                    >
+                                                                                        <span className="mt-0.5 shrink-0 text-[#a855f7]">
+                                                                                            •
+                                                                                        </span>
+                                                                                        <span
+                                                                                            dangerouslySetInnerHTML={{
+                                                                                                __html: step,
+                                                                                            }}
+                                                                                        />
+                                                                                    </li>
+                                                                                ),
+                                                                            )}
+                                                                        </ul>
+                                                                    </div>
+                                                                ),
+                                                            )}
+                                                    </div>
+                                                    {/* Tombol Bayar */}
+                                                    <div className="flex shrink-0 flex-col items-center justify-center gap-3 md:min-w-[180px]">
+                                                        <a
+                                                            href={
+                                                                invoiceData.pay_url
+                                                            }
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            className="w-full rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-4 py-3 text-center font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:opacity-90"
+                                                        >
+                                                            Buka Aplikasi
+                                                            Pembayaran
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )}
+
+                                        {/* ===== Virtual Account / mBanking ===== */}
+                                        {!invoiceData.pay_url &&
+                                            !invoiceData.qr_url &&
+                                            invoiceData.pay_code && (
+                                                <div className="overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29]">
+                                                    <div className="border-b border-[#31334c] bg-white/5 px-4 py-3 md:px-6">
+                                                        <p className="font-bold text-gray-300">
+                                                            Cara Pembayaran
+                                                        </p>
+                                                    </div>
+                                                    {/* Instruksi tiga kolom */}
+                                                    <div className="grid grid-cols-1 gap-4 p-4 sm:grid-cols-2 md:grid-cols-3 md:gap-6 md:p-6">
+                                                        {invoiceData.instructions &&
+                                                            invoiceData.instructions.map(
+                                                                (
+                                                                    inst: any,
+                                                                    i: number,
+                                                                ) => (
+                                                                    <div
+                                                                        key={i}
+                                                                    >
+                                                                        <p className="mb-2 text-sm font-semibold text-gray-300">
+                                                                            {
+                                                                                inst.title
+                                                                            }
+                                                                        </p>
+                                                                        <ul className="flex flex-col gap-1.5">
+                                                                            {inst.steps.map(
+                                                                                (
+                                                                                    step: string,
+                                                                                    j: number,
+                                                                                ) => (
+                                                                                    <li
+                                                                                        key={
+                                                                                            j
+                                                                                        }
+                                                                                        className="flex items-start gap-2 text-xs text-gray-400"
+                                                                                    >
+                                                                                        <span className="mt-0.5 shrink-0 text-[#a855f7]">
+                                                                                            •
+                                                                                        </span>
+                                                                                        <span
+                                                                                            dangerouslySetInnerHTML={{
+                                                                                                __html: step,
+                                                                                            }}
+                                                                                        />
+                                                                                    </li>
+                                                                                ),
+                                                                            )}
+                                                                        </ul>
+                                                                    </div>
+                                                                ),
+                                                            )}
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                        {/* ===== Fallback ===== */}
+                                        {!invoiceData.pay_url &&
+                                            !invoiceData.qr_url &&
+                                            !invoiceData.pay_code && (
+                                                <div className="overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] p-4 md:p-6">
+                                                    <p className="mb-3 text-sm text-gray-400">
+                                                        Lanjutkan pembayaran
+                                                        melalui halaman Tripay.
+                                                    </p>
+                                                    <a
+                                                        href={
+                                                            invoiceData.payment_url
+                                                        }
+                                                        target="_blank"
+                                                        rel="noopener noreferrer"
+                                                        className="block w-full rounded-lg bg-[#4ade80] px-4 py-3 text-center font-bold text-[#1e1f29] transition hover:bg-[#34d399]"
+                                                    >
+                                                        Buka Halaman Pembayaran
+                                                    </a>
+                                                </div>
+                                            )}
+
+                                        {/* ===== Nomor VA di bawah (seperti screenshot) ===== */}
+                                        {!invoiceData.pay_url &&
+                                            !invoiceData.qr_url &&
+                                            invoiceData.pay_code && (
+                                                <div className="flex flex-col gap-2 rounded-xl border border-[#31334c] bg-[#1e1f29] px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-6 md:py-4">
+                                                    <span className="text-sm font-semibold text-gray-300">
+                                                        Nomor Pembayaran —{' '}
+                                                        {invoiceData.method}
+                                                    </span>
+                                                    <div className="flex items-center gap-3">
+                                                        <span className="font-mono font-bold break-all text-[#FFC107]">
+                                                            {
+                                                                invoiceData.pay_code
+                                                            }
+                                                        </span>
+                                                        <button
+                                                            type="button"
+                                                            onClick={() =>
+                                                                copyToClipboard(
+                                                                    invoiceData.pay_code,
+                                                                )
+                                                            }
+                                                            className="text-gray-400 transition hover:text-white"
+                                                            title="Salin"
+                                                        >
+                                                            <svg
+                                                                width="16"
+                                                                height="16"
+                                                                viewBox="0 0 24 24"
+                                                                fill="none"
+                                                                stroke="currentColor"
+                                                                strokeWidth="2"
+                                                                strokeLinecap="round"
+                                                                strokeLinejoin="round"
+                                                            >
+                                                                <rect
+                                                                    width="14"
+                                                                    height="14"
+                                                                    x="8"
+                                                                    y="8"
+                                                                    rx="2"
+                                                                    ry="2"
+                                                                />
+                                                                <path d="M4 16c-1.1 0-2-.9-2-2V4c0-1.1.9-2 2-2h10c1.1 0 2 .9 2 2" />
+                                                            </svg>
+                                                        </button>
+                                                    </div>
+                                                </div>
+                                            )}
+
+                                        {/* ===== Pesan menunggu pembayaran ===== */}
+                                        <div className="flex items-center gap-2 rounded-lg border border-yellow-500/20 bg-yellow-500/5 px-4 py-3 text-xs text-yellow-400">
+                                            <svg
+                                                width="14"
+                                                height="14"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                className="shrink-0"
+                                            >
+                                                <circle
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                />
+                                                <path d="M12 8v4l3 3" />
+                                            </svg>
+                                            Menunggu pembayaran anda. Silahkan
+                                            selesaikan pembayaran sebelum batas
+                                            waktu berakhir.
+                                        </div>
                                     </div>
-                                </a>
+                                </div>
                             ) : (
                                 <Link href="/">
                                     <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#9b4dec] px-4 py-3 font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:opacity-90 md:px-6 md:py-4">
