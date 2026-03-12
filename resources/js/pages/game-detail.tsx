@@ -386,7 +386,7 @@ export default function GameDetail({
 
     return (
         <GuestLayout>
-            <Head title={`${game.name} - Nebustore`} />
+            <Head title={`${game.name} - Nuvelo`} />
 
             {/* Background Texture & Hero Graphic */}
             <div className="relative min-h-screen pb-40 md:pb-32">

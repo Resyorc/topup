@@ -26,10 +26,6 @@ class FortifyServiceProvider extends ServiceProvider
                 return new class implements \Laravel\Fortify\Contracts\LoginResponse {
                     public function toResponse($request)
                     {
-                        if ($request->user()->hasAnyRole(['Super Admin', 'Admin Operasional'])) {
-                            return redirect()->intended('/admin');
-                        }
-                        
                         return redirect()->intended(config('fortify.home'));
                     }
                 };

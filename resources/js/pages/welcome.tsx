@@ -98,7 +98,7 @@ export default function Welcome({
                                         key={game.id}
                                         id={game.id}
                                         title={game.name}
-                                        subTitle={game.publisher || 'Nebustore'}
+                                        subTitle={game.publisher || 'Nuvelo'}
                                         imgSrc={getImageUrl(
                                             game.thumbnail || game.image,
                                             game.name,
@@ -157,7 +157,7 @@ export default function Welcome({
                                     key={game.id}
                                     id={game.id}
                                     title={game.name}
-                                    subTitle={game.publisher || 'Nebustore'}
+                                    subTitle={game.publisher || 'Nuvelo'}
                                     imgSrc={getImageUrl(game.image, game.name)}
                                     slug={game.slug}
                                     cardSize="sm"
