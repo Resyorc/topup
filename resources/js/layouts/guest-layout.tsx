@@ -14,7 +14,7 @@ export default function GuestLayout({
             ? broadcastMessages
             : [
                   '🔥 PROMO SPESIAL MINGGU INI!',
-                  'TOP UP DI NEBUSTORE CEPAT & TERPERCAYA',
+                  'TOP UP DI Nuvelo CEPAT & TERPERCAYA',
               ];
 
     // Mobile search bar toggle state
@@ -415,7 +415,7 @@ export default function GuestLayout({
                             />
                         </Link>
                         <p className="text-xs leading-relaxed text-gray-400 md:text-sm">
-                            <strong className="text-primary">NEBUSTORE</strong>{' '}
+                            <strong className="text-primary">Nuvelo</strong>{' '}
                             adalah tempat top up games yang aman, murah dan
                             terpercaya, dengan proses instan dan layanan 24 jam
                             nonstop.
@@ -558,7 +558,7 @@ export default function GuestLayout({
 
                 {/* Footer Bottom — stacked on mobile, side-by-side on desktop */}
                 <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 border-t border-[#31334c] px-4 pt-4 text-xs text-gray-500 md:flex-row md:gap-0 md:pt-6">
-                    <p>&copy; 2025 Nebustore. All rights reserved.</p>
+                    <p>&copy; 2026 Nuvelo. All rights reserved.</p>
                     <div className="mt-2 flex gap-4 md:mt-0">
                         <Link
                             href="/kebijakan-privasi"

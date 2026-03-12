@@ -11,6 +11,8 @@ Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/order/{slug}', [App\Http\Controllers\GameController::class, 'show'])->name('game.detail');
 Route::get('/invoice', [App\Http\Controllers\InvoiceController::class, 'show'])->name('invoice');
 Route::get('/invoice/data', [App\Http\Controllers\InvoiceController::class, 'data'])->name('invoice.data');
+Route::inertia('/syarat-ketentuan', 'syarat-ketentuan')->name('terms');
+Route::inertia('/kebijakan-privasi', 'kebijakan-privasi')->name('privacy');
 
 Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
