@@ -1,4 +1,4 @@
-import { usePage } from '@inertiajs/react';
+import { usePage, Link } from '@inertiajs/react';
 import UserLayout from '@/layouts/user-layout';
 import { formatCurrency, formatDate, getTransactionStatusBadge } from '@/lib';
 

@@ -35,7 +35,7 @@ class CheckoutController extends Controller
         $qty             = $validated['qty'] ?? 1;
         $customerName    = $validated['customer_name'] ?? 'Guest';
         $customerEmail   = $validated['customer_email'] ?? 'guest@nuvelo.com';
-        $authenticatedUserId = auth('web')->id() ?? auth('sanctum')->id() ?? auth()->id();
+        $authenticatedUserId = auth()->id();
 
         $product = Product::findOrFail($validated['product_id']);
 

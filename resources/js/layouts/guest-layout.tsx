@@ -1,5 +1,5 @@
 import { Link, usePage } from '@inertiajs/react';
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import NewsTicker from '@/components/news-ticker';
 
 export default function GuestLayout({
@@ -128,27 +128,6 @@ export default function GuestLayout({
                                     {/* Notification dot indicator */}
                                     <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500"></span>
                                 </button>
-
-                                {/* Dashboard Link / Avatar — hidden on mobile, bottom nav has Akun */}
-                                <Link
-                                    className="hidden h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-primary/50 bg-white/10 transition hover:bg-white/20 md:flex md:h-10 md:w-10"
-                                    href="/dashboard"
-                                >
-                                    <svg
-                                        width="20"
-                                        height="20"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="text-gray-300 md:[height:24px] md:[width:24px]"
-                                    >
-                                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                                        <circle cx="12" cy="7" r="4" />
-                                    </svg>
-                                </Link>
                             </div>
                         ) : (
                             <div className="flex items-center gap-2 md:gap-3">
@@ -372,7 +351,7 @@ export default function GuestLayout({
                     <span className="text-[10px] font-medium">Cek Invoice</span>
                 </Link>
 
-                {/* Akun — only shown when user is logged in. When not logged in, Masuk button is in the header. */}
+                {/* Akun — only shown when user is logged in. Links to dashboard. */}
                 {auth?.user && (
                     <Link
                         href="/dashboard"
