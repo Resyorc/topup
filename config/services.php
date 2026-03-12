@@ -49,4 +49,34 @@ return [
         'mode' => env('TRIPAY_MODE', 'sandbox'),
     ],
 
+    'user_id_check' => [
+        'endpoint' => env('USER_ID_CHECK_ENDPOINT', 'https://order-sg.codashop.com/initPayment.action'),
+        'timeout' => env('USER_ID_CHECK_TIMEOUT', 5),
+        'cache_seconds' => env('USER_ID_CHECK_CACHE_SECONDS', 60),
+        // Optional override per slug. If empty, fallback to values stored in table games.
+        'games' => [],
+    ],
+
+    'product_grouping' => [
+        'fallback_label' => env('PRODUCT_GROUPING_FALLBACK_LABEL', 'Produk Lainnya'),
+        'default_rules' => [
+            'Diamond' => ['diamond'],
+            'Event Top Up' => ['event'],
+        ],
+        'rules_by_slug' => [
+            'genshin' => [
+                'Blessing' => ['blessing', 'welkin'],
+                'Genesis Crystal' => ['genesis', 'crystal'],
+            ],
+            'hsr' => [
+                'Express Supply Pass' => ['express', 'supply', 'pass'],
+                'Oneiric Shard' => ['oneiric', 'shard'],
+            ],
+            'mobile-legends' => [
+                'WDP' => ['wdp', 'weekly', 'weekly diamond pass'],
+                'Diamond' => ['diamond'],
+            ],
+        ],
+    ],
+
 ];

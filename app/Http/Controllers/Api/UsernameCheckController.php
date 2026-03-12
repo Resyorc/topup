@@ -4,23 +4,22 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
-use App\Services\CodashopServices;
+use App\Services\UserIdCheckService;
 
 class UsernameCheckController extends Controller
 {
-    public function check(Request $request)
+    public function check(Request $request, UserIdCheckService $userIdCheckService)
     {
-        $request->validate([
-            'game' => 'required|string',
-            'user_id' => 'required|string',
-            'zone_id' => 'nullable|string',
+        $validated = $request->validate([
+            'game' => 'required|string|max:100',
+            'user_id' => 'required|string|max:100',
+            'zone_id' => 'nullable|string|max:100',
         ]);
 
-        $service = new CodashopServices();
-        $result = $service->check(
-            $request->input('game'),
-            $request->input('user_id'),
-            $request->input('zone_id')
+        $result = $userIdCheckService->check(
+            $validated['game'],
+            $validated['user_id'],
+            $validated['zone_id'] ?? null,
         );
 
         if (!$result['success']) {

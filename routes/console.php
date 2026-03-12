@@ -9,3 +9,4 @@ Artisan::command('inspire', function () {
 })->purpose('Display an inspiring quote');
 
 Schedule::command('digiflazz:sync-products')->everyFourHours();
+Schedule::command('transactions:expire-pending')->everyMinute();

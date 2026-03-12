@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\CoinTopup;
 use Illuminate\Http\Request;
 use App\Models\Transaction;
+use App\Services\CoinService;
 use App\Services\DigiflazzService;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\DB;
@@ -14,7 +16,7 @@ class TripayCallbackController extends Controller
     /**
      * Handle the incoming Tripay Webhook request.
      */
-    public function handle(Request $request, DigiflazzService $digiflazzService)
+    public function handle(Request $request, DigiflazzService $digiflazzService, CoinService $coinService)
     {
         $callbackSignature = $request->header('X-Callback-Signature');
         $json = $request->getContent();
@@ -53,6 +55,43 @@ class TripayCallbackController extends Controller
                 'success' => false,
                 'message' => 'Open payment is not supported',
             ], 400);
+        }
+
+        $coinTopup = CoinTopup::where('invoice_id', $data->merchant_ref)->first();
+
+        if ($coinTopup) {
+            DB::transaction(function () use ($coinTopup, $data, $coinService) {
+                $lockedTopup = CoinTopup::whereKey($coinTopup->id)
+                    ->lockForUpdate()
+                    ->first();
+
+                if (in_array($lockedTopup->status, ['paid', 'failed', 'expired'], true)) {
+                    return;
+                }
+
+                if ($data->status === 'PAID') {
+                    $coinService->credit(
+                        $lockedTopup->user,
+                        (int) $lockedTopup->amount,
+                        'Top up Krysta Coin',
+                        $lockedTopup->invoice_id,
+                    );
+
+                    $lockedTopup->update([
+                        'status' => 'paid',
+                        'paid_at' => now(),
+                    ]);
+                } elseif (in_array($data->status, ['EXPIRED', 'FAILED'])) {
+                    $lockedTopup->update([
+                        'status' => $data->status === 'EXPIRED' ? 'expired' : 'failed',
+                        'failure_reason' => $data->status === 'EXPIRED'
+                            ? 'Pembayaran melewati batas waktu (expired).'
+                            : 'Pembayaran gagal.',
+                    ]);
+                }
+            });
+
+            return response()->json(['success' => true]);
         }
 
         // Check existence first before acquiring lock

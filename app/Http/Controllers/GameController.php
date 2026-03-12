@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Game;
+use App\Services\ProductGroupingService;
 use App\Services\TripayService;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Illuminate\Support\Facades\Log;
 
@@ -13,7 +13,7 @@ class GameController extends Controller
     /**
      * Display the specified game detail and its products.
      */
-    public function show($slug)
+    public function show($slug, ProductGroupingService $productGroupingService)
     {
         // 1. Fetch the Game including its active products and category
         $game = Game::with(['category', 'products' => function ($query) {
@@ -36,24 +36,11 @@ class GameController extends Controller
             'reviews_count' => '10.2M+',
         ];
 
-        // 3. Group products by category
-        $productsGrouped = [
-            'Diamond' => $game->products->map(function ($product) {
-                return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'price' => (float) $product->price_sell,
-                    'extra' => str_contains($product->name, '(')
-                        ? substr($product->name, strpos($product->name, '('))
-                        : null,
-                    'clean_name' => str_contains($product->name, '(')
-                        ? trim(substr($product->name, 0, strpos($product->name, '(')))
-                        : $product->name,
-                ];
-            })->values()->toArray(),
-            'WDP' => [],
-            'Event Top Up' => [],
-        ];
+        // 3. Group products via dedicated service (per-game dynamic rules)
+        $productsGrouped = $productGroupingService->groupByGameSlug(
+            $game->products,
+            $game->slug,
+        );
 
         // 4. Fetch real payment channels from Tripay
         $paymentMethods = [];
