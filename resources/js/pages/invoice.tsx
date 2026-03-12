@@ -190,50 +190,55 @@ export default function InvoiceSearch({
         }
 
         // If it's a completely different invoice, reset animation to 0
-        if (invoiceData.invoice_no !== lastInvoiceNoRef.current) {
+        const isNewInvoice =
+            invoiceData.invoice_no !== lastInvoiceNoRef.current;
+        if (isNewInvoice) {
             lastInvoiceNoRef.current = invoiceData.invoice_no;
             setAnimatedStatus(0);
             if (animationIntervalRef.current) {
                 clearInterval(animationIntervalRef.current);
                 animationIntervalRef.current = null;
             }
-            // Schedule next effect to animate to target
-            return;
         }
 
         // Animate if target is higher than current animated status
-        setAnimatedStatus((currentStatus) => {
-            // Clear previous interval if exists
-            if (animationIntervalRef.current) {
-                clearInterval(animationIntervalRef.current);
-            }
+        // Use a small delay for new invoices to ensure state is updated
+        const animateDelay = isNewInvoice ? 50 : 0;
+        const timeoutId = setTimeout(() => {
+            setAnimatedStatus((currentStatus) => {
+                // Clear previous interval if exists
+                if (animationIntervalRef.current) {
+                    clearInterval(animationIntervalRef.current);
+                }
 
-            if (targetStep > currentStatus) {
-                // Start animation from current to target
-                animationIntervalRef.current = setInterval(() => {
-                    setAnimatedStatus((prev) => {
-                        if (prev < targetStep) {
-                            return prev + 1;
-                        } else {
-                            if (animationIntervalRef.current) {
-                                clearInterval(animationIntervalRef.current);
-                                animationIntervalRef.current = null;
+                if (targetStep > currentStatus) {
+                    // Start animation from current to target
+                    animationIntervalRef.current = setInterval(() => {
+                        setAnimatedStatus((prev) => {
+                            if (prev < targetStep) {
+                                return prev + 1;
+                            } else {
+                                if (animationIntervalRef.current) {
+                                    clearInterval(animationIntervalRef.current);
+                                    animationIntervalRef.current = null;
+                                }
+                                return prev;
                             }
-                            return prev;
-                        }
-                    });
-                }, 500); // animate every 500ms
+                        });
+                    }, 500); // animate every 500ms
 
-                return currentStatus; // Return current before animation starts
-            } else if (targetStep < currentStatus) {
-                // Reset if target is lower
-                return targetStep;
-            }
-            return currentStatus;
-        });
+                    return currentStatus; // Return current before animation starts
+                } else if (targetStep < currentStatus) {
+                    // Reset if target is lower
+                    return targetStep;
+                }
+                return currentStatus;
+            });
+        }, animateDelay);
 
-        // Cleanup interval on unmount or status change
+        // Cleanup interval and timeout on unmount or status change
         return () => {
+            clearTimeout(timeoutId);
             if (animationIntervalRef.current) {
                 clearInterval(animationIntervalRef.current);
                 animationIntervalRef.current = null;
