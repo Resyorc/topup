@@ -8,6 +8,7 @@ export default function GuestLayout({
     children: React.ReactNode;
 }) {
     const { auth, broadcastMessages } = usePage().props as any;
+    const currentUrl = usePage().url;
     const tickerMsgs =
         broadcastMessages && broadcastMessages.length > 0
             ? broadcastMessages
@@ -19,12 +20,18 @@ export default function GuestLayout({
     // Mobile search bar toggle state
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
 
+    // Helper: check if a nav link is currently active
+    const isActive = (href: string) => {
+        if (href === '/') return currentUrl === '/';
+        return currentUrl.startsWith(href);
+    };
+
     return (
         <div className="flex min-h-screen flex-col pt-[116px] md:pt-[106px]">
             {/* Header Navbar */}
             <header className="fixed inset-x-0 top-0 z-50 bg-[#3E3D4980] text-white shadow-md backdrop-blur-sm">
                 <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 md:gap-10 md:py-4 lg:px-8">
-                    {/* Logo — image-based, naturally aligned left via parent flex */}
+                    {/* Logo — cropped image with no padding, sits naturally at left */}
                     <Link
                         href="/"
                         className="flex shrink-0 cursor-pointer items-center focus:outline-0"
@@ -32,7 +39,7 @@ export default function GuestLayout({
                         <img
                             src="/logo.png"
                             alt="Nuvelo"
-                            className="h-8 w-auto md:h-10"
+                            className="h-10 w-auto md:h-12"
                         />
                     </Link>
 
@@ -122,9 +129,9 @@ export default function GuestLayout({
                                     <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-red-500"></span>
                                 </button>
 
-                                {/* Dashboard Link / Avatar */}
+                                {/* Dashboard Link / Avatar — hidden on mobile, bottom nav has Akun */}
                                 <Link
-                                    className="flex h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-primary/50 bg-white/10 transition hover:bg-white/20 md:h-10 md:w-10"
+                                    className="hidden h-9 w-9 items-center justify-center overflow-hidden rounded-full border-2 border-primary/50 bg-white/10 transition hover:bg-white/20 md:flex md:h-10 md:w-10"
                                     href="/dashboard"
                                 >
                                     <svg
@@ -145,7 +152,7 @@ export default function GuestLayout({
                             </div>
                         ) : (
                             <div className="flex items-center gap-2 md:gap-3">
-                                {/* Masuk button — slightly smaller on mobile */}
+                                {/* Masuk button — shown on mobile (next to search) and desktop */}
                                 <Link
                                     href="/login"
                                     className="rounded-md border border-primary bg-transparent px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/10 md:px-4 md:py-2 md:text-sm"
@@ -204,12 +211,12 @@ export default function GuestLayout({
 
                 {/* Sub-Header Navigation with Ticker */}
                 <div className="flex w-full items-center justify-center bg-[#6C3C8980] text-sm font-medium shadow-inner select-none">
-                    <div className="mx-auto flex w-full max-w-7xl flex-col-reverse flex-nowrap items-center gap-0 px-4 md:flex-row md:gap-12 md:px-8">
-                        {/* Static Links — centered on mobile, no scroll needed (only 2 items) */}
-                        <div className="flex w-full flex-nowrap items-center justify-center gap-x-6 pb-2 sm:flex-nowrap sm:justify-between sm:gap-12 sm:gap-x-8 md:w-auto md:pb-0">
+                    <div className="mx-auto flex w-full max-w-7xl flex-col-reverse flex-nowrap items-center gap-0 px-4 sm:px-4 md:flex-row md:gap-12 md:px-8">
+                        {/* Static Links — hidden on mobile (bottom nav handles navigation), visible on desktop */}
+                        <div className="hidden w-full flex-nowrap items-center justify-center gap-x-6 pb-2 sm:flex-nowrap sm:justify-between sm:gap-12 sm:gap-x-8 md:flex md:w-auto md:pb-0">
                             <Link
                                 href="/"
-                                className="group relative flex cursor-pointer items-center py-2 text-nowrap text-white transition hover:text-gray-200 md:py-3"
+                                className={`group relative flex cursor-pointer items-center py-2 text-nowrap transition md:py-3 ${isActive('/') ? 'text-primary' : 'text-white hover:text-gray-200'}`}
                             >
                                 <div className="flex items-center justify-between gap-2 md:gap-2.5">
                                     <svg
@@ -240,7 +247,7 @@ export default function GuestLayout({
 
                             <Link
                                 href="/invoice"
-                                className="group relative flex cursor-pointer items-center py-2 text-nowrap text-white transition hover:text-gray-200 md:py-3"
+                                className={`group relative flex cursor-pointer items-center py-2 text-nowrap transition md:py-3 ${isActive('/invoice') ? 'text-primary' : 'text-white hover:text-gray-200'}`}
                             >
                                 <div className="flex items-center justify-between gap-2 md:gap-2.5">
                                     <svg
@@ -311,7 +318,7 @@ export default function GuestLayout({
 
             {/* ===== Mobile Bottom Navigation Bar ===== */}
             {/* Only visible on screens smaller than md (768px). 
-                Provides thumb-friendly access to: Beranda, Cek Invoice, Top Up, Akun/Masuk */}
+                Provides thumb-friendly access to: Beranda, Cek Invoice, Akun/Masuk */}
             <nav
                 className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-around border-t border-[#31334c] bg-[#1e1f29]/95 px-2 py-2 backdrop-blur-md md:hidden"
                 style={{
@@ -320,10 +327,12 @@ export default function GuestLayout({
             >
                 <Link
                     href="/"
-                    className="relative flex flex-col items-center gap-0.5 px-3 py-1 text-primary"
+                    className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition ${isActive('/') ? 'text-primary' : 'text-gray-500 hover:text-gray-300'}`}
                 >
                     {/* Active indicator bar */}
-                    <span className="absolute -top-2 left-1/2 h-[3px] w-6 -translate-x-1/2 rounded-b bg-primary"></span>
+                    {isActive('/') && (
+                        <span className="absolute -top-2 left-1/2 h-[3px] w-6 -translate-x-1/2 rounded-b bg-primary"></span>
+                    )}
                     <svg
                         width="22"
                         height="22"
@@ -342,8 +351,11 @@ export default function GuestLayout({
 
                 <Link
                     href="/invoice"
-                    className="flex flex-col items-center gap-0.5 px-3 py-1 text-gray-500 transition hover:text-gray-300"
+                    className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition ${isActive('/invoice') ? 'text-primary' : 'text-gray-500 hover:text-gray-300'}`}
                 >
+                    {isActive('/invoice') && (
+                        <span className="absolute -top-2 left-1/2 h-[3px] w-6 -translate-x-1/2 rounded-b bg-primary"></span>
+                    )}
                     <svg
                         width="22"
                         height="22"
@@ -360,32 +372,15 @@ export default function GuestLayout({
                     <span className="text-[10px] font-medium">Cek Invoice</span>
                 </Link>
 
-                <Link
-                    href="/"
-                    className="relative flex flex-col items-center gap-0.5 px-3 py-1 text-gray-500 transition hover:text-gray-300"
-                >
-                    <svg
-                        width="22"
-                        height="22"
-                        viewBox="0 0 24 24"
-                        fill="none"
-                        stroke="currentColor"
-                        strokeWidth="2"
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                    >
-                        <circle cx="9" cy="21" r="1"></circle>
-                        <circle cx="20" cy="21" r="1"></circle>
-                        <path d="M1 1h4l2.68 13.39a2 2 0 0 0 2 1.61h9.72a2 2 0 0 0 2-1.61L23 6H6"></path>
-                    </svg>
-                    <span className="text-[10px] font-medium">Top Up</span>
-                </Link>
-
-                {auth?.user ? (
+                {/* Akun — only shown when user is logged in. When not logged in, Masuk button is in the header. */}
+                {auth?.user && (
                     <Link
                         href="/dashboard"
-                        className="flex flex-col items-center gap-0.5 px-3 py-1 text-gray-500 transition hover:text-gray-300"
+                        className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition ${isActive('/dashboard') ? 'text-primary' : 'text-gray-500 hover:text-gray-300'}`}
                     >
+                        {isActive('/dashboard') && (
+                            <span className="absolute -top-2 left-1/2 h-[3px] w-6 -translate-x-1/2 rounded-b bg-primary"></span>
+                        )}
                         <svg
                             width="22"
                             height="22"
@@ -400,26 +395,6 @@ export default function GuestLayout({
                             <circle cx="12" cy="7" r="4"></circle>
                         </svg>
                         <span className="text-[10px] font-medium">Akun</span>
-                    </Link>
-                ) : (
-                    <Link
-                        href="/login"
-                        className="flex flex-col items-center gap-0.5 px-3 py-1 text-gray-500 transition hover:text-gray-300"
-                    >
-                        <svg
-                            width="22"
-                            height="22"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
-                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                            <circle cx="12" cy="7" r="4"></circle>
-                        </svg>
-                        <span className="text-[10px] font-medium">Masuk</span>
                     </Link>
                 )}
             </nav>

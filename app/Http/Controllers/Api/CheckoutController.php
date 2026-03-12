@@ -32,6 +32,7 @@ class CheckoutController extends Controller
         $qty = $validated['qty'] ?? 1;
         $customerName = $validated['customer_name'] ?? 'Guest';
         $customerEmail = $validated['customer_email'] ?? 'guest@nebustore.com';
+        $authenticatedUserId = auth('web')->id() ?? auth('sanctum')->id() ?? auth()->id();
 
         $product = Product::findOrFail($validated['product_id']);
 
@@ -54,7 +55,7 @@ class CheckoutController extends Controller
         ];
 
         try {
-            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $orderItems, $customerName, $customerEmail, $tripayService) {
+            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $orderItems, $customerName, $customerEmail, $tripayService, $authenticatedUserId) {
                 // Request transaction creation to Tripay
                 $paymentResponse = $tripayService->createTransaction(
                     $validated['payment_method'],
@@ -69,7 +70,7 @@ class CheckoutController extends Controller
                 // Record transaction locally as UNPAID
                 $transaction = Transaction::create([
                     'invoice_id' => $merchantRef,
-                    'user_id' => auth('web')->id() ?? auth()->id() ?? null,
+                    'user_id' => $authenticatedUserId,
                     'product_id' => $product->id,
                     'customer_game_id' => $validated['customer_game_id'],
                     'customer_zone_id' => $validated['customer_zone_id'] ?? null,

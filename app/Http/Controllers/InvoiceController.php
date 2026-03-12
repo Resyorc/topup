@@ -18,46 +18,70 @@ class InvoiceController extends Controller
                 ->where('invoice_id', $invoiceId)
                 ->first();
 
-
             if ($transaction) {
-                // Map the database format to what the frontend expects
-                $invoiceData = [
-                    'invoice_no' => $transaction->invoice_id,
-                    'whatsapp' => maskPhoneNumber($transaction->customer_whatsapp),
-                    'status' => $transaction->status, // pending, paid, processing, success, failed
-                    'payment_status' => $transaction->payment_status,
-                    'method' => $transaction->payment_method ? 'Gateway / Payment URL' : 'Manual',
-                    'created_at' => $transaction->created_at->format('d M Y H:i:s'),
-                    'paid_at' => $transaction->updated_at->format('Y/m/d H:i:s T'),
-                    'game' => [
-                        'name' => $transaction->product->game->name,
-                        'publisher' => $transaction->product->game->publisher ?? 'Nebu Publisher',
-                        'image' => $transaction->product->game->image ?? '/storage/games/dummy-ml.jpg',
-                        'slug' => $transaction->product->game->slug ?? '',
-                    ],
-                    'account' => [
-                        'username' => $transaction->customer_name ?? $transaction->user?->name ?? 'Guest User',
-                        'id' => $transaction->customer_game_id,
-                        'server' => $transaction->customer_zone_id ?? '-'
-                    ],
-                    'product' => [
-                        'name' => $transaction->product->name,
-                        'extra' => ''
-                    ],
-                    'payment_url' => $transaction->payment_url,
-                    'price' => (float)$transaction->amount,
-                    'qty' => 1,
-                    'fee' => 0, // No extra fee stored yet locally
-                    'total' => (float)$transaction->amount
-                ];
+                $invoiceData = $this->mapTransactionToInvoiceData($transaction);
             }
         }
-        // dd($invoiceData);
-
 
         return Inertia::render('invoice', [
             'initialInvoiceData' => $invoiceData,
             'searchedInvoiceId' => $invoiceId
         ]);
+    }
+
+    public function data(Request $request)
+    {
+        $validated = $request->validate([
+            'invoice_id' => 'required|string',
+        ]);
+
+        $transaction = Transaction::with(['product.game', 'user'])
+            ->where('invoice_id', $validated['invoice_id'])
+            ->first();
+
+        if (! $transaction) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Invoice tidak ditemukan.',
+            ], 404);
+        }
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->mapTransactionToInvoiceData($transaction),
+        ]);
+    }
+
+    private function mapTransactionToInvoiceData(Transaction $transaction): array
+    {
+        return [
+            'invoice_no' => $transaction->invoice_id,
+            'whatsapp' => maskPhoneNumber($transaction->customer_whatsapp),
+            'status' => $transaction->status,
+            'payment_status' => $transaction->payment_status,
+            'method' => $transaction->payment_method ? 'Gateway / Payment URL' : 'Manual',
+            'created_at' => $transaction->created_at->format('d M Y H:i:s'),
+            'paid_at' => $transaction->updated_at->format('Y/m/d H:i:s T'),
+            'game' => [
+                'name' => $transaction->product->game->name,
+                'publisher' => $transaction->product->game->publisher ?? 'Nebu Publisher',
+                'image' => $transaction->product->game->image ?? '/storage/games/dummy-ml.jpg',
+                'slug' => $transaction->product->game->slug ?? '',
+            ],
+            'account' => [
+                'username' => $transaction->customer_name ?? $transaction->user?->name ?? 'Guest User',
+                'id' => $transaction->customer_game_id,
+                'server' => $transaction->customer_zone_id ?? '-',
+            ],
+            'product' => [
+                'name' => $transaction->product->name,
+                'extra' => '',
+            ],
+            'payment_url' => $transaction->payment_url,
+            'price' => (float) $transaction->amount,
+            'qty' => 1,
+            'fee' => 0,
+            'total' => (float) $transaction->amount,
+        ];
     }
 }

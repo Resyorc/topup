@@ -374,10 +374,10 @@ export default function GameDetail({
             <Head title={`${game.name} - Nebustore`} />
 
             {/* Background Texture & Hero Graphic */}
-            <div className="relative min-h-screen pb-32">
-                <div className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
+            <div className="relative min-h-screen pb-40 md:pb-32">
+                <div className="mx-auto max-w-7xl px-3 pt-4 sm:px-6 md:pt-10 lg:px-8">
                     {/* Breadcrumbs */}
-                    <div className="mb-6 flex items-center gap-2 text-sm text-gray-400">
+                    <div className="mb-4 flex items-center gap-1.5 text-xs text-gray-400 md:mb-6 md:gap-2 md:text-sm">
                         <span>Beranda</span>
                         <span>›</span>
                         <span>Top Up</span>
@@ -386,7 +386,7 @@ export default function GameDetail({
                             {game.name}
                         </span>
 
-                        <div className="ml-auto">
+                        <div className="ml-auto hidden md:block">
                             <button className="flex items-center gap-2 rounded-full border border-[#31334c] px-4 py-1.5 text-xs text-gray-300 transition hover:bg-white/5 hover:text-white">
                                 Cara Pembelian{' '}
                                 <svg
@@ -408,42 +408,44 @@ export default function GameDetail({
                     </div>
 
                     {/* Header Banner (Replicated from ClientTpProductInfo) */}
-                    <div className="flex-start relative mt-12 flex h-fit w-full flex-col flex-wrap items-center justify-between gap-8 px-8 pb-8 lg:flex-row lg:items-end">
-                        {/* Game Card Thumbnail */}
-                        <GameCard
-                            id={game.id}
-                            title={game.name}
-                            subTitle={game.publisher}
-                            imgSrc={getImageUrl(game.image)}
-                            slug={game.slug}
-                            active={true}
-                            customClass="z-1"
-                            cardSize="sm"
-                        />
+                    <div className="flex-start relative mt-6 flex h-fit w-full flex-col flex-wrap items-center justify-between gap-4 px-3 pb-6 md:mt-12 md:gap-8 md:px-8 md:pb-8 lg:flex-row lg:items-end">
+                        {/* Game Card Thumbnail — fixed small size on mobile, original sm size on desktop */}
+                        <div className="relative z-[10] shrink-0">
+                            <GameCard
+                                id={game.id}
+                                title={game.name}
+                                subTitle={game.publisher}
+                                imgSrc={getImageUrl(game.image)}
+                                slug={game.slug}
+                                active={true}
+                                customClass="!w-28 !h-[160px] md:!w-auto md:!h-auto"
+                                cardSize="sm"
+                            />
+                        </div>
 
                         {/* Product Info */}
                         <div
-                            className="z-10 flex w-fit flex-1 flex-col flex-wrap items-start gap-8 md:flex-row"
+                            className="z-10 flex w-full flex-1 flex-col flex-wrap items-start gap-4 md:w-fit md:flex-row md:gap-8"
                             id="client-product-info"
                         >
                             {/* Product Detail */}
                             <div
-                                className="flex w-fit flex-1 flex-col items-start justify-between"
+                                className="flex w-full flex-1 flex-col items-start justify-between md:w-fit"
                                 id="client-product-detail"
                             >
-                                <h3 className="mb-1 text-2xl font-semibold text-white">
+                                <h3 className="mb-0.5 text-lg font-semibold text-white md:mb-1 md:text-2xl">
                                     {game.name}
                                 </h3>
-                                <h4 className="mb-2.5 text-lg text-[#FFC107] text-client-warning">
+                                <h4 className="mb-2 text-sm text-[#FFC107] text-client-warning md:mb-2.5 md:text-lg">
                                     {game.publisher}
                                 </h4>
 
                                 {/* Badges */}
                                 <div
                                     id="client-product-detail-badges"
-                                    className="item-center flex flex-wrap gap-2"
+                                    className="item-center flex flex-wrap gap-1.5 md:gap-2"
                                 >
-                                    <div className="flex cursor-pointer items-center gap-1.5 rounded-full border border-[#3b82f6]/30 bg-[#1e6fdb]/20 px-3 py-1 text-[0.7rem] font-semibold whitespace-nowrap text-[#3b82f6]">
+                                    <div className="flex cursor-pointer items-center gap-1 rounded-full border border-[#3b82f6]/30 bg-[#1e6fdb]/20 px-2.5 py-0.5 text-[0.65rem] font-semibold whitespace-nowrap text-[#3b82f6] md:gap-1.5 md:px-3 md:py-1 md:text-[0.7rem]">
                                         <svg
                                             width="12"
                                             height="12"
@@ -454,7 +456,7 @@ export default function GameDetail({
                                         </svg>
                                         Proses Cepat
                                     </div>
-                                    <div className="flex cursor-pointer items-center gap-1.5 rounded-full border border-[#3b82f6]/30 bg-[#1e6fdb]/20 px-3 py-1 text-[0.7rem] font-semibold whitespace-nowrap text-[#3b82f6]">
+                                    <div className="flex cursor-pointer items-center gap-1 rounded-full border border-[#3b82f6]/30 bg-[#1e6fdb]/20 px-2.5 py-0.5 text-[0.65rem] font-semibold whitespace-nowrap text-[#3b82f6] md:gap-1.5 md:px-3 md:py-1 md:text-[0.7rem]">
                                         <svg
                                             width="12"
                                             height="12"
@@ -493,13 +495,13 @@ export default function GameDetail({
                             {/* Separator Line (Horizontal) Mobile only */}
                             <div className="mt-1 h-px w-full rounded-full bg-gradient-to-r from-transparent via-white/50 to-transparent select-none md:hidden"></div>
 
-                            {/* Rating */}
+                            {/* Rating — mobile: compact inline. Desktop: restored to original sizing */}
                             <div className="w-fit" id="client-product-rating">
-                                <h5 className="text-md mb-2 text-nowrap text-gray-400 md:mb-1 md:text-[0.6rem]">
+                                <h5 className="md:text-md mb-1 text-xs text-nowrap text-gray-400 md:mb-1 md:text-[0.6rem]">
                                     Ulasan & Penilaian
                                 </h5>
-                                <div className="flex items-center gap-3 md:flex-col md:items-start md:gap-0">
-                                    <p className="text-4xl font-bold text-white md:text-[1.26rem]">
+                                <div className="flex items-center gap-2 md:flex-col md:items-start md:gap-0">
+                                    <p className="text-2xl font-bold text-white md:text-[1.26rem]">
                                         {game.rating}
                                     </p>
                                     <div className="flex text-[#FFC107] md:mt-1 md:mb-1">
@@ -529,9 +531,9 @@ export default function GameDetail({
                     </div>
 
                     {/* Forms Content */}
-                    <div className="mt-10 grid grid-cols-1 gap-8 lg:grid-cols-3">
+                    <div className="mt-6 grid grid-cols-1 gap-4 md:mt-10 md:gap-8 lg:grid-cols-3">
                         {/* Left Column (Inputs) */}
-                        <div className="flex flex-col gap-6 lg:col-span-2">
+                        <div className="flex flex-col gap-4 md:gap-6 lg:col-span-2">
                             {/* SECTION 1: Informasi Akun */}
                             <div className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg">
                                 {/* Header (Refactored from StepAccountInfo) */}
@@ -701,7 +703,7 @@ export default function GameDetail({
                                     </div>
 
                                     {/* Grid Products */}
-                                    <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:gap-4">
+                                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-4">
                                         {(productGroups[activeTab] || []).map(
                                             (product) => (
                                                 <div
@@ -712,7 +714,7 @@ export default function GameDetail({
                                                             product.id,
                                                         )
                                                     }
-                                                    className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[#1A1A24] p-4 transition-all hover:border-[#6a359c] ${data.product_id === product.id ? 'border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)] ring-1 ring-primary' : 'border-[#31334c]'}`}
+                                                    className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[#1A1A24] p-3 transition-all hover:border-[#6a359c] md:p-4 ${data.product_id === product.id ? 'border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)] ring-1 ring-primary' : 'border-[#31334c]'}`}
                                                 >
                                                     {/* Card Content */}
                                                     <div className="relative z-10 flex h-full flex-col justify-between">
@@ -841,7 +843,7 @@ export default function GameDetail({
                         </div>
 
                         {/* Right Column (Details & Payments) */}
-                        <div className="flex flex-col gap-6">
+                        <div className="flex flex-col gap-4 md:gap-6">
                             {/* SECTION 5: Metode Pembayaran */}
                             <div className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg">
                                 {/* Header */}
@@ -1096,9 +1098,9 @@ export default function GameDetail({
                                 </div>
                             </div>
 
-                            {/* SECTION 6: Rincian Pembayaran */}
+                            {/* SECTION 6: Rincian Pembayaran — hidden on mobile */}
                             {selectedProduct && selectedPayment && (
-                                <div className="mt-0 mb-20 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg md:mb-0">
+                                <div className="mt-0 mb-20 hidden overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg md:mb-0 md:block">
                                     <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
                                         <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
                                             6
@@ -1195,14 +1197,49 @@ export default function GameDetail({
                 </div>
             </div>
 
-            {/* Floating Action Menu (Bottom Docked) */}
-            <div className="fixed bottom-0 left-0 z-40 w-full border-t border-[#31334c] bg-[#1e1f29] shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
-                <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-4 px-4 py-4 sm:flex-row sm:px-6 lg:px-8">
-                    <div className="w-full text-center text-white sm:w-auto sm:text-left">
-                        <div className="text-sm text-gray-400">
+            {/* Floating Action Menu (Bottom Docked) — positioned above bottom nav on mobile */}
+            <div className="fixed bottom-[60px] left-0 z-[45] w-full border-t border-[#31334c] bg-[#1e1f29] shadow-[0_-10px_30px_rgba(0,0,0,0.5)] md:bottom-0">
+                <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-3 py-3 sm:flex-row sm:px-6 md:flex-row md:gap-4 md:px-4 md:py-4 lg:px-8">
+                    {/* Payment Breakdown — Mobile Only (displayed above total) */}
+                    {selectedProduct && selectedPayment && (
+                        <div className="w-full space-y-2 border-b border-[#31334c] pb-3 md:hidden">
+                            <div className="flex items-center justify-between text-xs">
+                                <span className="text-gray-400">
+                                    Harga Produk
+                                </span>
+                                <span className="font-medium text-white">
+                                    Rp{' '}
+                                    {(
+                                        selectedProduct.price * data.qty
+                                    ).toLocaleString('id-ID')}
+                                </span>
+                            </div>
+                            <div className="flex items-center justify-between text-xs">
+                                <span className="text-gray-400">
+                                    Biaya Admin ({selectedPayment.name})
+                                </span>
+                                <span className="font-medium text-white">
+                                    Rp{' '}
+                                    {(calculatedFees?.[selectedPayment.id] !==
+                                    undefined
+                                        ? calculatedFees[selectedPayment.id]
+                                        : Math.ceil(
+                                              selectedPayment.fee_flat +
+                                                  (selectedProduct.price *
+                                                      data.qty *
+                                                      selectedPayment.fee_percent) /
+                                                      100,
+                                          )
+                                    ).toLocaleString('id-ID')}
+                                </span>
+                            </div>
+                        </div>
+                    )}
+                    <div className="w-full text-left text-white md:w-auto">
+                        <div className="text-xs text-gray-400 md:text-sm">
                             Total Pembayaran
                         </div>
-                        <div className="text-xl font-black text-[#FFC107]">
+                        <div className="text-base font-black text-[#FFC107] md:text-xl">
                             {selectedProduct && selectedPayment
                                 ? `Rp ${(
                                       selectedProduct.price * data.qty +
@@ -1224,7 +1261,7 @@ export default function GameDetail({
                     {/* Animated Button */}
                     <button
                         onClick={handlePurchase}
-                        className="group relative flex w-full items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-primary to-[#9b4dec] px-12 py-3 text-lg font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] sm:w-auto"
+                        className="group relative flex w-full shrink-0 items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-primary to-[#9b4dec] px-6 py-2.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] md:w-auto md:px-12 md:py-3 md:text-lg"
                     >
                         {/* Particles effect (simulated CSS) */}
                         <div className="absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100">
@@ -1268,22 +1305,23 @@ export default function GameDetail({
 
             {/* Modal Konfirmasi Pesanan */}
             {showModal && (
-                <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-                    <div className="animate-slide-up w-full max-w-md overflow-hidden rounded-3xl border border-[#31334c] bg-[#242533] shadow-2xl">
+                <div className="animate-fade-in fixed inset-0 z-50 flex items-end justify-center bg-black/70 px-0 backdrop-blur-sm md:items-center md:px-4">
+                    <div className="animate-slide-up w-full max-w-md overflow-hidden rounded-t-3xl border border-[#31334c] bg-[#242533] shadow-2xl md:rounded-3xl">
                         {/* Modal Header & Graphic */}
-                        <div className="flex flex-col items-center p-8 pb-4 text-center">
-                            <div className="pointer-events-none relative mb-6 h-32 w-32">
+                        <div className="flex flex-col items-center p-5 pb-3 text-center md:p-8 md:pb-4">
+                            <div className="pointer-events-none relative mb-4 h-20 w-20 md:mb-6 md:h-32 md:w-32">
                                 {/* Success Circle Check - Replicating mockup graphic */}
                                 <div className="absolute inset-0 flex items-center justify-center rounded-full border-4 border-[#242533] bg-gradient-to-tr from-[#1e1f29] to-[#31334c] shadow-[0_0_30px_rgba(74,222,128,0.2)]">
                                     <svg
-                                        width="60"
-                                        height="60"
+                                        width="40"
+                                        height="40"
                                         viewBox="0 0 24 24"
                                         fill="none"
                                         stroke="#4ade80"
                                         strokeWidth="3"
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
+                                        className="md:h-[60px] md:w-[60px]"
                                     >
                                         <polyline points="20 6 9 17 4 12" />
                                     </svg>
@@ -1349,18 +1387,18 @@ export default function GameDetail({
                                 ></div>
                             </div>
 
-                            <h2 className="mb-2 text-2xl font-bold text-white">
+                            <h2 className="mb-1 text-xl font-bold text-white md:mb-2 md:text-2xl">
                                 Konfirmasi Pesanan
                             </h2>
-                            <p className="px-2 text-sm text-gray-400">
+                            <p className="px-2 text-xs text-gray-400 md:text-sm">
                                 Pastikan data akun dan produk yang dipilih valid
                                 dan sesuai.
                             </p>
                         </div>
 
                         {/* Order Summary Form */}
-                        <div className="p-6 pt-2">
-                            <div className="mb-6 rounded-2xl border border-[#31334c] bg-[#1a1a24] p-5 shadow-inner">
+                        <div className="p-4 pt-1 md:p-6 md:pt-2">
+                            <div className="mb-4 rounded-2xl border border-[#31334c] bg-[#1a1a24] p-3 shadow-inner md:mb-6 md:p-5">
                                 <div className="flex flex-col gap-3 text-sm">
                                     <div className="flex">
                                         <span className="w-24 shrink-0 font-bold text-white">

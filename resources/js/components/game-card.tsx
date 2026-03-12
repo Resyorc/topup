@@ -99,13 +99,11 @@ export default function GameCard({
          */
         <Link
             href={active ? undefined : targetHref}
-            className={
-                'group m-0 block transition-all duration-100 ease-in-out lg:m-3 ' +
-                (active
+            className={`group m-0 block transition-all duration-100 ease-in-out lg:m-3 ${
+                active
                     ? 'pointer-events-none cursor-default'
-                    : 'cursor-pointer hover:-translate-y-1') +
-                customClass
-            }
+                    : 'cursor-pointer hover:-translate-y-1'
+            } ${customClass}`}
         >
             <div
                 className={

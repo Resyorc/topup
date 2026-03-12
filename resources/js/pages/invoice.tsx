@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Head, useForm, Link, router } from '@inertiajs/react';
+import { Head, useForm, Link } from '@inertiajs/react';
+import axios from 'axios';
 import GuestLayout from '@/layouts/guest-layout';
 import GameCard from '@/components/game-card';
 import {
@@ -32,7 +33,7 @@ export default function InvoiceSearch({
 
     // Auto-polling effect for real-time updates
     useEffect(() => {
-        let pollInterval: NodeJS.Timeout;
+        let pollInterval: ReturnType<typeof setInterval> | undefined;
 
         // Only poll if we have an active invoice displayed and it's not yet successful/failed
         if (
@@ -42,9 +43,18 @@ export default function InvoiceSearch({
             )
         ) {
             pollInterval = setInterval(() => {
-                router.reload({
-                    only: ['initialInvoiceData'],
-                });
+                axios
+                    .get('/invoice/data', {
+                        params: { invoice_id: invoiceData.invoice_no },
+                    })
+                    .then((response) => {
+                        if (response.data?.success && response.data?.data) {
+                            setInvoiceData(response.data.data);
+                        }
+                    })
+                    .catch(() => {
+                        // Silently ignore polling errors and retry on next tick.
+                    });
             }, 3000); // Poll every 3 seconds
         }
 
@@ -63,85 +73,121 @@ export default function InvoiceSearch({
     };
 
     const lastInvoiceNoRef = React.useRef<string>('');
+    const animationIntervalRef = React.useRef<ReturnType<
+        typeof setInterval
+    > | null>(null);
 
     const paymentBadge = getPaymentStatusBadge(invoiceData?.payment_status);
     const transactionBadge = getTransactionStatusBadge(invoiceData?.status);
 
-    // Animate progress bar incrementally when invoice is loaded
+    // Animate progress bar incrementally when invoice status changes
     useEffect(() => {
-        if (invoiceData) {
-            let targetStep = 0;
-            const statusLower = invoiceData.status.toLowerCase();
-            switch (statusLower) {
-                case 'pending':
-                    targetStep = 1;
-                    break;
-                case 'paid':
-                    targetStep = 2;
-                    break;
-                case 'processing':
-                    targetStep = 3;
-                    break;
-                case 'success':
-                    targetStep = 4;
-                    break;
-                // 'failed' might remain at step 0 or step 1
-                default:
-                    targetStep = 0;
+        if (!invoiceData) {
+            setAnimatedStatus(0);
+            lastInvoiceNoRef.current = '';
+            if (animationIntervalRef.current) {
+                clearInterval(animationIntervalRef.current);
+                animationIntervalRef.current = null;
+            }
+            return;
+        }
+
+        let targetStep = 0;
+        const statusLower = invoiceData.status.toLowerCase();
+
+        switch (statusLower) {
+            case 'pending':
+                targetStep = 1;
+                break;
+            case 'paid':
+                targetStep = 2;
+                break;
+            case 'processing':
+                targetStep = 3;
+                break;
+            case 'success':
+                targetStep = 4;
+                break;
+            default:
+                targetStep = 0;
+        }
+
+        // If it's a completely different invoice, reset animation to 0
+        if (invoiceData.invoice_no !== lastInvoiceNoRef.current) {
+            lastInvoiceNoRef.current = invoiceData.invoice_no;
+            setAnimatedStatus(0);
+            if (animationIntervalRef.current) {
+                clearInterval(animationIntervalRef.current);
+                animationIntervalRef.current = null;
+            }
+            // Schedule next effect to animate to target
+            return;
+        }
+
+        // Animate if target is higher than current animated status
+        setAnimatedStatus((currentStatus) => {
+            // Clear previous interval if exists
+            if (animationIntervalRef.current) {
+                clearInterval(animationIntervalRef.current);
             }
 
-            let startStatus = animatedStatus;
-
-            // If it's a completely different invoice, reset animation to 0
-            if (invoiceData.invoice_no !== lastInvoiceNoRef.current) {
-                startStatus = 0;
-                setAnimatedStatus(0);
-                lastInvoiceNoRef.current = invoiceData.invoice_no;
-            }
-
-            if (targetStep > startStatus) {
-                const interval = setInterval(() => {
+            if (targetStep > currentStatus) {
+                // Start animation from current to target
+                animationIntervalRef.current = setInterval(() => {
                     setAnimatedStatus((prev) => {
-                        if (prev < targetStep) return prev + 1;
-                        clearInterval(interval);
-                        return prev;
+                        if (prev < targetStep) {
+                            return prev + 1;
+                        } else {
+                            if (animationIntervalRef.current) {
+                                clearInterval(animationIntervalRef.current);
+                                animationIntervalRef.current = null;
+                            }
+                            return prev;
+                        }
                     });
                 }, 500); // animate every 500ms
 
-                return () => clearInterval(interval);
-            } else if (targetStep < startStatus) {
-                setAnimatedStatus(targetStep);
+                return currentStatus; // Return current before animation starts
+            } else if (targetStep < currentStatus) {
+                // Reset if target is lower
+                return targetStep;
             }
-        } else {
-            setAnimatedStatus(0);
-            lastInvoiceNoRef.current = '';
-        }
-    }, [invoiceData]);
+            return currentStatus;
+        });
+
+        // Cleanup interval on unmount or status change
+        return () => {
+            if (animationIntervalRef.current) {
+                clearInterval(animationIntervalRef.current);
+                animationIntervalRef.current = null;
+            }
+        };
+    }, [invoiceData?.status, invoiceData?.invoice_no]);
 
     return (
         <GuestLayout>
             <Head title="Cek Invoice" />
 
-            <div className="relative flex min-h-[calc(100vh-106px)] items-center justify-center overflow-hidden py-20">
+            <div className="relative flex min-h-[calc(100vh-106px)] items-center justify-center overflow-hidden py-10 md:py-20">
                 {/* Dotted Texture Background - Top Right */}
                 <div className="pointer-events-none absolute top-0 right-0 h-96 w-96 bg-[radial-gradient(#fff_2px,transparent_2px)] [mask-image:radial-gradient(ellipse_at_top_right,black_10%,transparent_70%)] [background-size:24px_24px] opacity-[0.03]"></div>
 
                 {/* Dotted Texture Background - Bottom Left */}
                 <div className="pointer-events-none absolute bottom-0 left-0 h-96 w-96 bg-[radial-gradient(#fff_2px,transparent_2px)] [mask-image:radial-gradient(ellipse_at_bottom_left,black_10%,transparent_70%)] [background-size:24px_24px] opacity-[0.03]"></div>
 
-                <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center px-4 sm:px-6 lg:px-8">
+                <div className="relative z-10 mx-auto flex w-full max-w-5xl flex-col items-center px-3 sm:px-6 lg:px-8">
                     {/* Tampilkan Header & Pencarian hanya jika TIDAK ada invoiceData */}
                     {!invoiceData && (
                         <>
                             {/* Header Texts */}
-                            <div className="mb-10 text-center">
-                                <h1 className="mb-4 text-3xl font-bold text-white md:text-4xl">
+                            <div className="mb-6 text-center md:mb-10">
+                                <h1 className="mb-3 text-2xl font-bold text-white md:mb-4 md:text-4xl">
                                     Periksa Invoice Anda dengan{' '}
                                     <span className="text-[#FFC107]">
                                         Mudah dan Cepat
                                     </span>
                                 </h1>
-                                <p className="text-sm text-gray-300 md:text-base">
+                                <p className="text-xs text-gray-300 md:text-base">
                                     Lihat detail pembelian anda menggunakan
                                     nomor Invoice.
                                 </p>
@@ -149,7 +195,6 @@ export default function InvoiceSearch({
 
                             {/* Search Box */}
                             <div className="w-full max-w-5xl overflow-hidden rounded-2xl border border-[#31334c] bg-[#1e1f29] shadow-2xl">
-                                {/* Box Header */}
                                 <div className="border-b border-[#31334c] bg-white/10 px-6 py-4">
                                     <h2 className="text-lg font-bold text-white">
                                         Nomor Invoice
@@ -157,7 +202,7 @@ export default function InvoiceSearch({
                                 </div>
 
                                 {/* Box Body */}
-                                <div className="p-6 md:p-8">
+                                <div className="p-4 md:p-8">
                                     <form
                                         onSubmit={submit}
                                         className="flex flex-col gap-6"
@@ -198,14 +243,14 @@ export default function InvoiceSearch({
 
                     {/* DETAIL INVOICE SECTION (Tampil jika ada data invoice) */}
                     {invoiceData && (
-                        <div className="animate-fade-in-up mt-10 flex w-full max-w-5xl flex-col gap-6">
+                        <div className="animate-fade-in-up mt-6 flex w-full max-w-5xl flex-col gap-4 md:mt-10 md:gap-6">
                             {/* Status Bar Card */}
-                            <div className="relative overflow-hidden rounded-2xl border border-[#31334c] bg-[#1e1f29] p-6 shadow-lg md:p-10">
-                                <h2 className="mb-12 text-center text-2xl font-bold text-white">
+                            <div className="relative overflow-hidden rounded-2xl border border-[#31334c] bg-[#1e1f29] p-4 shadow-lg md:p-10">
+                                <h2 className="mb-8 text-center text-lg font-bold text-white md:mb-12 md:text-2xl">
                                     Detail Invoice
                                 </h2>
 
-                                <div className="relative mx-auto max-w-3xl px-8 pt-6 pb-20 md:px-12">
+                                <div className="relative mx-auto max-w-3xl px-4 pt-4 pb-16 md:px-12 md:pt-6 md:pb-20">
                                     {/* The Line Container itself is the anchor */}
                                     <div className="relative z-0 h-1.5 w-full rounded-full bg-[#31334c]">
                                         {/* Animated Progress Line Foreground */}
@@ -217,7 +262,7 @@ export default function InvoiceSearch({
                                         ></div>
 
                                         {/* Step 1: Transaksi Dibuat */}
-                                        <div className="absolute top-1/2 left-[0%] z-10 flex w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center md:w-32">
+                                        <div className="absolute top-1/2 left-[0%] z-10 flex w-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center md:w-32">
                                             <div
                                                 className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all delay-100 duration-500 ${animatedStatus >= 1 ? 'bg-[#4ade80] text-[#1e1f29]' : 'bg-[#31334c] text-gray-400'}`}
                                             >
@@ -244,7 +289,7 @@ export default function InvoiceSearch({
                                         </div>
 
                                         {/* Step 2: Pembayaran */}
-                                        <div className="absolute top-1/2 left-[33.333%] z-10 flex w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center md:w-32">
+                                        <div className="absolute top-1/2 left-[33.333%] z-10 flex w-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center md:w-32">
                                             <div
                                                 className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all delay-100 duration-500 ${animatedStatus >= 2 ? 'bg-[#4ade80] text-[#1e1f29]' : 'bg-[#31334c] text-gray-400'}`}
                                             >
@@ -281,7 +326,7 @@ export default function InvoiceSearch({
                                         </div>
 
                                         {/* Step 3: Sedang di Proses */}
-                                        <div className="absolute top-1/2 left-[66.666%] z-10 flex w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center md:w-32">
+                                        <div className="absolute top-1/2 left-[66.666%] z-10 flex w-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center md:w-32">
                                             <div
                                                 className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all delay-100 duration-500 ${animatedStatus >= 3 ? 'bg-[#4ade80] text-[#1e1f29]' : 'bg-[#31334c] text-gray-400'}`}
                                             >
@@ -311,7 +356,7 @@ export default function InvoiceSearch({
                                         </div>
 
                                         {/* Step 4: Transaksi Selesai */}
-                                        <div className="absolute top-1/2 left-[100%] z-10 flex w-24 -translate-x-1/2 -translate-y-1/2 flex-col items-center md:w-32">
+                                        <div className="absolute top-1/2 left-[100%] z-10 flex w-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center md:w-32">
                                             <div
                                                 className={`flex h-10 w-10 items-center justify-center rounded-xl shadow-[0_0_15px_rgba(74,222,128,0.3)] transition-all delay-100 duration-500 ${animatedStatus >= 4 ? 'bg-[#4ade80] text-[#1e1f29]' : 'bg-[#31334c] text-gray-400'}`}
                                             >
@@ -339,9 +384,9 @@ export default function InvoiceSearch({
                             </div>
 
                             {/* Account Info Card */}
-                            <div className="relative z-10 mt-26 flex min-h-[140px] flex-col items-center gap-8 overflow-visible rounded-2xl border border-[#31334c] bg-[#242533] p-6 shadow-lg md:flex-row md:items-stretch">
+                            <div className="relative z-10 mt-16 flex min-h-[140px] flex-col items-center gap-4 overflow-visible rounded-2xl border border-[#31334c] bg-[#242533] p-4 shadow-lg md:mt-26 md:flex-row md:items-stretch md:gap-8 md:p-6">
                                 {/* Game Card Component - Overlapping Top */}
-                                <div className="relative -mt-20 flex shrink-0 justify-center md:-mt-32 md:mb-0 md:w-40">
+                                <div className="relative -mt-16 flex shrink-0 justify-center md:-mt-32 md:mb-0 md:w-40">
                                     <GameCard
                                         cardSize="sm"
                                         title={invoiceData.game.name}
@@ -351,7 +396,7 @@ export default function InvoiceSearch({
                                         }
                                         active={true}
                                         slug={invoiceData.game.slug}
-                                        customClass="!m-0"
+                                        customClass="!m-0 !w-24 !h-[140px] md:!w-auto md:!h-auto"
                                     />
                                 </div>
 
@@ -368,11 +413,11 @@ export default function InvoiceSearch({
                                     )}
 
                                     {/* Informasi Akun */}
-                                    <div className="flex flex-col pt-2">
-                                        <h3 className="mb-4 text-lg font-bold text-white">
+                                    <div className="flex flex-col pt-0 md:pt-2">
+                                        <h3 className="mb-3 text-base font-bold text-white md:mb-4 md:text-lg">
                                             Informasi Akun
                                         </h3>
-                                        <div className="grid grid-cols-[100px_10px_1fr] gap-y-2 text-sm text-gray-300">
+                                        <div className="grid grid-cols-[80px_10px_1fr] gap-y-1.5 text-xs text-gray-300 md:grid-cols-[100px_10px_1fr] md:gap-y-2 md:text-sm">
                                             <span className="font-semibold text-white">
                                                 Username
                                             </span>
@@ -458,7 +503,7 @@ export default function InvoiceSearch({
                                     </div>
 
                                     {isPaymentOpen && (
-                                        <div className="flex flex-col gap-6 p-6 text-sm md:p-8">
+                                        <div className="flex flex-col gap-4 p-4 text-sm md:gap-6 md:p-8">
                                             <div className="grid grid-cols-1 gap-x-4 gap-y-4 border-b border-[#31334c] pb-6 sm:grid-cols-2">
                                                 <div className="flex items-center gap-2 font-semibold text-white">
                                                     Nomor Invoice
@@ -579,7 +624,7 @@ export default function InvoiceSearch({
                             )}
 
                             {/* Total Pembayaran Box */}
-                            <div className="flex items-center justify-between rounded-xl border border-[#31334c] bg-[#1e1f29] px-6 py-4 shadow-lg">
+                            <div className="flex items-center justify-between rounded-xl border border-[#31334c] bg-[#1e1f29] px-4 py-3 shadow-lg md:px-6 md:py-4">
                                 <span className="text-sm font-bold text-white md:text-base">
                                     Total Pembayaran
                                 </span>
@@ -624,7 +669,7 @@ export default function InvoiceSearch({
                                     href={invoiceData.payment_url}
                                     className="w-full"
                                 >
-                                    <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#4ade80] px-6 py-4 font-bold text-[#1e1f29] shadow-[0_0_20px_rgba(74,222,128,0.3)] transition hover:bg-[#34d399]">
+                                    <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#4ade80] px-4 py-3 font-bold text-[#1e1f29] shadow-[0_0_20px_rgba(74,222,128,0.3)] transition hover:bg-[#34d399] md:px-6 md:py-4">
                                         <svg
                                             width="20"
                                             height="20"
@@ -643,7 +688,7 @@ export default function InvoiceSearch({
                                 </a>
                             ) : (
                                 <Link href="/">
-                                    <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#9b4dec] px-6 py-4 font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:opacity-90">
+                                    <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#9b4dec] px-4 py-3 font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:opacity-90 md:px-6 md:py-4">
                                         <svg
                                             width="20"
                                             height="20"
