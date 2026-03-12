@@ -67,10 +67,14 @@ class DigiflazzCallbackController extends Controller
             ]);
             Log::info("Digiflazz Topup SUKSES for Invoice: {$refId}");
         } elseif ($status === 'gagal') {
+            $rc = $trxData['rc'] ?? 'Unknown RC';
             $transaction->update([
                 'status' => 'failed',
+                // Simpan rc ke database agar mudah debug kalau pelanggan komplain
+                // Pastikan kolom 'failure_reason' ada di tabel transactions (nullable string)
+                'failure_reason' => $rc,
             ]);
-            Log::info("Digiflazz Topup GAGAL for Invoice: {$refId} - " . ($trxData['rc'] ?? 'Unknown RC'));
+            Log::info("Digiflazz Topup GAGAL for Invoice: {$refId} - RC: {$rc}");
         }
 
         return response()->json(['success' => true]);

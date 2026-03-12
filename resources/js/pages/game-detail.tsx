@@ -19,6 +19,9 @@ interface PaymentMethod {
     fee_flat: number;
     fee_percent: number;
     minimum_amount: number;
+    is_coin?: boolean;
+    disabled?: boolean;
+    coin_balance?: number;
 }
 
 interface GameDetailProps {
@@ -73,6 +76,18 @@ export default function GameDetail({
         Object.keys(productGroups)[0] || '',
     );
     const [showModal, setShowModal] = useState(false);
+
+    const paymentMethodEntries = React.useMemo(
+        () =>
+            Object.entries(paymentMethods).sort(([a], [b]) => {
+                const aIsCoin = a === 'Krysta Coin';
+                const bIsCoin = b === 'Krysta Coin';
+
+                if (aIsCoin === bIsCoin) return 0;
+                return aIsCoin ? -1 : 1;
+            }),
+        [paymentMethods],
+    );
 
     // Collapse State for Payment Methods — all open by default
     const [openCategories, setOpenCategories] = useState<
@@ -859,7 +874,7 @@ export default function GameDetail({
                                 </div>
                                 <div className="space-y-4 p-4">
                                     {/* Iterating Categories */}
-                                    {Object.entries(paymentMethods).map(
+                                    {paymentMethodEntries.map(
                                         ([category, methods]) => {
                                             const isOpen =
                                                 openCategories[category] !==
@@ -870,6 +885,8 @@ export default function GameDetail({
                                                 category
                                                     .toUpperCase()
                                                     .includes('QRIS');
+                                            const isCoin =
+                                                category === 'Krysta Coin';
 
                                             return (
                                                 <div
@@ -880,18 +897,55 @@ export default function GameDetail({
                                                     <button
                                                         type="button"
                                                         onClick={() =>
+                                                            !isCoin &&
                                                             toggleCategory(
                                                                 category,
                                                             )
                                                         }
-                                                        className="flex w-full cursor-pointer items-center justify-between px-4 py-3"
+                                                        className={`flex w-full items-center justify-between px-4 py-3 ${isCoin ? 'cursor-default' : 'cursor-pointer'}`}
                                                     >
-                                                        <span className="text-sm font-semibold text-white">
-                                                            {category}
-                                                        </span>
+                                                        <div className="flex items-center gap-2">
+                                                            {/* Icon coin di group header */}
+                                                            {isCoin && (
+                                                                <div className="flex h-5 w-5 shrink-0 items-center justify-center overflow-hidden rounded-full">
+                                                                    {methods[0]
+                                                                        ?.icon_url ? (
+                                                                        <img
+                                                                            src={
+                                                                                methods[0]
+                                                                                    .icon_url
+                                                                            }
+                                                                            alt="Krysta Coin"
+                                                                            className="h-full w-full object-contain"
+                                                                        />
+                                                                    ) : (
+                                                                        <span className="text-[10px] font-bold text-gray-500">
+                                                                            COIN
+                                                                        </span>
+                                                                    )}
+                                                                </div>
+                                                            )}
+                                                            <span className="text-sm font-semibold text-white">
+                                                                {category}
+                                                            </span>
+                                                            {/* Badge saldo kalau sudah login */}
+                                                            {isCoin &&
+                                                                methods[0]
+                                                                    ?.disabled ===
+                                                                    false && (
+                                                                    <span className="rounded-full bg-[#2f2a3a] px-2 py-0.5 text-[10px] font-semibold text-[#c26eff]">
+                                                                        {methods[0]?.coin_balance?.toLocaleString(
+                                                                            'id-ID',
+                                                                        ) ??
+                                                                            0}{' '}
+                                                                        Coins
+                                                                    </span>
+                                                                )}
+                                                        </div>
 
-                                                        <div className="flex items-center gap-3">
-                                                            {!isQRIS && (
+                                                        {/* Icons preview — hanya untuk non-coin dan non-QRIS */}
+                                                        {!isCoin && !isQRIS && (
+                                                            <div className="flex items-center gap-3">
                                                                 <div className="flex gap-2">
                                                                     {methods
                                                                         .slice(
@@ -928,51 +982,60 @@ export default function GameDetail({
                                                                             ),
                                                                         )}
                                                                 </div>
-                                                            )}
-                                                            {!isQRIS && (
                                                                 <span
                                                                     className={`text-white transition ${isOpen ? 'rotate-180' : ''}`}
                                                                 >
                                                                     ▼
                                                                 </span>
-                                                            )}
-                                                        </div>
+                                                            </div>
+                                                        )}
                                                     </button>
 
                                                     {/* ===== CONTENT ===== */}
-                                                    {isOpen && (
+                                                    {(isOpen || isCoin) && (
                                                         <div className="space-y-2 bg-[#2f2a3a] p-3">
                                                             {methods.map(
                                                                 (
                                                                     method,
                                                                     index,
                                                                 ) => {
-                                                                    const isChecked =
-                                                                        data.payment_method ===
-                                                                        method.id;
-
                                                                     const subtotal =
                                                                         (selectedProduct?.price ||
                                                                             0) *
                                                                         data.qty;
+
+                                                                    // Validasi berbeda untuk coin vs metode biasa
                                                                     const isValidAmount =
                                                                         subtotal >=
                                                                         method.minimum_amount;
+
                                                                     const valid =
-                                                                        selectedProduct !=
-                                                                            null &&
-                                                                        isValidAmount;
+                                                                        method.is_coin
+                                                                            ? !method.disabled &&
+                                                                              (method.coin_balance ??
+                                                                                  0) >=
+                                                                                  subtotal &&
+                                                                              selectedProduct !=
+                                                                                  null
+                                                                            : selectedProduct !=
+                                                                                  null &&
+                                                                              isValidAmount;
 
-                                                                    // Fallback static calculation
+                                                                    const isChecked =
+                                                                        data.payment_method ===
+                                                                        method.id;
+
+                                                                    // Fee coin selalu 0
                                                                     const staticAdminFee =
-                                                                        Math.ceil(
-                                                                            method.fee_flat +
-                                                                                (subtotal *
-                                                                                    method.fee_percent) /
-                                                                                    100,
-                                                                        );
+                                                                        method.is_coin
+                                                                            ? 0
+                                                                            : Math.ceil(
+                                                                                  method.fee_flat +
+                                                                                      (subtotal *
+                                                                                          method.fee_percent) /
+                                                                                          100,
+                                                                              );
 
-                                                                    // Use API calculation ONLY if available in the dictionary
                                                                     const fetchedFee =
                                                                         calculatedFees
                                                                             ? calculatedFees[
@@ -981,16 +1044,137 @@ export default function GameDetail({
                                                                               ]
                                                                             : null;
                                                                     const displayAdminFee =
-                                                                        fetchedFee !==
-                                                                            null &&
-                                                                        fetchedFee !==
-                                                                            undefined
-                                                                            ? fetchedFee
-                                                                            : staticAdminFee;
+                                                                        method.is_coin
+                                                                            ? 0
+                                                                            : fetchedFee !==
+                                                                                    null &&
+                                                                                fetchedFee !==
+                                                                                    undefined
+                                                                              ? fetchedFee
+                                                                              : staticAdminFee;
                                                                     const displayTotal =
                                                                         subtotal +
                                                                         displayAdminFee;
 
+                                                                    // ===== COIN ITEM — BELUM LOGIN =====
+                                                                    if (
+                                                                        method.is_coin &&
+                                                                        method.disabled
+                                                                    ) {
+                                                                        return (
+                                                                            <div
+                                                                                key={
+                                                                                    method.id
+                                                                                }
+                                                                                className="flex w-full items-center justify-between rounded-lg bg-[#3a3545] p-3 opacity-70"
+                                                                            >
+                                                                                <div className="flex items-center gap-3">
+                                                                                    <div className="flex h-6 w-12 shrink-0 items-center justify-center overflow-hidden rounded">
+                                                                                        {method.icon_url ? (
+                                                                                            <img
+                                                                                                src={
+                                                                                                    method.icon_url
+                                                                                                }
+                                                                                                alt={
+                                                                                                    method.name
+                                                                                                }
+                                                                                                className="max-h-full max-w-full object-contain"
+                                                                                            />
+                                                                                        ) : (
+                                                                                            <span className="text-[10px] font-bold text-gray-500">
+                                                                                                COIN
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                    <div className="text-left">
+                                                                                        <p className="text-sm font-semibold text-white">
+                                                                                            {
+                                                                                                method.name
+                                                                                            }
+                                                                                        </p>
+                                                                                        <p className="text-xs text-yellow-400">
+                                                                                            Login
+                                                                                            untuk
+                                                                                            menggunakan
+                                                                                            Krysta
+                                                                                            Coin
+                                                                                        </p>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <a
+                                                                                    href="/login"
+                                                                                    className="shrink-0 rounded-lg bg-yellow-500 px-3 py-1.5 text-xs font-bold text-black transition hover:bg-yellow-400"
+                                                                                >
+                                                                                    Login
+                                                                                </a>
+                                                                            </div>
+                                                                        );
+                                                                    }
+
+                                                                    // ===== COIN ITEM — SUDAH LOGIN TAPI SALDO KURANG =====
+                                                                    if (
+                                                                        method.is_coin &&
+                                                                        !method.disabled &&
+                                                                        selectedProduct &&
+                                                                        (method.coin_balance ??
+                                                                            0) <
+                                                                            subtotal
+                                                                    ) {
+                                                                        return (
+                                                                            <div
+                                                                                key={
+                                                                                    method.id
+                                                                                }
+                                                                                className="flex w-full items-center justify-between rounded-lg bg-[#3a3545] p-3 opacity-60"
+                                                                            >
+                                                                                <div className="flex items-center gap-3">
+                                                                                    <div className="flex h-6 w-12 shrink-0 items-center justify-center overflow-hidden rounded">
+                                                                                        {method.icon_url ? (
+                                                                                            <img
+                                                                                                src={
+                                                                                                    method.icon_url
+                                                                                                }
+                                                                                                alt={
+                                                                                                    method.name
+                                                                                                }
+                                                                                                className="max-h-full max-w-full object-contain"
+                                                                                            />
+                                                                                        ) : (
+                                                                                            <span className="text-[10px] font-bold text-gray-500">
+                                                                                                COIN
+                                                                                            </span>
+                                                                                        )}
+                                                                                    </div>
+                                                                                    <div className="text-left">
+                                                                                        <p className="text-sm font-semibold text-white">
+                                                                                            {
+                                                                                                method.name
+                                                                                            }
+                                                                                        </p>
+                                                                                        <p className="text-xs text-red-400">
+                                                                                            Saldo
+                                                                                            tidak
+                                                                                            cukup
+                                                                                            (
+                                                                                            {method.coin_balance?.toLocaleString(
+                                                                                                'id-ID',
+                                                                                            ) ??
+                                                                                                0}{' '}
+                                                                                            Coins)
+                                                                                        </p>
+                                                                                    </div>
+                                                                                </div>
+                                                                                <p className="text-sm font-semibold text-white">
+                                                                                    Rp{' '}
+                                                                                    {subtotal.toLocaleString(
+                                                                                        'id-ID',
+                                                                                    )}
+                                                                                </p>
+                                                                            </div>
+                                                                        );
+                                                                    }
+
+                                                                    // ===== ITEM BIASA (Tripay + Coin yang valid) =====
                                                                     return (
                                                                         <button
                                                                             key={
@@ -1008,7 +1192,9 @@ export default function GameDetail({
                                                                             className={`flex w-full cursor-pointer items-center justify-between rounded-lg p-3 transition ${isChecked ? 'ring-2 ring-primary' : 'bg-[#3a3545]'} ${!valid && 'cursor-not-allowed opacity-50'}`}
                                                                         >
                                                                             <div className="flex items-center gap-3">
-                                                                                <div className="flex h-6 w-12 shrink-0 items-center justify-center overflow-hidden rounded bg-white p-0.5">
+                                                                                <div
+                                                                                    className={`flex h-6 w-12 shrink-0 items-center justify-center overflow-hidden rounded ${method.is_coin ? '' : 'bg-white p-0.5'}`}
+                                                                                >
                                                                                     {method.icon_url ? (
                                                                                         <img
                                                                                             src={
@@ -1021,7 +1207,7 @@ export default function GameDetail({
                                                                                         />
                                                                                     ) : (
                                                                                         <span className="text-[10px] font-bold text-gray-500">
-                                                                                            LOGO
+                                                                                            COIN
                                                                                         </span>
                                                                                     )}
                                                                                 </div>
@@ -1031,13 +1217,13 @@ export default function GameDetail({
                                                                                             method.name
                                                                                         }
                                                                                     </p>
-
                                                                                     {!selectedProduct ? (
                                                                                         <p className="text-xs text-red-400">
                                                                                             Pilih
                                                                                             Produk
                                                                                         </p>
-                                                                                    ) : !isValidAmount ? (
+                                                                                    ) : !isValidAmount &&
+                                                                                      !method.is_coin ? (
                                                                                         <p className="text-xs text-red-400">
                                                                                             Min.
                                                                                             Rp{' '}
@@ -1045,28 +1231,27 @@ export default function GameDetail({
                                                                                                 'id-ID',
                                                                                             )}
                                                                                         </p>
-                                                                                    ) : isValidAmount ? (
+                                                                                    ) : (
                                                                                         <p className="text-xs text-gray-300">
-                                                                                            Admin
-                                                                                            Rp{' '}
-                                                                                            {isCalculatingFee ? (
+                                                                                            {method.is_coin ? (
+                                                                                                'Bebas Biaya Admin'
+                                                                                            ) : isCalculatingFee ? (
                                                                                                 <span className="animate-pulse italic">
                                                                                                     Menghitung...
                                                                                                 </span>
                                                                                             ) : (
-                                                                                                displayAdminFee.toLocaleString(
-                                                                                                    'id-ID',
-                                                                                                )
+                                                                                                `Admin Rp ${displayAdminFee.toLocaleString('id-ID')}`
                                                                                             )}
                                                                                         </p>
-                                                                                    ) : null}
+                                                                                    )}
                                                                                 </div>
                                                                             </div>
 
                                                                             <div className="text-right">
                                                                                 <p className="text-sm font-semibold text-white">
                                                                                     Rp{' '}
-                                                                                    {isCalculatingFee ? (
+                                                                                    {isCalculatingFee &&
+                                                                                    !method.is_coin ? (
                                                                                         <span className="animate-pulse italic">
                                                                                             ...
                                                                                         </span>
@@ -1076,14 +1261,20 @@ export default function GameDetail({
                                                                                         )
                                                                                     )}
                                                                                 </p>
-
-                                                                                {method.id ===
-                                                                                    cheapestPaymentMethodId && (
-                                                                                    <span className="mt-1 inline-block rounded bg-purple-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]">
-                                                                                        BEST
-                                                                                        PRICE
+                                                                                {method.is_coin && (
+                                                                                    <span className="mt-1 inline-block rounded bg-[#c26eff] px-2 py-0.5 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(194,110,255,0.4)]">
+                                                                                        NO
+                                                                                        FEE
                                                                                     </span>
                                                                                 )}
+                                                                                {!method.is_coin &&
+                                                                                    method.id ===
+                                                                                        cheapestPaymentMethodId && (
+                                                                                        <span className="mt-1 inline-block rounded bg-purple-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]">
+                                                                                            BEST
+                                                                                            PRICE
+                                                                                        </span>
+                                                                                    )}
                                                                             </div>
                                                                         </button>
                                                                     );
@@ -1305,11 +1496,11 @@ export default function GameDetail({
 
             {/* Modal Konfirmasi Pesanan */}
             {showModal && (
-                <div className="animate-fade-in fixed inset-0 z-50 flex items-end justify-center bg-black/70 px-0 backdrop-blur-sm md:items-center md:px-4">
-                    <div className="animate-slide-up w-full max-w-md overflow-hidden rounded-t-3xl border border-[#31334c] bg-[#242533] shadow-2xl md:rounded-3xl">
+                <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3 py-4 backdrop-blur-sm sm:px-4 md:px-4">
+                    <div className="animate-slide-up max-h-[85vh] w-full max-w-md overflow-x-hidden overflow-y-auto rounded-3xl border border-[#31334c] bg-[#242533] shadow-2xl">
                         {/* Modal Header & Graphic */}
-                        <div className="flex flex-col items-center p-5 pb-3 text-center md:p-8 md:pb-4">
-                            <div className="pointer-events-none relative mb-4 h-20 w-20 md:mb-6 md:h-32 md:w-32">
+                        <div className="sticky top-0 z-10 flex flex-col items-center bg-[#242533] p-4 pb-2 text-center sm:p-5 sm:pb-3 md:p-8 md:pb-4">
+                            <div className="pointer-events-none relative mb-3 h-16 w-16 sm:mb-4 sm:h-20 sm:w-20 md:mb-6 md:h-32 md:w-32">
                                 {/* Success Circle Check - Replicating mockup graphic */}
                                 <div className="absolute inset-0 flex items-center justify-center rounded-full border-4 border-[#242533] bg-gradient-to-tr from-[#1e1f29] to-[#31334c] shadow-[0_0_30px_rgba(74,222,128,0.2)]">
                                     <svg
@@ -1387,29 +1578,26 @@ export default function GameDetail({
                                 ></div>
                             </div>
 
-                            <h2 className="mb-1 text-xl font-bold text-white md:mb-2 md:text-2xl">
+                            <h2 className="mb-1 text-lg font-bold text-white sm:text-xl md:mb-2 md:text-2xl">
                                 Konfirmasi Pesanan
                             </h2>
-                            <p className="px-2 text-xs text-gray-400 md:text-sm">
+                            <p className="px-1 text-xs text-gray-400 sm:px-2 md:text-sm">
                                 Pastikan data akun dan produk yang dipilih valid
                                 dan sesuai.
                             </p>
                         </div>
 
                         {/* Order Summary Form */}
-                        <div className="p-4 pt-1 md:p-6 md:pt-2">
-                            <div className="mb-4 rounded-2xl border border-[#31334c] bg-[#1a1a24] p-3 shadow-inner md:mb-6 md:p-5">
-                                <div className="flex flex-col gap-3 text-sm">
-                                    <div className="flex">
-                                        <span className="w-24 shrink-0 font-bold text-white">
+                        <div className="p-3 pt-1 sm:p-4 sm:pt-1 md:p-6 md:pt-2">
+                            <div className="mb-3 rounded-2xl border border-[#31334c] bg-[#1a1a24] p-2.5 shadow-inner sm:mb-4 sm:p-3 md:mb-6 md:p-5">
+                                <div className="flex flex-col gap-2 text-xs sm:gap-3 sm:text-sm">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="font-bold text-white">
                                             Username
                                         </span>
                                         <span
-                                            className={`min-h-[20px] font-medium ${validatedUsername?.startsWith('❌') ? 'text-red-400' : 'text-green-400'}`}
+                                            className={`min-h-[20px] text-xs font-medium sm:text-sm ${validatedUsername?.startsWith('❌') ? 'text-red-400' : 'text-green-400'}`}
                                         >
-                                            <span className="mr-2 font-normal text-gray-300">
-                                                :
-                                            </span>
                                             {isValidating ? (
                                                 <span className="inline-flex animate-pulse items-center gap-2 text-gray-400">
                                                     <svg
@@ -1439,32 +1627,31 @@ export default function GameDetail({
                                             )}
                                         </span>
                                     </div>
-                                    <div className="flex">
-                                        <span className="w-24 shrink-0 font-bold text-white">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="font-bold text-white">
                                             Server
                                         </span>
-                                        <span className="text-gray-300">
-                                            <span className="mr-2">:</span>
+                                        <span className="text-xs text-gray-300 sm:text-sm">
                                             {data.server_id || '-'}
                                         </span>
                                     </div>
-                                    <div className="flex">
-                                        <span className="w-24 shrink-0 font-bold text-white">
+                                    <div className="flex flex-col gap-1">
+                                        <span className="font-bold text-white">
                                             ID
                                         </span>
-                                        <span className="text-gray-300">
-                                            <span className="mr-2">:</span>
+                                        <span className="text-xs text-gray-300 sm:text-sm">
                                             {data.user_id || '-'}
                                         </span>
                                     </div>
-                                    <div className="mt-2 flex border-t border-[#31334c] pt-2">
-                                        <span className="w-24 shrink-0 font-bold text-white">
-                                            Product
-                                        </span>
-                                        <span className="text-gray-300">
-                                            <span className="mr-2">:</span>
-                                            {game.name}
-                                        </span>
+                                    <div className="mt-2 border-t border-[#31334c] pt-2">
+                                        <div className="flex flex-col gap-1">
+                                            <span className="font-bold text-white">
+                                                Product
+                                            </span>
+                                            <span className="text-xs text-gray-300 sm:text-sm">
+                                                {game.name}
+                                            </span>
+                                        </div>
                                     </div>
                                     <div className="flex">
                                         <span className="w-24 shrink-0 font-bold text-white">

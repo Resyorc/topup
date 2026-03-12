@@ -46,6 +46,15 @@ class TripayCallbackController extends Controller
             ], 400);
         }
 
+        // Sesuai dokumentasi Tripay — hanya proses closed payment (is_closed_payment = 1)
+        // Open payment (0) tidak didukung karena jumlah bayar bisa berbeda
+        if (!isset($data->is_closed_payment) || $data->is_closed_payment !== 1) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Open payment is not supported',
+            ], 400);
+        }
+
         // Check existence first before acquiring lock
         $transaction = Transaction::where('invoice_id', $data->merchant_ref)->first();
 

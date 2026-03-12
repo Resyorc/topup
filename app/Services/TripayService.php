@@ -27,9 +27,6 @@ class TripayService
             : 'https://tripay.co.id/api-sandbox/';
     }
 
-    /**
-     * Get pre-configured HTTP client
-     */
     private function client(): PendingRequest
     {
         return Http::baseUrl($this->baseUrl)
@@ -41,62 +38,65 @@ class TripayService
             ]);
     }
 
-    /**
-     * Generate HMAC-SHA256 signature
-     */
     public function generateSignature(string $merchantRef, int $amount): string
     {
         $signaturePayload = $this->merchantCode . $merchantRef . $amount;
         return hash_hmac('sha256', $signaturePayload, $this->privateKey);
     }
 
-    /**
-     * Get available active payment channels
-     */
     public function getPaymentChannels(): array
     {
         $response = $this->client()->get('merchant/payment-channel');
-
         if (!$response->successful()) {
             throw new Exception('Tripay API Error: ' . $response->body());
         }
-
         return $response->json('data') ?? [];
     }
 
-    /**
-     * Calculate Tripay fee dynamically
-     */
     public function calculateFee(int $amount, ?string $method = null): array
     {
         $payload = ['amount' => $amount];
         if ($method) {
             $payload['code'] = $method;
         }
-
         $response = $this->client()->get('merchant/fee-calculator', $payload);
-
         if (!$response->successful()) {
             throw new Exception('Tripay API Error: ' . $response->body());
         }
-
         return $response->json('data') ?? [];
     }
 
     /**
      * Create a payment transaction
+     *
+     * @param int $expiredTime Unix timestamp kapan transaksi expired.
+     *                         Default 0 = otomatis set 1 jam dari sekarang.
      */
-    public function createTransaction(string $method, string $merchantRef, int $amount, string $customerName, string $customerEmail, string $customerPhone, array $orderItems): array
-    {
+    public function createTransaction(
+        string $method,
+        string $merchantRef,
+        int $amount,
+        string $customerName,
+        string $customerEmail,
+        string $customerPhone,
+        array $orderItems,
+        int $expiredTime = 0
+    ): array {
+        // Default expired 1 jam dari sekarang jika tidak di-set
+        if ($expiredTime === 0) {
+            $expiredTime = time() + (1 * 60 * 60);
+        }
+
         $payload = [
-            'method' => $method,
-            'merchant_ref' => $merchantRef,
-            'amount' => $amount,
-            'customer_name' => $customerName,
+            'method'         => $method,
+            'merchant_ref'   => $merchantRef,
+            'amount'         => $amount,
+            'customer_name'  => $customerName,
             'customer_email' => $customerEmail,
             'customer_phone' => $customerPhone,
-            'order_items' => $orderItems,
-            'signature' => $this->generateSignature($merchantRef, $amount),
+            'order_items'    => $orderItems,
+            'expired_time'   => $expiredTime,
+            'signature'      => $this->generateSignature($merchantRef, $amount),
         ];
 
         $response = $this->client()->post('transaction/create', $payload);
