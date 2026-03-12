@@ -158,9 +158,12 @@ export default function Dashboard() {
                                 </div>
                             </div>
 
-                            <button className="w-full rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-6 py-2.5 text-sm font-bold text-white shadow-lg transition hover:opacity-90 md:w-auto">
+                            <Link
+                                href="/dashboard/topup-saldo"
+                                className="w-full rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-6 py-2.5 text-center text-sm font-bold text-white shadow-lg transition hover:opacity-90 md:w-auto"
+                            >
                                 Top Up
-                            </button>
+                            </Link>
                         </div>
                     </div>
                 </div>

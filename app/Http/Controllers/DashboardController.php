@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaction;
+use App\Services\TransactionExpiryService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class DashboardController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, TransactionExpiryService $transactionExpiryService)
     {
         $user = $request->user();
+
+        $transactionExpiryService->expireOverdue(userId: (int) $user->id);
 
         $baseTodayQuery = Transaction::query()
             ->where('user_id', $user->id)
@@ -23,12 +26,7 @@ class DashboardController extends Controller
             'failed' => (clone $baseTodayQuery)->where('status', 'failed')->count(),
         ];
 
-        $coinsBalance = (int) round(
-            Transaction::query()
-                ->where('user_id', $user->id)
-                ->where('status', 'success')
-                ->sum('amount')
-        );
+        $coinsBalance = (int) ($user->fresh()->coin_balance ?? 0);
 
         $recentTransactions = Transaction::query()
             ->where('user_id', $user->id)

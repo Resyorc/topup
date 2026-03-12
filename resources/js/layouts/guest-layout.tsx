@@ -109,6 +109,27 @@ export default function GuestLayout({
 
                         {auth?.user ? (
                             <div className="flex items-center gap-2 md:gap-3">
+                                <Link
+                                    href="/dashboard"
+                                    className={`hidden h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 transition md:flex ${isActive('/dashboard') ? 'border-primary bg-primary/20 text-white shadow-[0_0_12px_rgba(131,39,216,0.35)]' : 'border-primary/40 bg-white/10 text-gray-300 hover:bg-white/20'}`}
+                                    aria-label="Buka dashboard"
+                                >
+                                    <svg
+                                        width="20"
+                                        height="20"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                        className="md:[height:24px] md:[width:24px]"
+                                    >
+                                        <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                        <circle cx="12" cy="7" r="4" />
+                                    </svg>
+                                </Link>
+
                                 {/* Mobile-only: notification bell */}
                                 <button className="relative flex h-9 w-9 items-center justify-center rounded-full border border-gray-500/50 bg-white/10 transition hover:bg-white/20 md:hidden">
                                     <svg

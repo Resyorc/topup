@@ -25,9 +25,6 @@ class GamesTable
                 ImageColumn::make('image'),
                 IconColumn::make('is_active')
                     ->boolean(),
-                IconColumn::make('is_check_id')
-                    ->boolean()
-                    ->label('Cek ID'),
                 TextColumn::make('created_at')
                     ->dateTime()
                     ->sortable()

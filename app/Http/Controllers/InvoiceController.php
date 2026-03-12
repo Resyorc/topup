@@ -5,15 +5,18 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Transaction;
+use App\Services\TransactionExpiryService;
 
 class InvoiceController extends Controller
 {
-    public function show(Request $request)
+    public function show(Request $request, TransactionExpiryService $transactionExpiryService)
     {
         $invoiceId = $request->query('invoice_id');
         $invoiceData = null;
 
         if ($invoiceId) {
+            $transactionExpiryService->expireOverdue($invoiceId);
+
             $transaction = Transaction::with(['product.game', 'user'])
                 ->where('invoice_id', $invoiceId)
                 ->first();
@@ -31,11 +34,13 @@ class InvoiceController extends Controller
         ]);
     }
 
-    public function data(Request $request)
+    public function data(Request $request, TransactionExpiryService $transactionExpiryService)
     {
         $validated = $request->validate([
             'invoice_id' => 'required|string',
         ]);
+
+        $transactionExpiryService->expireOverdue($validated['invoice_id']);
 
         $transaction = Transaction::with(['product.game', 'user'])
             ->where('invoice_id', $validated['invoice_id'])

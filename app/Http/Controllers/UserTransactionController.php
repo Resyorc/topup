@@ -3,14 +3,17 @@
 namespace App\Http\Controllers;
 
 use App\Models\Transaction;
+use App\Services\TransactionExpiryService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class UserTransactionController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, TransactionExpiryService $transactionExpiryService)
     {
         $user = $request->user();
+
+        $transactionExpiryService->expireOverdue(userId: (int) $user->id);
 
         $filters = [
             'status' => $request->string('status')->toString(),
