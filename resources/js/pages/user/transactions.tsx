@@ -1,31 +1,101 @@
-import { usePage } from '@inertiajs/react';
+import { useForm, usePage } from '@inertiajs/react';
 import UserLayout from '@/layouts/user-layout';
+import {
+    formatCurrency,
+    formatDate,
+    getPaymentStatusBadge,
+    getTransactionStatusBadge,
+} from '@/lib';
+
+interface TransactionItem {
+    id: string;
+    invoice_id: string;
+    game_name: string;
+    product_name: string;
+    amount: number;
+    created_at: string | null;
+    status: string;
+    payment_status: string;
+}
+
+interface TransactionFilters {
+    status: string;
+    payment_status: string;
+    start_date: string;
+    end_date: string;
+    search: string;
+}
 
 export default function Transactions() {
-    const { auth } = usePage().props as any;
+    const pageProps = usePage().props as any;
+    const filters: TransactionFilters = pageProps.filters ?? {
+        status: '',
+        payment_status: '',
+        start_date: '',
+        end_date: '',
+        search: '',
+    };
+    const transactions: TransactionItem[] = pageProps.transactions ?? [];
+
+    const { data, setData, get, processing } = useForm<TransactionFilters>({
+        status: filters.status,
+        payment_status: filters.payment_status,
+        start_date: filters.start_date,
+        end_date: filters.end_date,
+        search: filters.search,
+    });
+
+    const onApplyFilters = (e: React.FormEvent) => {
+        e.preventDefault();
+
+        get('/dashboard/transactions', {
+            preserveState: true,
+            preserveScroll: true,
+            replace: true,
+        });
+    };
 
     return (
         <UserLayout title="Riwayat Transaksi">
-            <h2 className="text-2xl font-bold text-white mb-6">Riwayat Transaksi</h2>
-            
+            <h2 className="mb-6 text-2xl font-bold text-white">
+                Riwayat Transaksi
+            </h2>
+
             {/* Filter Section */}
-            <div className="bg-[#1e1f29] rounded-xl border border-[#31334c] p-6 mb-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
-                    {/* Status */}
+            <form
+                onSubmit={onApplyFilters}
+                className="mb-6 rounded-xl border border-[#31334c] bg-[#1e1f29] p-6"
+            >
+                <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <div>
-                        <label className="block text-sm font-bold text-white mb-2">Status</label>
-                        <select className="w-full bg-[#1A1A24] border border-[#31334c] text-sm text-gray-300 rounded-lg focus:ring-primary focus:border-primary block p-2.5 outline-none transition">
+                        <label className="mb-2 block text-sm font-bold text-white">
+                            Status
+                        </label>
+                        <select
+                            value={data.status}
+                            onChange={(e) => setData('status', e.target.value)}
+                            className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-2.5 text-sm text-gray-300 transition outline-none focus:border-primary focus:ring-primary"
+                        >
                             <option value="">Semua</option>
+                            <option value="pending">Menunggu</option>
+                            <option value="paid">Paid</option>
+                            <option value="processing">Processing</option>
                             <option value="success">Success</option>
-                            <option value="pending">Pending</option>
                             <option value="failed">Failed</option>
                         </select>
                     </div>
 
-                    {/* Status Pembayaran */}
                     <div>
-                        <label className="block text-sm font-bold text-white mb-2">Status Pembayaran</label>
-                        <select className="w-full bg-[#1A1A24] border border-[#31334c] text-sm text-gray-300 rounded-lg focus:ring-primary focus:border-primary block p-2.5 outline-none transition">
+                        <label className="mb-2 block text-sm font-bold text-white">
+                            Status Pembayaran
+                        </label>
+                        <select
+                            value={data.payment_status}
+                            onChange={(e) =>
+                                setData('payment_status', e.target.value)
+                            }
+                            className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-2.5 text-sm text-gray-300 transition outline-none focus:border-primary focus:ring-primary"
+                        >
                             <option value="">Semua</option>
                             <option value="paid">Paid</option>
                             <option value="unpaid">Unpaid</option>
@@ -33,26 +103,34 @@ export default function Transactions() {
                         </select>
                     </div>
 
-                    {/* Tanggal Mulai */}
                     <div>
-                        <label className="block text-sm font-bold text-white mb-2">Tanggal Mulai</label>
+                        <label className="mb-2 block text-sm font-bold text-white">
+                            Tanggal Mulai
+                        </label>
                         <div className="relative">
-                            <input 
-                                type="date" 
-                                className="w-full bg-[#1A1A24] border border-[#31334c] text-sm text-gray-300 rounded-lg focus:ring-primary focus:border-primary block p-2.5 outline-none transition [&::-webkit-calendar-picker-indicator]:invert-[0.6]"
-                                defaultValue="2025-07-23"
+                            <input
+                                type="date"
+                                value={data.start_date}
+                                onChange={(e) =>
+                                    setData('start_date', e.target.value)
+                                }
+                                className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-2.5 text-sm text-gray-300 transition outline-none focus:border-primary focus:ring-primary [&::-webkit-calendar-picker-indicator]:invert-[0.6]"
                             />
                         </div>
                     </div>
 
-                    {/* Tanggal Selesai */}
                     <div>
-                        <label className="block text-sm font-bold text-white mb-2">Tanggal Selesai</label>
+                        <label className="mb-2 block text-sm font-bold text-white">
+                            Tanggal Selesai
+                        </label>
                         <div className="relative">
-                            <input 
-                                type="date" 
-                                className="w-full bg-[#1A1A24] border border-[#31334c] text-sm text-gray-300 rounded-lg focus:ring-primary focus:border-primary block p-2.5 outline-none transition [&::-webkit-calendar-picker-indicator]:invert-[0.6]"
-                                defaultValue="2025-07-23"
+                            <input
+                                type="date"
+                                value={data.end_date}
+                                onChange={(e) =>
+                                    setData('end_date', e.target.value)
+                                }
+                                className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-2.5 text-sm text-gray-300 transition outline-none focus:border-primary focus:ring-primary [&::-webkit-calendar-picker-indicator]:invert-[0.6]"
                             />
                         </div>
                     </div>
@@ -60,75 +138,153 @@ export default function Transactions() {
 
                 {/* Cari Search Bar */}
                 <div>
-                    <label className="block text-sm font-bold text-white mb-2">Cari</label>
+                    <label className="mb-2 block text-sm font-bold text-white">
+                        Cari
+                    </label>
                     <div className="relative">
-                        <input 
-                            type="text" 
-                            placeholder="Masukkan Deskripsi" 
-                            className="w-full bg-[#1A1A24] border border-[#31334c] text-sm text-gray-300 rounded-lg focus:ring-primary focus:border-primary block p-2.5 pr-10 outline-none transition"
+                        <input
+                            type="text"
+                            value={data.search}
+                            onChange={(e) => setData('search', e.target.value)}
+                            placeholder="Masukkan nomor invoice, produk, atau game"
+                            className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-2.5 pr-10 text-sm text-gray-300 transition outline-none focus:border-primary focus:ring-primary"
                         />
-                        <div className="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none text-gray-400">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" x2="16.65" y1="21" y2="16.65"/></svg>
+                        <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
+                            <svg
+                                width="18"
+                                height="18"
+                                viewBox="0 0 24 24"
+                                fill="none"
+                                stroke="currentColor"
+                                strokeWidth="2"
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                            >
+                                <circle cx="11" cy="11" r="8" />
+                                <line x1="21" x2="16.65" y1="21" y2="16.65" />
+                            </svg>
                         </div>
                     </div>
                 </div>
-            </div>
+
+                <div className="mt-4 flex flex-wrap gap-3">
+                    <button
+                        type="submit"
+                        disabled={processing}
+                        className="rounded-lg bg-primary px-4 py-2 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-60"
+                    >
+                        {processing ? 'Memuat...' : 'Terapkan Filter'}
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => {
+                            setData({
+                                status: '',
+                                payment_status: '',
+                                start_date: '',
+                                end_date: '',
+                                search: '',
+                            });
+                            get('/dashboard/transactions', {
+                                preserveState: true,
+                                preserveScroll: true,
+                                replace: true,
+                            });
+                        }}
+                        className="rounded-lg border border-[#31334c] px-4 py-2 text-sm font-bold text-gray-300 transition hover:bg-white/5"
+                    >
+                        Reset
+                    </button>
+                </div>
+            </form>
 
             {/* Table Section */}
-            <div className="bg-[#1e1f29] rounded-xl overflow-hidden border border-[#31334c]">
+            <div className="overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29]">
                 <div className="overflow-x-auto">
-                    <table className="w-full text-sm text-left">
-                        <thead className="text-xs font-bold text-white uppercase bg-white/10 border-b border-[#31334c]">
+                    <table className="w-full text-left text-sm">
+                        <thead className="border-b border-[#31334c] bg-white/10 text-xs font-bold text-white uppercase">
                             <tr>
-                                <th scope="col" className="px-6 py-4">Nomor Invoice</th>
-                                <th scope="col" className="px-6 py-4">Produk</th>
-                                <th scope="col" className="px-6 py-4">Item</th>
-                                <th scope="col" className="px-6 py-4">Harga</th>
-                                <th scope="col" className="px-6 py-4">Tanggal</th>
-                                <th scope="col" className="px-6 py-4">Status</th>
+                                <th scope="col" className="px-6 py-4">
+                                    Nomor Invoice
+                                </th>
+                                <th scope="col" className="px-6 py-4">
+                                    Produk
+                                </th>
+                                <th scope="col" className="px-6 py-4">
+                                    Item
+                                </th>
+                                <th scope="col" className="px-6 py-4">
+                                    Harga
+                                </th>
+                                <th scope="col" className="px-6 py-4">
+                                    Tanggal
+                                </th>
+                                <th scope="col" className="px-6 py-4">
+                                    Status
+                                </th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr className="border-b border-[#31334c] hover:bg-white/5 transition">
-                                <td className="px-6 py-4 font-medium text-white">LDO1B2C7ECEDE...</td>
-                                <td className="px-6 py-4 text-gray-300">Mobile Legends</td>
-                                <td className="px-6 py-4 text-gray-300">Diamonds</td>
-                                <td className="px-6 py-4 text-gray-300">Rp 5.330</td>
-                                <td className="px-6 py-4 text-gray-300">11/07/2025</td>
-                                <td className="px-6 py-4">
-                                    <span className="bg-green-500/20 text-green-400 border border-green-500/30 text-[10px] font-bold px-2 py-1 rounded">SUCCESS</span>
-                                </td>
-                            </tr>
-                            <tr className="border-b border-[#31334c] hover:bg-white/5 transition">
-                                <td className="px-6 py-4 font-medium text-white">LDO1B2C7ECED7...</td>
-                                <td className="px-6 py-4 text-gray-300">Mobile Legends</td>
-                                <td className="px-6 py-4 text-gray-300">Diamonds</td>
-                                <td className="px-6 py-4 text-gray-300">Rp 5.330</td>
-                                <td className="px-6 py-4 text-gray-300">09/07/2025</td>
-                                <td className="px-6 py-4">
-                                    <span className="bg-green-500/20 text-green-400 border border-green-500/30 text-[10px] font-bold px-2 py-1 rounded">SUCCESS</span>
-                                </td>
-                            </tr>
-                            <tr className="border-b border-[#31334c] hover:bg-white/5 transition">
-                                <td className="px-6 py-4 font-medium text-white">LDO1B2C7ECED7...</td>
-                                <td className="px-6 py-4 text-gray-300">Mobile Legends</td>
-                                <td className="px-6 py-4 text-gray-300">Diamonds</td>
-                                <td className="px-6 py-4 text-gray-300">Rp 5.330</td>
-                                <td className="px-6 py-4 text-gray-300">09/07/2025</td>
-                                <td className="px-6 py-4">
-                                    <span className="bg-green-500/20 text-green-400 border border-green-500/30 text-[10px] font-bold px-2 py-1 rounded">SUCCESS</span>
-                                </td>
-                            </tr>
-                            <tr className="border-b border-[#31334c] hover:bg-white/5 transition">
-                                <td className="px-6 py-4 font-medium text-white">LDO1B2C7ECED7...</td>
-                                <td className="px-6 py-4 text-gray-300">Mobile Legends</td>
-                                <td className="px-6 py-4 text-gray-300">Diamonds</td>
-                                <td className="px-6 py-4 text-gray-300">Rp 5.330</td>
-                                <td className="px-6 py-4 text-gray-300">09/07/2025</td>
-                                <td className="px-6 py-4">
-                                    <span className="bg-green-500/20 text-green-400 border border-green-500/30 text-[10px] font-bold px-2 py-1 rounded">SUCCESS</span>
-                                </td>
-                            </tr>
+                            {transactions.length === 0 && (
+                                <tr>
+                                    <td
+                                        colSpan={6}
+                                        className="px-6 py-8 text-center text-gray-400"
+                                    >
+                                        Data transaksi tidak ditemukan.
+                                    </td>
+                                </tr>
+                            )}
+                            {transactions.map((transaction) => {
+                                const transactionBadge =
+                                    getTransactionStatusBadge(
+                                        transaction.status,
+                                    );
+                                const paymentBadge = getPaymentStatusBadge(
+                                    transaction.payment_status,
+                                );
+
+                                return (
+                                    <tr
+                                        key={transaction.id}
+                                        className="border-b border-[#31334c] transition hover:bg-white/5"
+                                    >
+                                        <td className="px-6 py-4 font-medium text-white">
+                                            {transaction.invoice_id}
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-300">
+                                            {transaction.game_name}
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-300">
+                                            {transaction.product_name}
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-300">
+                                            {formatCurrency(transaction.amount)}
+                                        </td>
+                                        <td className="px-6 py-4 text-gray-300">
+                                            {transaction.created_at
+                                                ? formatDate(
+                                                      transaction.created_at,
+                                                  )
+                                                : '-'}
+                                        </td>
+                                        <td className="px-6 py-4">
+                                            <div className="flex flex-col gap-1">
+                                                <span
+                                                    className={`${transactionBadge.className} w-fit rounded px-2 py-1 text-[10px] font-bold uppercase`}
+                                                >
+                                                    {transactionBadge.label}
+                                                </span>
+                                                <span
+                                                    className={`${paymentBadge.className} w-fit rounded px-2 py-1 text-[10px] font-bold uppercase`}
+                                                >
+                                                    {paymentBadge.label}
+                                                </span>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })}
                         </tbody>
                     </table>
                 </div>

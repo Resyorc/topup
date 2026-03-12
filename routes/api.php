@@ -13,7 +13,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // Checkout API
-Route::middleware('throttle:10,1')->group(function () {
+Route::middleware(['web', 'throttle:10,1'])->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'store']);
     Route::post('/calculate-fee', [CheckoutController::class, 'calculateFee']);
 });

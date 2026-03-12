@@ -4,14 +4,17 @@ use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\UserTransactionController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/order/{slug}', [App\Http\Controllers\GameController::class, 'show'])->name('game.detail');
 Route::get('/invoice', [App\Http\Controllers\InvoiceController::class, 'show'])->name('invoice');
+Route::get('/invoice/data', [App\Http\Controllers\InvoiceController::class, 'data'])->name('invoice.data');
 
 Route::middleware(['auth', 'verified'])->group(function () {
-    Route::inertia('dashboard', 'dashboard')->name('dashboard');
-    Route::inertia('dashboard/transactions', 'user/transactions')->name('dashboard.transactions');
+    Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
+    Route::get('dashboard/transactions', [UserTransactionController::class, 'index'])->name('dashboard.transactions');
     Route::inertia('dashboard/settings', 'user/settings')->name('dashboard.settings');
 });
 
