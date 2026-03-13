@@ -80,7 +80,7 @@ export default function TopupSaldo() {
                                 </label>
                                 <input
                                     type="number"
-                                    min={1000}
+                                    min={10000}
                                     step={1000}
                                     value={data.amount}
                                     onChange={(event) =>

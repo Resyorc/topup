@@ -3,6 +3,7 @@ import { Head, useForm, router } from '@inertiajs/react';
 import GuestLayout from '@/layouts/guest-layout';
 import GameCard from '@/components/game-card';
 import axios from 'axios';
+import { swalError, swalWarning } from '@/lib/swal';
 
 interface Product {
     id: string;
@@ -302,15 +303,15 @@ export default function GameDetail({
 
     const handlePurchase = () => {
         if (!data.user_id) {
-            alert('Silakan masukkan ID pemain Anda.');
+            swalWarning('Silakan masukkan ID pemain Anda.');
             return;
         }
         if (!selectedProduct) {
-            alert('Silakan pilih produk yang ingin dibeli.');
+            swalWarning('Silakan pilih produk yang ingin dibeli.');
             return;
         }
         if (!selectedPayment) {
-            alert('Silakan pilih metode pembayaran.');
+            swalWarning('Silakan pilih metode pembayaran.');
             return;
         }
         if (
@@ -318,9 +319,7 @@ export default function GameDetail({
             !validatedUsername ||
             validatedUsername.startsWith('❌')
         ) {
-            alert(
-                'ID belum diisi atau tidak valid/ditemukan. Mohon periksa kembali.',
-            );
+            swalWarning('ID belum diisi atau tidak valid/ditemukan. Mohon periksa kembali.');
             return;
         }
 
@@ -330,7 +329,7 @@ export default function GameDetail({
     const submitOrder = async () => {
         if (isSubmitting) return;
         if (!validatedUsername || validatedUsername.startsWith('❌')) {
-            alert('ID belum valid. Pastikan data akun benar.');
+            swalWarning('ID belum valid. Pastikan data akun benar.');
             return;
         }
         const payload = {
@@ -355,10 +354,10 @@ export default function GameDetail({
                         response.data.data.transaction.invoice_id,
                 );
             } else {
-                alert('Gagal membuat pesanan. Silakan coba lagi.');
+                swalError('Gagal membuat pesanan. Silakan coba lagi.');
             }
         } catch (error: any) {
-            alert(
+            swalError(
                 error.response?.data?.message ||
                     'Terjadi kesalahan saat memproses pesanan.',
             );
@@ -370,11 +369,11 @@ export default function GameDetail({
 
     const handleCheckoutClick = () => {
         if (!data.product_id) {
-            alert('Silakan pilih produk terlebih dahulu!');
+            swalWarning('Silakan pilih produk terlebih dahulu!');
             return;
         }
         if (!data.payment_method) {
-            alert('Silakan pilih metode pembayaran!');
+            swalWarning('Silakan pilih metode pembayaran!');
             return;
         }
         setShowModal(true);
@@ -382,8 +381,6 @@ export default function GameDetail({
 
     const confirmCheckout = () => {
         setShowModal(false);
-        // post('/checkout', { ... })
-        alert('Fitur Checkout akan segera diproses!');
     };
 
     return (
