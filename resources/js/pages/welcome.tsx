@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Head, Link } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import GuestLayout from '@/layouts/guest-layout';
 import HeroBanner from '@/components/hero-banner';
 import PromoBanner from '@/components/promo-banner';
@@ -25,13 +25,17 @@ interface WelcomeProps {
     categories: Category[];
     games: Game[];
     trendingGames: Game[];
+    trendingTotalSold: number;
 }
 
 export default function Welcome({
     categories,
     games,
     trendingGames,
+    trendingTotalSold,
 }: WelcomeProps) {
+    const { auth } = usePage<{ auth: { user: unknown } }>().props;
+
     // Default active category tab to the first category if it exists
     const [activeTab, setActiveTab] = useState<number | null>(
         categories.length > 0 ? categories[0].id : null,
@@ -80,7 +84,7 @@ export default function Welcome({
                                 </h2>
                                 <div className="mt-1 flex items-baseline gap-2">
                                     <span className="text-lg font-bold text-primary md:text-xl">
-                                        12.928
+                                        {trendingTotalSold.toLocaleString('id-ID')}
                                     </span>
                                     <span className="text-xs font-medium text-gray-400 md:text-sm">
                                         Orang
@@ -204,7 +208,7 @@ export default function Welcome({
                 </section>
             </div>
 
-            <PromoBanner />
+            {!auth.user && <PromoBanner />}
         </GuestLayout>
     );
 }

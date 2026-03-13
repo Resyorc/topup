@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Models\Game;
 use App\Models\Transaction;
 use Illuminate\Support\Facades\Log;
 
@@ -65,6 +66,13 @@ class DigiflazzCallbackController extends Controller
                 'status' => 'success',
                 'sn' => $trxData['sn'] ?? null,
             ]);
+
+            // Increment total_sold di tabel games
+            $gameId = $transaction->load('product')->product->game_id ?? null;
+            if ($gameId) {
+                Game::where('id', $gameId)->increment('total_sold');
+            }
+
             Log::info("Digiflazz Topup SUKSES for Invoice: {$refId}");
         } elseif ($status === 'gagal') {
             $rc = $trxData['rc'] ?? 'Unknown RC';

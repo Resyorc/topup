@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\CoinTopup;
+use App\Models\GameReview;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use App\Models\Transaction;
@@ -23,6 +25,23 @@ class InvoiceController extends Controller
 
             if ($transaction) {
                 $invoiceData = $this->mapTransactionToInvoiceData($transaction);
+                $invoiceData['has_reviewed'] = GameReview::where('transaction_id', $invoiceId)->exists();
+            } else {
+                $coinTopup = CoinTopup::with('user')
+                    ->where('invoice_id', $invoiceId)
+                    ->first();
+
+                if ($coinTopup) {
+                    if ($coinTopup->status === 'pending' && $coinTopup->expired_at?->isPast()) {
+                        $coinTopup->update([
+                            'status' => 'expired',
+                            'failure_reason' => 'Pembayaran melewati batas waktu (expired).',
+                        ]);
+                        $coinTopup->refresh();
+                    }
+
+                    $invoiceData = $this->mapCoinTopupToInvoiceData($coinTopup);
+                }
             }
         }
 
@@ -46,22 +65,42 @@ class InvoiceController extends Controller
             ->where('invoice_id', $validated['invoice_id'])
             ->first();
 
-        if (! $transaction) {
+        if ($transaction) {
+            return response()->json([
+                'success' => true,
+                'data' => $this->mapTransactionToInvoiceData($transaction),
+            ]);
+        }
+
+        $coinTopup = CoinTopup::with('user')
+            ->where('invoice_id', $validated['invoice_id'])
+            ->first();
+
+        if (! $coinTopup) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invoice tidak ditemukan.',
             ], 404);
         }
 
+        if ($coinTopup->status === 'pending' && $coinTopup->expired_at?->isPast()) {
+            $coinTopup->update([
+                'status' => 'expired',
+                'failure_reason' => 'Pembayaran melewati batas waktu (expired).',
+            ]);
+            $coinTopup->refresh();
+        }
+
         return response()->json([
             'success' => true,
-            'data' => $this->mapTransactionToInvoiceData($transaction),
+            'data' => $this->mapCoinTopupToInvoiceData($coinTopup),
         ]);
     }
 
     private function mapTransactionToInvoiceData(Transaction $transaction): array
     {
         return [
+            'type' => 'transaction',
             'invoice_no'     => $transaction->invoice_id,
             'whatsapp'       => maskPhoneNumber($transaction->customer_whatsapp),
             'status'         => $transaction->status,
@@ -102,6 +141,61 @@ class InvoiceController extends Controller
             'qty'   => 1,
             'fee'   => 0,
             'total' => (int) $transaction->amount,
+        ];
+    }
+
+    private function mapCoinTopupToInvoiceData(CoinTopup $coinTopup): array
+    {
+        $displayStatus = match ($coinTopup->status) {
+            'paid' => 'success',
+            'expired' => 'failed',
+            default => $coinTopup->status,
+        };
+
+        $paymentStatus = match ($coinTopup->status) {
+            'paid' => 'paid',
+            'expired' => 'expired',
+            default => $coinTopup->status,
+        };
+
+        return [
+            'type' => 'coin_topup',
+            'invoice_no' => $coinTopup->invoice_id,
+            'whatsapp' => maskPhoneNumber($coinTopup->customer_whatsapp),
+            'status' => $displayStatus,
+            'payment_status' => $paymentStatus,
+            'method' => $coinTopup->payment_name ?? $coinTopup->payment_method ?? 'QRIS',
+            'created_at' => $coinTopup->created_at->format('d M Y H:i:s'),
+            'paid_at' => ($coinTopup->paid_at ?? $coinTopup->updated_at)?->format('Y/m/d H:i:s T'),
+            'expired_at' => $coinTopup->expired_at?->format('d M Y H:i:s'),
+            'expired_at_unix' => $coinTopup->expired_at?->timestamp,
+            'game' => [
+                'name' => 'Krysta Coins',
+                'publisher' => 'Top Up Saldo',
+                'image' => '/coin.png',
+                'slug' => '',
+            ],
+            'account' => [
+                'username' => $coinTopup->user?->name ?? 'User',
+                'id' => 'Top Up Saldo',
+                'server' => '-',
+            ],
+            'product' => [
+                'name' => number_format((int) $coinTopup->amount, 0, ',', '.') . ' Coins',
+                'extra' => 'Top Up Saldo',
+                'icon_url' => '/coin.png',
+            ],
+            'payment_url' => $coinTopup->payment_url,
+            'pay_code' => $coinTopup->pay_code,
+            'qr_url' => $coinTopup->qr_url,
+            'pay_url' => $coinTopup->pay_url,
+            'instructions' => isset($coinTopup->api_logs['instructions'])
+                ? $coinTopup->api_logs['instructions']
+                : [],
+            'price' => (int) $coinTopup->amount,
+            'qty' => 1,
+            'fee' => 0,
+            'total' => (int) $coinTopup->amount,
         ];
     }
 }

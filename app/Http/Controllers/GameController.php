@@ -32,8 +32,10 @@ class GameController extends Controller
             'publisher' => $game->publisher ?? 'Nebu Publisher',
             'thumbnail' => $game->thumbnail ? '/storage/' . $game->thumbnail : null,
             'image' => $game->image ? '/storage/' . $game->image : null,
-            'rating' => 4.99,
-            'reviews_count' => '10.2M+',
+            'rating' => $game->reviews_count > 0 ? number_format($game->rating, 2) : '—',
+            'reviews_count' => $game->reviews_count >= 1000
+                ? number_format($game->reviews_count / 1000, 1) . 'K+'
+                : (string) $game->reviews_count,
         ];
 
         // 3. Group products via dedicated service (per-game dynamic rules)

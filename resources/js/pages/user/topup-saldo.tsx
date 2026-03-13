@@ -1,62 +1,16 @@
-import React, { useState } from 'react';
 import { Head, useForm, usePage } from '@inertiajs/react';
 import UserLayout from '@/layouts/user-layout';
-
-type PaymentMethod = {
-    id: string;
-    name: string;
-    icon_url?: string | null;
-    minimum_amount: number;
-};
-
-type ActiveTopup = {
-    invoice_id: string;
-    amount: number;
-    status: string;
-    payment_name: string | null;
-    payment_url: string | null;
-    pay_code: string | null;
-    qr_url: string | null;
-    pay_url: string | null;
-    expired_at: string | null;
-    failure_reason: string | null;
-};
 
 export default function TopupSaldo() {
     const page = usePage().props as {
         coinsBalance?: number;
-        paymentMethods?: Record<string, PaymentMethod[]>;
-        activeTopup?: ActiveTopup | null;
         auth?: { user?: { phone?: string | null } };
     };
 
     const coinsBalance = page.coinsBalance ?? 0;
-    const paymentMethods = page.paymentMethods ?? {};
-    const activeTopup = page.activeTopup ?? null;
-
-    const paymentMethodEntries = React.useMemo(
-        () => Object.entries(paymentMethods),
-        [paymentMethods],
-    );
-
-    const [openCategories, setOpenCategories] = useState<
-        Record<string, boolean>
-    >(() =>
-        Object.fromEntries(
-            Object.keys(paymentMethods).map((key) => [key, true]),
-        ),
-    );
-
-    const toggleCategory = (category: string) => {
-        setOpenCategories((prev) => ({
-            ...prev,
-            [category]: !prev[category],
-        }));
-    };
 
     const { data, setData, post, processing, errors } = useForm({
         amount: 10000,
-        payment_method: '',
         customer_whatsapp: page.auth?.user?.phone ?? '',
     });
 
@@ -87,7 +41,7 @@ export default function TopupSaldo() {
                     </div>
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-[1.2fr,0.8fr]">
+                <div className="grid gap-6 lg:grid-cols-[1.15fr,0.85fr]">
                     <div className="rounded-2xl border border-[#31334c] bg-[#1e1f29] p-6">
                         <h2 className="text-lg font-semibold text-white">
                             Buat Top Up Baru
@@ -167,174 +121,42 @@ export default function TopupSaldo() {
                                 )}
                             </div>
 
-                            <div className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg">
-                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
-                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
-                                        1
+                            <div className="rounded-2xl border border-[#31334c] bg-[#252834] p-5">
+                                <div className="flex items-center gap-3">
+                                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white p-2">
+                                        <img
+                                            src="/qris.svg"
+                                            alt="QRIS"
+                                            className="h-full w-full object-contain"
+                                        />
                                     </div>
-                                    <div className="flex flex-1 items-center bg-[#31334c] px-4">
-                                        <h4 className="text-sm font-semibold text-white">
+                                    <div>
+                                        <p className="text-sm font-semibold text-white">
                                             Metode Pembayaran
-                                        </h4>
+                                        </p>
+                                        <p className="text-sm text-gray-300">
+                                            QRIS
+                                        </p>
                                     </div>
                                 </div>
-
-                                <div className="space-y-4 p-4">
-                                    {paymentMethodEntries.map(
-                                        ([category, methods]) => {
-                                            const isOpen =
-                                                openCategories[category] !==
-                                                false;
-
-                                            return (
-                                                <div
-                                                    key={category}
-                                                    className="overflow-hidden rounded-lg bg-[#3a3545]"
-                                                >
-                                                    <button
-                                                        type="button"
-                                                        onClick={() =>
-                                                            toggleCategory(
-                                                                category,
-                                                            )
-                                                        }
-                                                        className="flex w-full cursor-pointer items-center justify-between px-4 py-3"
-                                                    >
-                                                        <span className="text-sm font-semibold text-white">
-                                                            {category}
-                                                        </span>
-                                                        <div className="flex items-center gap-3">
-                                                            <div className="flex gap-2">
-                                                                {methods
-                                                                    .slice(0, 4)
-                                                                    .map(
-                                                                        (
-                                                                            pm,
-                                                                            i,
-                                                                        ) => (
-                                                                            <div
-                                                                                key={`${pm.id}-${i}`}
-                                                                                className="flex h-6 w-10 shrink-0 items-center justify-center overflow-hidden rounded bg-white p-0.5 md:w-12"
-                                                                            >
-                                                                                {pm.icon_url ? (
-                                                                                    <img
-                                                                                        src={
-                                                                                            pm.icon_url
-                                                                                        }
-                                                                                        alt={
-                                                                                            pm.name
-                                                                                        }
-                                                                                        className="max-h-full max-w-full object-contain"
-                                                                                    />
-                                                                                ) : (
-                                                                                    <span className="text-[8px] font-bold text-gray-500">
-                                                                                        LOGO
-                                                                                    </span>
-                                                                                )}
-                                                                            </div>
-                                                                        ),
-                                                                    )}
-                                                            </div>
-                                                            <span
-                                                                className={`text-white transition ${isOpen ? 'rotate-180' : ''}`}
-                                                            >
-                                                                ▼
-                                                            </span>
-                                                        </div>
-                                                    </button>
-
-                                                    {isOpen && (
-                                                        <div className="space-y-2 bg-[#2f2a3a] p-3">
-                                                            {methods.map(
-                                                                (method) => {
-                                                                    const isChecked =
-                                                                        data.payment_method ===
-                                                                        method.id;
-
-                                                                    return (
-                                                                        <button
-                                                                            key={
-                                                                                method.id
-                                                                            }
-                                                                            type="button"
-                                                                            onClick={() =>
-                                                                                setData(
-                                                                                    'payment_method',
-                                                                                    method.id,
-                                                                                )
-                                                                            }
-                                                                            className={`w-full rounded-lg border p-3 text-left transition ${isChecked ? 'border-primary bg-primary/10' : 'border-[#4b4558] bg-[#3a3545] hover:border-primary/60 hover:bg-[#433f4f]'}`}
-                                                                        >
-                                                                            <div className="flex items-center justify-between gap-3">
-                                                                                <div className="flex min-w-0 items-center gap-3">
-                                                                                    <div className="flex h-7 w-12 shrink-0 items-center justify-center overflow-hidden rounded bg-white p-0.5">
-                                                                                        {method.icon_url ? (
-                                                                                            <img
-                                                                                                src={
-                                                                                                    method.icon_url
-                                                                                                }
-                                                                                                alt={
-                                                                                                    method.name
-                                                                                                }
-                                                                                                className="max-h-full max-w-full object-contain"
-                                                                                            />
-                                                                                        ) : (
-                                                                                            <span className="text-[9px] font-bold text-gray-500">
-                                                                                                LOGO
-                                                                                            </span>
-                                                                                        )}
-                                                                                    </div>
-                                                                                    <div className="min-w-0">
-                                                                                        <p className="truncate text-sm font-semibold text-white">
-                                                                                            {
-                                                                                                method.name
-                                                                                            }
-                                                                                        </p>
-                                                                                        <p className="text-[11px] text-gray-400">
-                                                                                            Min.
-                                                                                            Rp{' '}
-                                                                                            {method.minimum_amount.toLocaleString(
-                                                                                                'id-ID',
-                                                                                            )}
-                                                                                        </p>
-                                                                                    </div>
-                                                                                </div>
-
-                                                                                {isChecked && (
-                                                                                    <span className="rounded-full bg-primary px-2 py-0.5 text-[10px] font-semibold text-white">
-                                                                                        Dipilih
-                                                                                    </span>
-                                                                                )}
-                                                                            </div>
-                                                                        </button>
-                                                                    );
-                                                                },
-                                                            )}
-                                                        </div>
-                                                    )}
-                                                </div>
-                                            );
-                                        },
-                                    )}
-                                </div>
-
-                                {errors.payment_method && (
-                                    <p className="mt-2 text-sm text-red-400">
-                                        {errors.payment_method}
-                                    </p>
-                                )}
+                                <p className="mt-4 text-sm leading-6 text-gray-400">
+                                    Top up Krysta Coins hanya menggunakan QRIS.
+                                    Setelah invoice dibuat, pembayaran dan QR
+                                    code akan ditampilkan di halaman invoice.
+                                </p>
                             </div>
 
                             <button
                                 type="submit"
-                                disabled={processing || !data.payment_method}
+                                disabled={processing}
                                 className="w-full rounded-xl bg-linear-to-r from-primary to-[#9b4dec] px-5 py-3 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                {processing ? 'Memproses...' : 'Buat Top Up'}
+                                {processing
+                                    ? 'Membuat Invoice...'
+                                    : 'Buat Invoice QRIS'}
                             </button>
                         </form>
                     </div>
-
                     <div className="space-y-6">
                         <div className="rounded-2xl border border-[#31334c] bg-[#1e1f29] p-6">
                             <h2 className="text-lg font-semibold text-white">
@@ -343,110 +165,15 @@ export default function TopupSaldo() {
                             <ul className="mt-4 space-y-3 text-sm text-gray-300">
                                 <li>1. 1 Krysta Coin = 1 Rupiah.</li>
                                 <li>
-                                    2. Saldo akan masuk otomatis setelah Tripay
-                                    memberi status PAID.
+                                    2. Pembayaran top up saldo hanya melalui
+                                    QRIS.
                                 </li>
                                 <li>
-                                    3. Top up yang melewati batas waktu akan
-                                    otomatis expired.
+                                    3. Setelah invoice dibuat, selesaikan
+                                    pembayaran di halaman invoice.
                                 </li>
                             </ul>
                         </div>
-
-                        {activeTopup && (
-                            <div className="rounded-2xl border border-[#31334c] bg-[#1e1f29] p-6">
-                                <h2 className="text-lg font-semibold text-white">
-                                    Top Up Terakhir
-                                </h2>
-                                <div className="mt-4 space-y-3 text-sm text-gray-300">
-                                    <div>
-                                        <span className="text-gray-500">
-                                            Invoice:
-                                        </span>{' '}
-                                        {activeTopup.invoice_id}
-                                    </div>
-                                    <div>
-                                        <span className="text-gray-500">
-                                            Nominal:
-                                        </span>{' '}
-                                        Rp{' '}
-                                        {activeTopup.amount.toLocaleString(
-                                            'id-ID',
-                                        )}
-                                    </div>
-                                    <div>
-                                        <span className="text-gray-500">
-                                            Status:
-                                        </span>{' '}
-                                        <span className="font-semibold text-white uppercase">
-                                            {activeTopup.status}
-                                        </span>
-                                    </div>
-                                    <div>
-                                        <span className="text-gray-500">
-                                            Metode:
-                                        </span>{' '}
-                                        {activeTopup.payment_name ?? '-'}
-                                    </div>
-                                    {activeTopup.pay_code && (
-                                        <div>
-                                            <span className="text-gray-500">
-                                                Kode Bayar:
-                                            </span>{' '}
-                                            <span className="font-semibold text-white">
-                                                {activeTopup.pay_code}
-                                            </span>
-                                        </div>
-                                    )}
-                                    {activeTopup.expired_at && (
-                                        <div>
-                                            <span className="text-gray-500">
-                                                Expired:
-                                            </span>{' '}
-                                            {activeTopup.expired_at}
-                                        </div>
-                                    )}
-                                    {activeTopup.failure_reason && (
-                                        <div className="rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-red-300">
-                                            {activeTopup.failure_reason}
-                                        </div>
-                                    )}
-                                </div>
-
-                                <div className="mt-5 flex flex-col gap-3">
-                                    {activeTopup.payment_url && (
-                                        <a
-                                            href={activeTopup.payment_url}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="inline-flex items-center justify-center rounded-xl bg-primary px-4 py-3 text-sm font-semibold text-white transition hover:opacity-90"
-                                        >
-                                            Lanjutkan Pembayaran
-                                        </a>
-                                    )}
-                                    {activeTopup.qr_url && (
-                                        <a
-                                            href={activeTopup.qr_url}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="inline-flex items-center justify-center rounded-xl border border-[#31334c] px-4 py-3 text-sm font-semibold text-gray-200 transition hover:bg-white/5"
-                                        >
-                                            Lihat QR Pembayaran
-                                        </a>
-                                    )}
-                                    {activeTopup.pay_url && (
-                                        <a
-                                            href={activeTopup.pay_url}
-                                            target="_blank"
-                                            rel="noreferrer"
-                                            className="inline-flex items-center justify-center rounded-xl border border-[#31334c] px-4 py-3 text-sm font-semibold text-gray-200 transition hover:bg-white/5"
-                                        >
-                                            Buka Pembayaran
-                                        </a>
-                                    )}
-                                </div>
-                            </div>
-                        )}
                     </div>
                 </div>
             </section>
