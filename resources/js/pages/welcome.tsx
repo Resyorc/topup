@@ -19,6 +19,7 @@ interface Game {
     image: string | null;
     thumbnail: string | null;
     publisher: string | null;
+    total_sold?: number;
 }
 
 interface WelcomeProps {

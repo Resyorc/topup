@@ -25,6 +25,7 @@ class HomeController extends Controller
 
         // 3. Trending games — 5 game paling banyak dibeli (all-time)
         $trendingGames = Game::where('is_active', true)
+            ->where('total_sold', '>', 0)
             ->select('id', 'category_id', 'name', 'slug', 'image', 'thumbnail', 'publisher', 'total_sold')
             ->orderByDesc('total_sold')
             ->limit(5)
