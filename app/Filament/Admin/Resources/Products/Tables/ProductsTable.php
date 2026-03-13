@@ -22,7 +22,7 @@ class ProductsTable
                 TextColumn::make('name')
                     ->searchable(),
                 TextColumn::make('price_cost')
-                    ->money()
+                    ->money('IDR', locale: 'id')
                     ->sortable(),
                 TextColumn::make('margin_flat')
                     ->numeric()

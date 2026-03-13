@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Game;
 use App\Models\Transaction;
+use App\Models\User;
+use App\Services\CoinService;
 use Illuminate\Support\Facades\Log;
 
 class DigiflazzCallbackController extends Controller
@@ -78,10 +80,28 @@ class DigiflazzCallbackController extends Controller
             $rc = $trxData['rc'] ?? 'Unknown RC';
             $transaction->update([
                 'status' => 'failed',
-                // Simpan rc ke database agar mudah debug kalau pelanggan komplain
-                // Pastikan kolom 'failure_reason' ada di tabel transactions (nullable string)
                 'failure_reason' => $rc,
             ]);
+
+            // Refund coin jika transaksi dibayar dengan COIN
+            if ($transaction->payment_method === 'COIN' && $transaction->user_id) {
+                try {
+                    $user = User::find($transaction->user_id);
+                    if ($user) {
+                        $refundAmount = (int) ($transaction->amount + $transaction->fee);
+                        app(CoinService::class)->credit(
+                            $user,
+                            $refundAmount,
+                            'Refund pesanan gagal: ' . $transaction->invoice_id,
+                            $transaction->invoice_id,
+                        );
+                        Log::info("Coin refunded {$refundAmount} to user {$user->id} for failed invoice: {$refId}");
+                    }
+                } catch (\Exception $e) {
+                    Log::error("Coin refund failed for invoice {$refId}: " . $e->getMessage());
+                }
+            }
+
             Log::info("Digiflazz Topup GAGAL for Invoice: {$refId} - RC: {$rc}");
         }
 

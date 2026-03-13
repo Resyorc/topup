@@ -24,6 +24,7 @@ export default function UserLayout({
                             className={`flex items-center gap-3 rounded-xl px-6 py-4 transition ${
                                 url.startsWith('/dashboard') &&
                                 !url.includes('/dashboard/transactions') &&
+                                !url.includes('/dashboard/coin-history') &&
                                 !url.includes('/dashboard/settings')
                                     ? 'bg-gradient-to-r from-primary to-[#9b4dec] font-semibold text-white shadow-lg shadow-primary/20'
                                     : 'font-medium text-gray-300 hover:bg-white/5 hover:text-white'
@@ -88,6 +89,22 @@ export default function UserLayout({
                                 <path d="M16 10a4 4 0 0 1-8 0" />
                             </svg>
                             Transaksi
+                        </Link>
+
+                        <Link
+                            href="/dashboard/coin-history"
+                            className={`flex items-center gap-3 rounded-xl px-6 py-4 transition ${
+                                url.includes('/dashboard/coin-history')
+                                    ? 'bg-gradient-to-r from-primary to-[#9b4dec] font-semibold text-white shadow-lg shadow-primary/20'
+                                    : 'font-medium text-gray-300 hover:bg-white/5 hover:text-white'
+                            }`}
+                        >
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                <circle cx="12" cy="12" r="8" />
+                                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" />
+                                <path d="M12 17h.01" />
+                            </svg>
+                            Riwayat Coin
                         </Link>
 
                         <Link

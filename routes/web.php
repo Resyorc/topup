@@ -7,6 +7,7 @@ use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\CoinTopupController;
 use App\Http\Controllers\UserTransactionController;
+use App\Http\Controllers\CoinHistoryController;
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
 Route::get('/order/{slug}', [App\Http\Controllers\GameController::class, 'show'])->name('game.detail');
@@ -20,6 +21,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('dashboard/topup-saldo', [CoinTopupController::class, 'index'])->name('dashboard.coin-topups.index');
     Route::post('dashboard/topup-saldo', [CoinTopupController::class, 'store'])->name('dashboard.coin-topups.store');
     Route::get('dashboard/transactions', [UserTransactionController::class, 'index'])->name('dashboard.transactions');
+    Route::get('dashboard/coin-history', [CoinHistoryController::class, 'index'])->name('dashboard.coin-history');
     Route::inertia('dashboard/settings', 'user/settings')->name('dashboard.settings');
 });
 

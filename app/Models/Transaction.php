@@ -22,6 +22,7 @@ class Transaction extends Model
         'customer_name',
         'customer_email',      // ✅ tambah
         'amount',
+        'fee',
         'profit',
         'status',
         'sn',

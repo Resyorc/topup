@@ -26,10 +26,10 @@ class TransactionsTable
                 TextColumn::make('customer_whatsapp')
                     ->searchable(),
                 TextColumn::make('amount')
-                    ->money('IDR')
+                    ->money('IDR', locale: 'id')
                     ->sortable(),
                 TextColumn::make('profit')
-                    ->money('IDR')
+                    ->money('IDR', locale: 'id')
                     ->sortable(),
                 TextColumn::make('status')
                     ->badge(),
