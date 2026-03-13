@@ -2,11 +2,16 @@
 
 namespace App\Providers;
 
+use App\Listeners\LogRegistered;
+use App\Listeners\LogSuccessfulLogin;
 use App\Models\Transaction;
 use App\Observers\TransactionObserver;
 use Carbon\CarbonImmutable;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Registered;
 use Illuminate\Support\Facades\Date;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Validation\Rules\Password;
 
@@ -26,6 +31,8 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Transaction::observe(TransactionObserver::class);
+        Event::listen(Login::class, LogSuccessfulLogin::class);
+        Event::listen(Registered::class, LogRegistered::class);
         $this->configureDefaults();
     }
 

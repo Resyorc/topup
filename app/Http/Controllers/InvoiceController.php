@@ -24,6 +24,10 @@ class InvoiceController extends Controller
                 ->first();
 
             if ($transaction) {
+                if ($transaction->user_id && $transaction->user_id !== auth()->id()) {
+                    abort(403);
+                }
+
                 $invoiceData = $this->mapTransactionToInvoiceData($transaction);
                 $invoiceData['has_reviewed'] = GameReview::where('transaction_id', $invoiceId)->exists();
             } else {
@@ -32,6 +36,10 @@ class InvoiceController extends Controller
                     ->first();
 
                 if ($coinTopup) {
+                    if ($coinTopup->user_id && $coinTopup->user_id !== auth()->id()) {
+                        abort(403);
+                    }
+
                     if ($coinTopup->status === 'pending' && $coinTopup->expired_at?->isPast()) {
                         $coinTopup->update([
                             'status' => 'expired',
@@ -66,6 +74,10 @@ class InvoiceController extends Controller
             ->first();
 
         if ($transaction) {
+            if ($transaction->user_id && $transaction->user_id !== auth()->id()) {
+                return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
+            }
+
             return response()->json([
                 'success' => true,
                 'data' => $this->mapTransactionToInvoiceData($transaction),
@@ -81,6 +93,10 @@ class InvoiceController extends Controller
                 'success' => false,
                 'message' => 'Invoice tidak ditemukan.',
             ], 404);
+        }
+
+        if ($coinTopup->user_id && $coinTopup->user_id !== auth()->id()) {
+            return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
         if ($coinTopup->status === 'pending' && $coinTopup->expired_at?->isPast()) {

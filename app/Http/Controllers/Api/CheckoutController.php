@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Product;
 use App\Models\Transaction;
+use App\Services\AuditLogger;
 use App\Services\TripayService;
 use App\Services\CoinService;
 use App\Services\DigiflazzService;
@@ -23,8 +24,8 @@ class CheckoutController extends Controller
     {
         $validated = $request->validate([
             'product_id'       => 'required|exists:products,id',
-            'customer_game_id' => 'required|string',
-            'customer_zone_id' => 'nullable|string',
+            'customer_game_id' => 'required|string|max:50|regex:/^[a-zA-Z0-9._\-]+$/',
+            'customer_zone_id' => 'nullable|string|max:20|regex:/^[0-9]+$/',
             'customer_whatsapp'=> 'required|string|regex:/^\+?[0-9]{8,15}$/',
             'payment_method'   => 'required|string',
             'customer_name'    => 'nullable|string|max:100',
@@ -138,6 +139,14 @@ class CheckoutController extends Controller
                 ];
             });
 
+            AuditLogger::log(
+                event: 'checkout',
+                description: 'Checkout ' . $product->name . ' — ' . $merchantRef,
+                subjectType: 'Transaction',
+                subjectId: $merchantRef,
+                request: $request,
+            );
+
             return response()->json([
                 'success' => true,
                 'message' => 'Checkout successful.',
@@ -231,6 +240,14 @@ class CheckoutController extends Controller
 
                 return $transaction;
             });
+
+            AuditLogger::log(
+                event: 'checkout',
+                description: 'Checkout COIN ' . $product->name . ' — ' . $merchantRef,
+                subjectType: 'Transaction',
+                subjectId: $merchantRef,
+                request: $request,
+            );
 
             return response()->json([
                 'success' => true,

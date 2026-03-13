@@ -27,7 +27,7 @@ class CategoryResource extends Resource
 
     public static function canAccess(): bool
     {
-        return auth()->user()->hasAnyRole(['Super Admin', 'Admin Operasional']);
+        return auth()->user()->hasAnyRole(['Super Admin', 'Admin', 'Staff']);
     }
 
     public static function form(Schema $schema): Schema

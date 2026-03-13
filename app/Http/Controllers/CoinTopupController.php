@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Models\CoinTopup;
+use App\Services\AuditLogger;
 use App\Services\TripayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -78,6 +79,14 @@ class CoinTopupController extends Controller
             'expired_at' => now()->setTimestamp($expiredTime),
             'api_logs' => $paymentResponse,
         ]);
+
+        AuditLogger::log(
+            event: 'coin_topup',
+            description: 'Top up coin sebesar Rp ' . number_format((int) $validated['amount'], 0, ',', '.') . ' — ' . $merchantRef,
+            subjectType: 'CoinTopup',
+            subjectId: $merchantRef,
+            request: $request,
+        );
 
         return redirect()->route('invoice', ['invoice_id' => $merchantRef]);
     }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Head, useForm, Link } from '@inertiajs/react';
+import DOMPurify from 'dompurify';
 import axios from 'axios';
 import { swalError } from '@/lib/swal';
 import Swal from 'sweetalert2';
@@ -1016,7 +1017,7 @@ export default function InvoiceSearch({
                                                                                             </span>
                                                                                             <span
                                                                                                 dangerouslySetInnerHTML={{
-                                                                                                    __html: step,
+                                                                                                    __html: DOMPurify.sanitize(step),
                                                                                                 }}
                                                                                             />
                                                                                         </li>
@@ -1095,7 +1096,7 @@ export default function InvoiceSearch({
                                                                                         </span>
                                                                                         <span
                                                                                             dangerouslySetInnerHTML={{
-                                                                                                __html: step,
+                                                                                                __html: DOMPurify.sanitize(step),
                                                                                             }}
                                                                                         />
                                                                                     </li>
@@ -1167,7 +1168,7 @@ export default function InvoiceSearch({
                                                                                         </span>
                                                                                         <span
                                                                                             dangerouslySetInnerHTML={{
-                                                                                                __html: step,
+                                                                                                __html: DOMPurify.sanitize(step),
                                                                                             }}
                                                                                         />
                                                                                     </li>
