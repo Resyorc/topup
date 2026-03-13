@@ -25,9 +25,38 @@ export default function InvoiceSearch({
     const [invoiceData, setInvoiceData] = useState<any>(initialInvoiceData);
     const [animatedStatus, setAnimatedStatus] = useState<number>(0);
     const [isPaymentOpen, setIsPaymentOpen] = useState<boolean>(true);
-    const [remainingSeconds, setRemainingSeconds] = useState<number | null>(
-        null,
-    );
+    const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+
+    // Review state
+    const [hasReviewed, setHasReviewed] = useState<boolean>(initialInvoiceData?.has_reviewed ?? false);
+    const [reviewRating, setReviewRating] = useState<number>(0);
+    const [reviewTags, setReviewTags] = useState<string[]>([]);
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [reviewDone, setReviewDone] = useState(false);
+
+    const REVIEW_TAGS = ['Proses Cepat', 'Terpercaya', 'Harga Terjangkau', 'Direkomendasikan', 'Pelayanan Ramah'];
+
+    const toggleReviewTag = (tag: string) => {
+        setReviewTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+    };
+
+    const submitReview = async () => {
+        if (reviewRating === 0 || isSubmittingReview) return;
+        setIsSubmittingReview(true);
+        try {
+            await axios.post('/api/review', {
+                invoice_id: invoiceData.invoice_no,
+                rating: reviewRating,
+                tags: reviewTags,
+            });
+            setReviewDone(true);
+            setHasReviewed(true);
+        } catch (error: any) {
+            alert(error.response?.data?.message || 'Gagal mengirim ulasan.');
+        } finally {
+            setIsSubmittingReview(false);
+        }
+    };
 
     // Sync newly grabbed server data
     useEffect(() => {
@@ -156,6 +185,7 @@ export default function InvoiceSearch({
 
     const paymentBadge = getPaymentStatusBadge(invoiceData?.payment_status);
     const transactionBadge = getTransactionStatusBadge(invoiceData?.status);
+    const isCoinTopup = invoiceData?.type === 'coin_topup';
 
     // Animate progress bar incrementally when invoice status changes
     useEffect(() => {
@@ -588,10 +618,15 @@ export default function InvoiceSearch({
                                         title={invoiceData.game.name}
                                         subTitle={invoiceData.game.publisher}
                                         imgSrc={
-                                            'storage/' + invoiceData.game.image
+                                            String(
+                                                invoiceData.game.image,
+                                            ).startsWith('/')
+                                                ? invoiceData.game.image
+                                                : 'storage/' +
+                                                  invoiceData.game.image
                                         }
                                         active={true}
-                                        slug={invoiceData.game.slug}
+                                        slug={invoiceData.game.slug || '#'}
                                         customClass="!m-0 !w-24 !h-[140px] md:!w-auto md:!h-auto"
                                     />
                                 </div>
@@ -615,7 +650,9 @@ export default function InvoiceSearch({
                                         </h3>
                                         <div className="grid grid-cols-[80px_10px_1fr] gap-y-1.5 text-xs text-gray-300 md:grid-cols-[100px_10px_1fr] md:gap-y-2 md:text-sm">
                                             <span className="font-semibold text-white">
-                                                Username
+                                                {isCoinTopup
+                                                    ? 'Nama'
+                                                    : 'Username'}
                                             </span>
                                             <span>:</span>
                                             <span>
@@ -623,7 +660,7 @@ export default function InvoiceSearch({
                                             </span>
 
                                             <span className="font-semibold text-white">
-                                                ID
+                                                {isCoinTopup ? 'Tipe' : 'ID'}
                                             </span>
                                             <span>:</span>
                                             <span>
@@ -631,11 +668,16 @@ export default function InvoiceSearch({
                                             </span>
 
                                             <span className="font-semibold text-white">
-                                                Server
+                                                {isCoinTopup
+                                                    ? 'Channel'
+                                                    : 'Server'}
                                             </span>
                                             <span>:</span>
                                             <span>
-                                                {invoiceData.account.server}
+                                                {isCoinTopup
+                                                    ? 'QRIS'
+                                                    : invoiceData.account
+                                                          .server}
                                             </span>
                                         </div>
                                     </div>
@@ -660,9 +702,15 @@ export default function InvoiceSearch({
                                             </div>
                                             <div className="ml-auto">
                                                 <img
-                                                    src="https://cdns.iconmonstr.com/wp-content/releases/preview/2012/240/iconmonstr-diamond-1.png"
-                                                    alt="Diamond"
-                                                    className="h-8 w-8 opacity-90 hue-rotate-[180deg] invert-[0.8] saturate-[3] sepia-[1]"
+                                                    src={
+                                                        invoiceData.product
+                                                            .icon_url ||
+                                                        'https://cdns.iconmonstr.com/wp-content/releases/preview/2012/240/iconmonstr-diamond-1.png'
+                                                    }
+                                                    alt={
+                                                        invoiceData.product.name
+                                                    }
+                                                    className={`h-8 w-8 opacity-90 ${invoiceData.product.icon_url ? 'object-contain' : 'hue-rotate-[180deg] invert-[0.8] saturate-[3] sepia-[1]'}`}
                                                 />
                                             </div>
                                         </div>
@@ -1188,25 +1236,87 @@ export default function InvoiceSearch({
                                     </div>
                                 </div>
                             ) : (
-                                <Link href="/">
-                                    <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#9b4dec] px-4 py-3 font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:opacity-90 md:px-6 md:py-4">
-                                        <svg
-                                            width="20"
-                                            height="20"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        >
-                                            <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
-                                            <path d="M3 6h18" />
-                                            <path d="M16 10a4 4 0 0 1-8 0" />
-                                        </svg>
-                                        Beli Lagi
-                                    </div>
-                                </Link>
+                                <div className="flex flex-col gap-4">
+                                    <Link href="/">
+                                        <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#9b4dec] px-4 py-3 font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:opacity-90 md:px-6 md:py-4">
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                                <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
+                                                <path d="M3 6h18" />
+                                                <path d="M16 10a4 4 0 0 1-8 0" />
+                                            </svg>
+                                            Beli Lagi
+                                        </div>
+                                    </Link>
+
+                                    {/* Review Section — hanya untuk transaksi game yang sudah success */}
+                                    {invoiceData.status.toLowerCase() === 'success' && invoiceData.type === 'transaction' && (
+                                        <div className="overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29]">
+                                            <div className="border-b border-[#31334c] bg-white/5 px-4 py-3">
+                                                <p className="font-bold text-gray-300">Beri Ulasan</p>
+                                            </div>
+                                            <div className="p-4 md:p-5">
+                                                {reviewDone || hasReviewed ? (
+                                                    <div className="flex flex-col items-center gap-2 py-4 text-center">
+                                                        <span className="text-3xl">🎉</span>
+                                                        <p className="font-semibold text-green-400">Terima kasih atas ulasanmu!</p>
+                                                        <p className="text-xs text-gray-500">Ulasanmu membantu pembeli lain.</p>
+                                                    </div>
+                                                ) : (
+                                                    <div className="flex flex-col gap-4">
+                                                        {/* Bintang */}
+                                                        <div>
+                                                            <p className="mb-2 text-xs text-gray-400">Seberapa puas kamu dengan layanan kami?</p>
+                                                            <div className="flex gap-2">
+                                                                {[1, 2, 3, 4, 5].map((star) => (
+                                                                    <button
+                                                                        key={star}
+                                                                        onClick={() => setReviewRating(star)}
+                                                                        className="text-2xl transition-transform hover:scale-110"
+                                                                    >
+                                                                        <span className={star <= reviewRating ? 'text-[#FFC107]' : 'text-gray-600'}>★</span>
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Tags */}
+                                                        <div>
+                                                            <p className="mb-2 text-xs text-gray-400">Pilih yang sesuai (opsional):</p>
+                                                            <div className="flex flex-wrap gap-2">
+                                                                {REVIEW_TAGS.map((tag) => (
+                                                                    <button
+                                                                        key={tag}
+                                                                        onClick={() => toggleReviewTag(tag)}
+                                                                        className={`rounded-full border px-3 py-1 text-xs font-medium transition ${
+                                                                            reviewTags.includes(tag)
+                                                                                ? 'border-primary bg-primary/20 text-primary'
+                                                                                : 'border-[#31334c] text-gray-400 hover:border-gray-500'
+                                                                        }`}
+                                                                    >
+                                                                        {tag}
+                                                                    </button>
+                                                                ))}
+                                                            </div>
+                                                        </div>
+
+                                                        {/* Submit */}
+                                                        <button
+                                                            onClick={submitReview}
+                                                            disabled={reviewRating === 0 || isSubmittingReview}
+                                                            className={`w-full rounded-xl py-2.5 text-sm font-bold text-white transition ${
+                                                                reviewRating === 0 || isSubmittingReview
+                                                                    ? 'cursor-not-allowed bg-gray-600'
+                                                                    : 'bg-primary hover:bg-primary/90'
+                                                            }`}
+                                                        >
+                                                            {isSubmittingReview ? 'Mengirim...' : 'Kirim Ulasan'}
+                                                        </button>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
                             )}
                         </div>
                     )}

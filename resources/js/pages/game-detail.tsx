@@ -126,6 +126,7 @@ export default function GameDetail({
 
     // State for username validation
     const [isValidating, setIsValidating] = useState(false);
+    const [isSubmitting, setIsSubmitting] = useState(false);
     const [validatedUsername, setValidatedUsername] = useState<string | null>(
         null,
     );
@@ -327,6 +328,7 @@ export default function GameDetail({
     };
 
     const submitOrder = async () => {
+        if (isSubmitting) return;
         if (!validatedUsername || validatedUsername.startsWith('❌')) {
             alert('ID belum valid. Pastikan data akun benar.');
             return;
@@ -342,7 +344,7 @@ export default function GameDetail({
         };
 
         try {
-            setIsValidating(true);
+            setIsSubmitting(true);
             const response = await axios.post('/api/checkout', payload);
             if (
                 response.data.success &&
@@ -361,7 +363,7 @@ export default function GameDetail({
                     'Terjadi kesalahan saat memproses pesanan.',
             );
         } finally {
-            setIsValidating(false);
+            setIsSubmitting(false);
             setShowModal(false);
         }
     };
@@ -1689,14 +1691,14 @@ export default function GameDetail({
                                 </button>
                                 <button
                                     onClick={submitOrder}
-                                    disabled={isValidating || isCalculatingFee}
-                                    className={`rounded-xl px-4 py-3.5 font-bold text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] transition ${isValidating || isCalculatingFee ? 'cursor-not-allowed bg-gray-500 shadow-none' : 'bg-primary hover:bg-primary/90'}`}
+                                    disabled={isSubmitting || isValidating || isCalculatingFee}
+                                    className={`rounded-xl px-4 py-3.5 font-bold text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] transition ${isSubmitting || isValidating || isCalculatingFee ? 'cursor-not-allowed bg-gray-500 shadow-none' : 'bg-primary hover:bg-primary/90'}`}
                                 >
-                                    {isValidating || isCalculatingFee
-                                        ? isCalculatingFee
+                                    {isSubmitting
+                                        ? 'Memproses...'
+                                        : isCalculatingFee
                                             ? 'Menghitung...'
-                                            : 'Memproses...'
-                                        : 'Buat Pesanan!'}
+                                            : 'Buat Pesanan!'}
                                 </button>
                             </div>
                         </div>

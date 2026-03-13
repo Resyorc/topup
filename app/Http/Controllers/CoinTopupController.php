@@ -10,7 +10,7 @@ use Inertia\Inertia;
 
 class CoinTopupController extends Controller
 {
-    public function index(Request $request, TripayService $tripayService)
+    public function index(Request $request)
     {
         $user = $request->user();
 
@@ -25,48 +25,8 @@ class CoinTopupController extends Controller
                 'updated_at' => now(),
             ]);
 
-        $activeTopup = CoinTopup::query()
-            ->where('user_id', $user->id)
-            ->latest()
-            ->first();
-
-        $paymentMethods = [];
-
-        try {
-            $channels = $tripayService->getPaymentChannels();
-
-            foreach ($channels as $channel) {
-                if (!($channel['active'] ?? false)) {
-                    continue;
-                }
-
-                $group = $channel['group'] ?? 'Lainnya';
-                $paymentMethods[$group][] = [
-                    'id' => $channel['code'],
-                    'name' => $channel['name'],
-                    'icon_url' => $channel['icon_url'] ?? null,
-                    'minimum_amount' => (int) ($channel['minimum_amount'] ?? 0),
-                ];
-            }
-        } catch (\Throwable $exception) {
-            $paymentMethods = [];
-        }
-
         return Inertia::render('user/topup-saldo', [
             'coinsBalance' => (int) ($user->fresh()->coin_balance ?? 0),
-            'paymentMethods' => $paymentMethods,
-            'activeTopup' => $activeTopup ? [
-                'invoice_id' => $activeTopup->invoice_id,
-                'amount' => $activeTopup->amount,
-                'status' => $activeTopup->status,
-                'payment_name' => $activeTopup->payment_name,
-                'payment_url' => $activeTopup->payment_url,
-                'pay_code' => $activeTopup->pay_code,
-                'qr_url' => $activeTopup->qr_url,
-                'pay_url' => $activeTopup->pay_url,
-                'expired_at' => $activeTopup->expired_at?->format('d M Y H:i:s'),
-                'failure_reason' => $activeTopup->failure_reason,
-            ] : null,
         ]);
     }
 
@@ -76,9 +36,10 @@ class CoinTopupController extends Controller
 
         $validated = $request->validate([
             'amount' => 'required|integer|min:1000|max:1000000',
-            'payment_method' => 'required|string|max:50',
             'customer_whatsapp' => 'required|string|regex:/^\+?[0-9]{8,15}$/',
         ]);
+
+        $qrisMethod = $this->resolveQrisMethod($tripayService);
 
         $merchantRef = 'CTP-' . strtoupper(Str::ulid());
         $expiredTime = time() + 3600;
@@ -91,7 +52,7 @@ class CoinTopupController extends Controller
         ]];
 
         $paymentResponse = $tripayService->createTransaction(
-            $validated['payment_method'],
+            $qrisMethod['code'],
             $merchantRef,
             (int) $validated['amount'],
             $user->name,
@@ -107,8 +68,8 @@ class CoinTopupController extends Controller
             'amount' => (int) $validated['amount'],
             'status' => 'pending',
             'customer_whatsapp' => $validated['customer_whatsapp'],
-            'payment_method' => $paymentResponse['payment_method'] ?? $validated['payment_method'],
-            'payment_name' => $paymentResponse['payment_name'] ?? null,
+            'payment_method' => $paymentResponse['payment_method'] ?? $qrisMethod['code'],
+            'payment_name' => $paymentResponse['payment_name'] ?? $qrisMethod['name'],
             'payment_url' => $paymentResponse['checkout_url'] ?? null,
             'pay_code' => $paymentResponse['pay_code'] ?? null,
             'qr_url' => $paymentResponse['qr_url'] ?? null,
@@ -118,6 +79,30 @@ class CoinTopupController extends Controller
             'api_logs' => $paymentResponse,
         ]);
 
-        return redirect()->route('dashboard.coin-topups.index');
+        return redirect()->route('invoice', ['invoice_id' => $merchantRef]);
+    }
+
+    private function resolveQrisMethod(TripayService $tripayService): array
+    {
+        $channels = $tripayService->getPaymentChannels();
+
+        foreach ($channels as $channel) {
+            if (!($channel['active'] ?? false)) {
+                continue;
+            }
+
+            $group = strtoupper((string) ($channel['group'] ?? ''));
+            $code = strtoupper((string) ($channel['code'] ?? ''));
+            $name = strtoupper((string) ($channel['name'] ?? ''));
+
+            if ($group === 'QRIS' || $code === 'QRIS' || str_contains($name, 'QRIS')) {
+                return [
+                    'code' => $channel['code'],
+                    'name' => $channel['name'],
+                ];
+            }
+        }
+
+        abort(422, 'Metode pembayaran QRIS tidak tersedia saat ini.');
     }
 }
