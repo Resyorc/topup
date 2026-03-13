@@ -36,9 +36,10 @@ class SecurityHeaders
                 "style-src 'self' 'unsafe-inline' https://fonts.bunny.net https://fonts.googleapis.com",
                 "img-src 'self' data: blob: https:",
                 "font-src 'self' data: https://fonts.bunny.net https://fonts.gstatic.com",
-                "style-src 'self' 'unsafe-inline' https://fonts.bunny.net",
-                "img-src 'self' data: blob: https:",
-                "font-src 'self' data: https://fonts.bunny.net",
+                // ❌ Hapus 3 baris di bawah ini (sisa lama):
+                // "style-src 'self' 'unsafe-inline' https://fonts.bunny.net",
+                // "img-src 'self' data: blob: https:",
+                // "font-src 'self' data: https://fonts.bunny.net",
                 "connect-src 'self'",
                 "frame-ancestors 'none'",
                 "base-uri 'self'",
