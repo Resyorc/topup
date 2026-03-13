@@ -56,7 +56,6 @@ export default function GameDetail({
         whatsapp: '',
         product_id: '',
         payment_method: '',
-        qty: 1,
         promo_code: '',
     });
 
@@ -115,7 +114,7 @@ export default function GameDetail({
     // Calculate total including Tripay fees
     const calculateTotal = (pm: PaymentMethod) => {
         if (!selectedProduct) return 0;
-        const subtotal = selectedProduct.price * data.qty;
+        const subtotal = selectedProduct.price;
 
         let totalFee = pm.fee_flat;
         if (pm.fee_percent > 0) {
@@ -204,7 +203,7 @@ export default function GameDetail({
     // Handle dynamic fee calculation
     useEffect(() => {
         const fetchFee = async () => {
-            if (!data.product_id || !data.qty) {
+            if (!data.product_id) {
                 setCalculatedFees(null);
                 return;
             }
@@ -214,7 +213,7 @@ export default function GameDetail({
             if (product) {
                 try {
                     setIsCalculatingFee(true);
-                    const subtotalAmount = product.price * data.qty;
+                    const subtotalAmount = product.price;
                     const response = await axios.post('/api/calculate-fee', {
                         amount: subtotalAmount,
                     });
@@ -233,7 +232,7 @@ export default function GameDetail({
 
         const timeoutId = setTimeout(fetchFee, 300); // Debounce
         return () => clearTimeout(timeoutId);
-    }, [data.product_id, data.qty, selectedProduct]);
+    }, [data.product_id, selectedProduct]);
 
     // Calculate cheapest payment method taking into account dynamic fees and subtotal
     const cheapestPaymentMethodId = React.useMemo(() => {
@@ -241,7 +240,7 @@ export default function GameDetail({
 
         let lowestTotal = Infinity;
         let cheapestId: string | null = null;
-        const subtotal = selectedProduct.price * data.qty;
+        const subtotal = selectedProduct.price;
 
         Object.values(paymentMethods)
             .flat()
@@ -267,7 +266,7 @@ export default function GameDetail({
             });
 
         return cheapestId;
-    }, [selectedProduct, data.qty, calculatedFees, paymentMethods]);
+    }, [selectedProduct, calculatedFees, paymentMethods]);
 
     // Format WhatsApp Number (IndoPhone)
     const [waDigits, setWaDigits] = useState('');
@@ -294,12 +293,12 @@ export default function GameDetail({
     // Deselect payment method if the current product price changes to below the minimum amount
     useEffect(() => {
         if (selectedProduct && selectedPayment) {
-            const subtotal = selectedProduct.price * data.qty;
+            const subtotal = selectedProduct.price;
             if (subtotal < selectedPayment.minimum_amount) {
                 setData('payment_method', ''); // Clear invalid selection
             }
         }
-    }, [data.product_id, data.qty]);
+    }, [data.product_id]);
 
     const handlePurchase = () => {
         if (!data.user_id) {
@@ -339,7 +338,6 @@ export default function GameDetail({
             customer_whatsapp: data.whatsapp,
             customer_name: validatedUsername,
             payment_method: data.payment_method,
-            qty: data.qty,
         };
 
         try {
@@ -794,42 +792,7 @@ export default function GameDetail({
                                         </h4>
                                     </div>
                                 </div>
-                                <div className="grid grid-cols-1 gap-4 p-4 md:grid-cols-2">
-                                    <div>
-                                        <label className="mb-1 block text-xs text-white/70">
-                                            Jumlah Pembelian
-                                        </label>
-                                        <div className="flex items-center gap-2">
-                                            <input
-                                                type="number"
-                                                value={data.qty}
-                                                readOnly
-                                                className="w-14 rounded-lg border-none bg-[#2b2735] px-3 py-2 text-white outline-none"
-                                            />
-                                            <button
-                                                onClick={() =>
-                                                    setData(
-                                                        'qty',
-                                                        Math.max(
-                                                            1,
-                                                            data.qty - 1,
-                                                        ),
-                                                    )
-                                                }
-                                                className="rounded-lg bg-primary px-3 py-2 font-bold text-white transition hover:bg-primary/80"
-                                            >
-                                                −
-                                            </button>
-                                            <button
-                                                onClick={() =>
-                                                    setData('qty', data.qty + 1)
-                                                }
-                                                className="rounded-lg bg-primary px-3 py-2 font-bold text-white transition hover:bg-primary/80"
-                                            >
-                                                +
-                                            </button>
-                                        </div>
-                                    </div>
+                                <div className="p-4">
                                     <div>
                                         <label className="mb-1 block text-xs text-white/70">
                                             Kode Promo
@@ -1001,7 +964,7 @@ export default function GameDetail({
                                                                     const subtotal =
                                                                         (selectedProduct?.price ||
                                                                             0) *
-                                                                        data.qty;
+                                                                        1;
 
                                                                     // Validasi berbeda untuk coin vs metode biasa
                                                                     const isValidAmount =
@@ -1310,7 +1273,7 @@ export default function GameDetail({
                                                 Rp{' '}
                                                 {(
                                                     selectedProduct.price *
-                                                    data.qty
+                                                    1
                                                 ).toLocaleString('id-ID')}
                                             </span>
                                         </div>
@@ -1335,7 +1298,7 @@ export default function GameDetail({
                                                         : Math.ceil(
                                                               selectedPayment.fee_flat +
                                                                   (selectedProduct.price *
-                                                                      data.qty *
+                                                                      1 *
                                                                       selectedPayment.fee_percent) /
                                                                       100,
                                                           )
@@ -1362,7 +1325,7 @@ export default function GameDetail({
                                                 Rp{' '}
                                                 {(
                                                     selectedProduct.price *
-                                                        data.qty +
+                                                        1 +
                                                     (calculatedFees?.[
                                                         selectedPayment.id
                                                     ] !== undefined
@@ -1372,7 +1335,7 @@ export default function GameDetail({
                                                         : Math.ceil(
                                                               selectedPayment.fee_flat +
                                                                   (selectedProduct.price *
-                                                                      data.qty *
+                                                                      1 *
                                                                       selectedPayment.fee_percent) /
                                                                       100,
                                                           ))
@@ -1400,7 +1363,7 @@ export default function GameDetail({
                                 <span className="font-medium text-white">
                                     Rp{' '}
                                     {(
-                                        selectedProduct.price * data.qty
+                                        selectedProduct.price
                                     ).toLocaleString('id-ID')}
                                 </span>
                             </div>
@@ -1416,7 +1379,7 @@ export default function GameDetail({
                                         : Math.ceil(
                                               selectedPayment.fee_flat +
                                                   (selectedProduct.price *
-                                                      data.qty *
+                                                      1 *
                                                       selectedPayment.fee_percent) /
                                                       100,
                                           )
@@ -1432,14 +1395,14 @@ export default function GameDetail({
                         <div className="text-base font-black text-[#FFC107] md:text-xl">
                             {selectedProduct && selectedPayment
                                 ? `Rp ${(
-                                      selectedProduct.price * data.qty +
+                                      selectedProduct.price +
                                       (calculatedFees?.[selectedPayment.id] !==
                                       undefined
                                           ? calculatedFees[selectedPayment.id]
                                           : Math.ceil(
                                                 selectedPayment.fee_flat +
                                                     (selectedProduct.price *
-                                                        data.qty *
+                                                        1 *
                                                         selectedPayment.fee_percent) /
                                                         100,
                                             ))
