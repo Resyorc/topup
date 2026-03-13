@@ -139,8 +139,8 @@ class InvoiceController extends Controller
 
             'price' => (int) $transaction->amount,
             'qty'   => 1,
-            'fee'   => 0,
-            'total' => (int) $transaction->amount,
+            'fee'   => (int) $transaction->fee,
+            'total' => (int) $transaction->amount + (int) $transaction->fee,
         ];
     }
 

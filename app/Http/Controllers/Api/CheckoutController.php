@@ -105,6 +105,8 @@ class CheckoutController extends Controller
                     $expiredTime
                 );
 
+                $fee = (int) ($paymentResponse['fee_customer'] ?? 0);
+
                 $transaction = Transaction::create([
                     'invoice_id'             => $merchantRef,
                     'user_id'                => $authenticatedUserId,
@@ -115,6 +117,7 @@ class CheckoutController extends Controller
                     'customer_name'          => $customerName,
                     'customer_email'         => $customerEmail,
                     'amount'                 => $amount,
+                    'fee'                    => $fee,
                     'profit'                 => ($product->price_sell - $product->price_cost) * $qty,
                     'status'                 => 'pending',
                     'sn'                     => null,
