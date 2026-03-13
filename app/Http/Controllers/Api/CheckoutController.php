@@ -43,27 +43,29 @@ class CheckoutController extends Controller
             return response()->json(['error' => 'Product is currently unavailable.'], 400);
         }
 
-        // Cegah double order: tolak jika ada transaksi pending/processing yang belum expired
-        $existingTransaction = Transaction::where('product_id', $product->id)
-            ->where('customer_game_id', $validated['customer_game_id'])
-            ->whereIn('status', ['pending', 'processing'])
-            ->where(function ($q) {
-                $q->whereNull('expired_at')->orWhere('expired_at', '>', now());
-            })
-            ->when($authenticatedUserId, fn($q) => $q->where('user_id', $authenticatedUserId))
-            ->latest()
-            ->first();
+        // Cegah double order: hanya untuk user yang login
+        if ($authenticatedUserId) {
+            $existingTransaction = Transaction::where('product_id', $product->id)
+                ->where('customer_game_id', $validated['customer_game_id'])
+                ->where('user_id', $authenticatedUserId)
+                ->whereIn('status', ['pending', 'processing'])
+                ->where(function ($q) {
+                    $q->whereNull('expired_at')->orWhere('expired_at', '>', now());
+                })
+                ->latest()
+                ->first();
 
-        if ($existingTransaction) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Kamu masih memiliki pesanan aktif untuk produk ini. Selesaikan atau tunggu pesanan sebelumnya expired.',
-                'data'    => [
-                    'invoice_id' => $existingTransaction->invoice_id,
-                    'status'     => $existingTransaction->status,
-                    'expired_at' => $existingTransaction->expired_at?->toDateTimeString(),
-                ],
-            ], 409);
+            if ($existingTransaction) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kamu masih memiliki pesanan aktif untuk produk ini. Selesaikan atau tunggu pesanan sebelumnya expired.',
+                    'data'    => [
+                        'invoice_id' => $existingTransaction->invoice_id,
+                        'status'     => $existingTransaction->status,
+                        'expired_at' => $existingTransaction->expired_at?->toDateTimeString(),
+                    ],
+                ], 409);
+            }
         }
 
         $merchantRef = 'INV-' . strtoupper(Str::ulid());
