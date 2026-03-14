@@ -1,14 +1,25 @@
-import { usePage } from '@inertiajs/react';
+import { Link, usePage } from '@inertiajs/react';
 import UserLayout from '@/layouts/user-layout';
 
 interface CoinHistoryItem {
-    id: number;
+    id: string;
+    source: 'transaction' | 'topup';
     type: 'credit' | 'debit';
     amount: number;
     description: string;
     reference_id: string | null;
+    status: string | null;
     created_at: string | null;
 }
+
+const TOPUP_STATUS: Record<string, { label: string; className: string }> = {
+    pending:  { label: 'Menunggu Bayar', className: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30' },
+    paid:     { label: 'Dibayar',        className: 'bg-green-500/15 text-green-400 border-green-500/30'   },
+    expired:  { label: 'Kadaluarsa',     className: 'bg-red-500/15 text-red-400 border-red-500/30'         },
+    canceled: { label: 'Dibatalkan',     className: 'bg-gray-500/15 text-gray-400 border-gray-500/30'      },
+    success:  { label: 'Berhasil',       className: 'bg-green-500/15 text-green-400 border-green-500/30'   },
+    failed:   { label: 'Gagal',          className: 'bg-red-500/15 text-red-400 border-red-500/30'         },
+};
 
 export default function CoinHistory() {
     const { coinBalance, history } = usePage<{
@@ -59,34 +70,59 @@ export default function CoinHistory() {
                                         <th className="px-5 py-3">Tanggal</th>
                                         <th className="px-5 py-3">Keterangan</th>
                                         <th className="px-5 py-3">Referensi</th>
+                                        <th className="px-5 py-3">Status</th>
                                         <th className="px-5 py-3 text-right">Jumlah</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-[#31334c]">
-                                    {history.map((item) => (
-                                        <tr key={item.id} className="transition hover:bg-white/[0.02]">
-                                            <td className="whitespace-nowrap px-5 py-3.5 text-gray-400">
-                                                {formatDate(item.created_at)}
-                                            </td>
-                                            <td className="px-5 py-3.5 text-gray-200">
-                                                {item.description || '-'}
-                                            </td>
-                                            <td className="px-5 py-3.5 font-mono text-xs text-gray-500">
-                                                {item.reference_id || '-'}
-                                            </td>
-                                            <td className="whitespace-nowrap px-5 py-3.5 text-right font-bold">
-                                                {item.type === 'credit' ? (
-                                                    <span className="text-green-400">
-                                                        +{item.amount.toLocaleString('id-ID')}
-                                                    </span>
-                                                ) : (
-                                                    <span className="text-red-400">
-                                                        -{item.amount.toLocaleString('id-ID')}
-                                                    </span>
-                                                )}
-                                            </td>
-                                        </tr>
-                                    ))}
+                                    {history.map((item) => {
+                                        const statusInfo = item.status ? TOPUP_STATUS[item.status] : null;
+                                        const isSettled = !item.status || ['paid', 'success'].includes(item.status);
+                                        return (
+                                            <tr key={item.id} className="transition hover:bg-white/2">
+                                                <td className="whitespace-nowrap px-5 py-3.5 text-gray-400">
+                                                    {formatDate(item.created_at)}
+                                                </td>
+                                                <td className="px-5 py-3.5 text-gray-200">
+                                                    {item.description || '-'}
+                                                </td>
+                                                <td className="px-5 py-3.5 font-mono text-xs text-gray-500">
+                                                    {item.reference_id ? (
+                                                        item.source === 'topup' ? (
+                                                            <Link
+                                                                href={`/invoice?invoice_id=${item.reference_id}`}
+                                                                className="text-primary hover:underline"
+                                                            >
+                                                                {item.reference_id}
+                                                            </Link>
+                                                        ) : (
+                                                            item.reference_id
+                                                        )
+                                                    ) : '-'}
+                                                </td>
+                                                <td className="px-5 py-3.5">
+                                                    {statusInfo ? (
+                                                        <span className={`inline-block rounded-full border px-2 py-0.5 text-[10px] font-semibold ${statusInfo.className}`}>
+                                                            {statusInfo.label}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-gray-600">—</span>
+                                                    )}
+                                                </td>
+                                                <td className="whitespace-nowrap px-5 py-3.5 text-right font-bold">
+                                                    {item.type === 'credit' ? (
+                                                        <span className={isSettled ? 'text-green-400' : 'text-gray-500'}>
+                                                            +{item.amount.toLocaleString('id-ID')}
+                                                        </span>
+                                                    ) : (
+                                                        <span className="text-red-400">
+                                                            -{item.amount.toLocaleString('id-ID')}
+                                                        </span>
+                                                    )}
+                                                </td>
+                                            </tr>
+                                        );
+                                    })}
                                 </tbody>
                             </table>
                         </div>
