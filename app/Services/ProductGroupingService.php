@@ -2,34 +2,32 @@
 
 namespace App\Services;
 
+use App\Models\Game;
 use Illuminate\Support\Collection;
 
 class ProductGroupingService
 {
     /**
-     * Group products dynamically by game slug + keyword rules.
+     * Group products using per-game grouping_rules from DB.
+     * Falls back to config-based keyword rules if game has no rules defined.
      */
-    public function groupByGameSlug(Collection $products, string $gameSlug): array
+    public function groupByGame(Collection $products, Game $game): array
     {
-        $rulesBySlug = (array) config('services.product_grouping.rules_by_slug', []);
-        $defaultRules = (array) config('services.product_grouping.default_rules', [
-            'Diamond' => ['diamond'],
-            'Event Top Up' => ['event'],
-        ]);
         $fallbackGroupLabel = (string) config(
             'services.product_grouping.fallback_label',
             'Produk Lainnya',
         );
 
-        $activeGroupRules = $rulesBySlug[$gameSlug] ?? $defaultRules;
+        // Build keyword rules from game's DB config
+        $keywordRules = $this->buildKeywordRules($game);
 
         return $products
             ->map(function ($product) {
                 return [
-                    'id' => $product->id,
-                    'name' => $product->name,
-                    'price' => (float) $product->price_sell,
-                    'extra' => str_contains($product->name, '(')
+                    'id'         => $product->id,
+                    'name'       => $product->name,
+                    'price'      => (float) $product->price_sell,
+                    'extra'      => str_contains($product->name, '(')
                         ? substr($product->name, strpos($product->name, '('))
                         : null,
                     'clean_name' => str_contains($product->name, '(')
@@ -37,12 +35,12 @@ class ProductGroupingService
                         : $product->name,
                 ];
             })
-            ->groupBy(function (array $product) use ($activeGroupRules, $fallbackGroupLabel) {
+            ->groupBy(function (array $product) use ($keywordRules, $fallbackGroupLabel) {
                 $name = strtolower($product['name']);
 
-                foreach ($activeGroupRules as $groupLabel => $keywords) {
+                foreach ($keywordRules as $groupLabel => $keywords) {
                     foreach ($keywords as $keyword) {
-                        if (str_contains($name, strtolower($keyword))) {
+                        if (str_contains($name, strtolower(trim($keyword)))) {
                             return $groupLabel;
                         }
                     }
@@ -52,5 +50,36 @@ class ProductGroupingService
             })
             ->map(fn ($group) => $group->values()->toArray())
             ->toArray();
+    }
+
+    /**
+     * Convert game's grouping_rules JSON to keyword rules array.
+     * DB format: [['group' => 'Weekly', 'keywords' => 'weekly, wdp'], ...]
+     * Returns: ['Weekly' => ['weekly', 'wdp'], ...]
+     */
+    private function buildKeywordRules(Game $game): array
+    {
+        $rules = $game->grouping_rules;
+
+        if (!empty($rules)) {
+            $keywordRules = [];
+            foreach ($rules as $rule) {
+                $group = $rule['group'] ?? null;
+                $keywords = $rule['keywords'] ?? '';
+                if ($group) {
+                    $keywordRules[$group] = array_map('trim', explode(',', $keywords));
+                }
+            }
+            return $keywordRules;
+        }
+
+        // Fallback to config-based rules
+        $rulesBySlug = (array) config('services.product_grouping.rules_by_slug', []);
+        $defaultRules = (array) config('services.product_grouping.default_rules', [
+            'Diamond' => ['diamond'],
+            'Event Top Up' => ['event'],
+        ]);
+
+        return $rulesBySlug[$game->slug] ?? $defaultRules;
     }
 }

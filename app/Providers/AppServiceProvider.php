@@ -4,7 +4,9 @@ namespace App\Providers;
 
 use App\Listeners\LogRegistered;
 use App\Listeners\LogSuccessfulLogin;
+use App\Models\CoinTopup;
 use App\Models\Transaction;
+use App\Observers\CoinTopupObserver;
 use App\Observers\TransactionObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Auth\Events\Login;
@@ -31,6 +33,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Transaction::observe(TransactionObserver::class);
+        CoinTopup::observe(CoinTopupObserver::class);
         Event::listen(Login::class, LogSuccessfulLogin::class);
         Event::listen(Registered::class, LogRegistered::class);
         $this->configureDefaults();

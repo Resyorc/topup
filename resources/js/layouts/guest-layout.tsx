@@ -14,7 +14,7 @@ const STATUS_LABEL: Record<string, { label: string; type: 'success' | 'error' | 
 type Notif = { invoice_id: string; product_name: string; status: string; time: string };
 
 function TransactionNotifier({ userId, onNotification }: { userId: number; onNotification: (data: any) => void }) {
-    useEcho(`transactions.${userId}`, 'TransactionStatusUpdated', onNotification);
+    useEcho(`transactions.${userId}`, '.InvoiceStatusUpdated', onNotification);
     return null;
 }
 

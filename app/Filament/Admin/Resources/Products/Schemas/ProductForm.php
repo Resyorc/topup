@@ -23,7 +23,7 @@ class ProductForm
                     ->required(),
                 TextInput::make('name')
                     ->required(),
-                TextInput::make('price_cost')
+TextInput::make('price_cost')
                     ->required()
                     ->numeric()
                     ->default(0.0)

@@ -108,37 +108,30 @@ export default function InvoiceSearch({
         }
     }, [invoiceData?.status]);
 
-    // Auto-polling effect for real-time updates
+    // Real-time invoice status updates via Reverb (public channel)
     useEffect(() => {
-        let pollInterval: ReturnType<typeof setInterval> | undefined;
+        const invoiceNo = invoiceData?.invoice_no;
+        if (!invoiceNo) return;
 
-        // Only poll if we have an active invoice displayed and it's not yet successful/failed
-        if (
-            invoiceData &&
-            !['success', 'failed', 'expired', 'canceled'].includes(
-                invoiceData.status.toLowerCase(),
-            )
-        ) {
-            pollInterval = setInterval(() => {
-                axios
-                    .get('/invoice/data', {
-                        params: { invoice_id: invoiceData.invoice_no },
-                    })
-                    .then((response) => {
-                        if (response.data?.success && response.data?.data) {
-                            setInvoiceData(response.data.data);
-                        }
-                    })
-                    .catch(() => {
-                        // Silently ignore polling errors and retry on next tick.
-                    });
-            }, 3000); // Poll every 3 seconds
-        }
+        const isTerminal = ['success', 'failed', 'expired', 'canceled'].includes(
+            invoiceData.status?.toLowerCase() ?? '',
+        );
+        if (isTerminal) return;
+
+        const channel = (window as any).Echo.channel(`invoice.${invoiceNo}`);
+
+        channel.listen('.InvoiceStatusUpdated', (data: { status: string; payment_status: string }) => {
+            setInvoiceData((prev: any) => ({
+                ...prev,
+                status: data.status,
+                payment_status: data.payment_status,
+            }));
+        });
 
         return () => {
-            if (pollInterval) clearInterval(pollInterval);
+            (window as any).Echo.leaveChannel(`invoice.${invoiceNo}`);
         };
-    }, [invoiceData]);
+    }, [invoiceData?.invoice_no]);
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();

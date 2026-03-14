@@ -12,6 +12,10 @@ class Game extends Model
 {
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'grouping_rules' => 'array',
+    ];
+
     public function category(): BelongsTo
     {
         return $this->belongsTo(Category::class);
