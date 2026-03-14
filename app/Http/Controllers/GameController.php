@@ -39,9 +39,9 @@ class GameController extends Controller
         ];
 
         // 3. Group products via dedicated service (per-game dynamic rules)
-        $productsGrouped = $productGroupingService->groupByGameSlug(
+        $productsGrouped = $productGroupingService->groupByGame(
             $game->products,
-            $game->slug,
+            $game,
         );
 
         // 4. Fetch real payment channels from Tripay
