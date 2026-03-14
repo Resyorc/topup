@@ -192,6 +192,14 @@ class CheckoutController extends Controller
 
         $user = \App\Models\User::findOrFail($authenticatedUserId);
 
+        // Harus verifikasi email untuk pakai coin
+        if (!$user->hasVerifiedEmail()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kamu harus verifikasi email terlebih dahulu untuk menggunakan Krysta Coin.',
+            ], 403);
+        }
+
         // Cek saldo sebelum masuk transaksi
         if (!$coinService->hasSufficientBalance($user, $amount)) {
             return response()->json([

@@ -16,13 +16,17 @@ Route::get('/invoice/data', [App\Http\Controllers\InvoiceController::class, 'dat
 Route::inertia('/syarat-ketentuan', 'syarat-ketentuan')->name('terms');
 Route::inertia('/kebijakan-privasi', 'kebijakan-privasi')->name('privacy');
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware('auth')->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('dashboard/topup-saldo', [CoinTopupController::class, 'index'])->name('dashboard.coin-topups.index');
-    Route::post('dashboard/topup-saldo', [CoinTopupController::class, 'store'])->name('dashboard.coin-topups.store');
     Route::get('dashboard/transactions', [UserTransactionController::class, 'index'])->name('dashboard.transactions');
-    Route::get('dashboard/coin-history', [CoinHistoryController::class, 'index'])->name('dashboard.coin-history');
     Route::inertia('dashboard/settings', 'user/settings')->name('dashboard.settings');
+
+    // Fitur coin — butuh verifikasi email
+    Route::middleware('verified')->group(function () {
+        Route::get('dashboard/topup-saldo', [CoinTopupController::class, 'index'])->name('dashboard.coin-topups.index');
+        Route::post('dashboard/topup-saldo', [CoinTopupController::class, 'store'])->name('dashboard.coin-topups.store');
+        Route::get('dashboard/coin-history', [CoinHistoryController::class, 'index'])->name('dashboard.coin-history');
+    });
 });
 
 require __DIR__.'/settings.php';
