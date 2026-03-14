@@ -21,6 +21,40 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         return $this->hasAnyRole(['Super Admin', 'Admin', 'Staff']);
     }
 
+    public function sendEmailVerificationNotification()
+    {
+        $verificationUrl = URL::temporarySignedRoute(
+            'verification.verify',
+            Carbon::now()->addMinutes(60),
+            [
+                'id' => $this->getKey(),
+                'hash' => sha1($this->getEmailForVerification()),
+            ]
+        );
+
+        Mail::html(
+            '
+            <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
+                <h2>Verifikasi Email Anda</h2>
+                <p>Klik tombol di bawah untuk memverifikasi alamat email Anda.</p>
+                <a href="' . $verificationUrl . '"
+                   style="display: inline-block; padding: 12px 24px; background-color: #4F46E5;
+                          color: white; text-decoration: none; border-radius: 6px; margin: 16px 0;">
+                    Verifikasi Email
+                </a>
+                <p style="color: #666; font-size: 14px;">
+                    Link ini akan kadaluarsa dalam 60 menit.<br>
+                    Jika Anda tidak merasa mendaftar, abaikan email ini.
+                </p>
+            </div>
+            ',
+            function ($message) {
+                $message->to($this->email)
+                        ->subject('Verifikasi Email - ' . config('app.name'));
+            }
+        );
+    }
+
     /**
      * The attributes that are mass assignable.
      *
