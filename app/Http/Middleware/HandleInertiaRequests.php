@@ -43,6 +43,9 @@ class HandleInertiaRequests extends Middleware
             'auth' => [
                 'user' => $request->user(),
             ],
+            'flash' => [
+                'status' => $request->session()->get('status'),
+            ],
             'broadcastMessages' => Cache::remember('broadcast_messages', 60, fn() =>
                 BroadcastMessage::where('is_active', true)->pluck('message')->toArray()
             ),
