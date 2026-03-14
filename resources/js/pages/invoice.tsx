@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { useEchoPublic } from '@laravel/echo-react';
 import { Head, useForm, Link } from '@inertiajs/react';
 import DOMPurify from 'dompurify';
 import axios from 'axios';
@@ -11,6 +12,17 @@ import {
     getTransactionStatusBadge,
     formatCurrency,
 } from '@/lib';
+
+function InvoiceRealtimeListener({
+    invoiceNo,
+    onUpdate,
+}: {
+    invoiceNo: string;
+    onUpdate: (data: { status: string; payment_status: string }) => void;
+}) {
+    useEchoPublic(`invoice.${invoiceNo}`, '.InvoiceStatusUpdated', onUpdate);
+    return null;
+}
 
 interface InvoiceSearchProps {
     initialInvoiceData?: any;
@@ -108,30 +120,20 @@ export default function InvoiceSearch({
         }
     }, [invoiceData?.status]);
 
-    // Real-time invoice status updates via Reverb (public channel)
-    useEffect(() => {
-        const invoiceNo = invoiceData?.invoice_no;
-        if (!invoiceNo) return;
+    const isTerminal = ['success', 'failed', 'expired', 'canceled'].includes(
+        invoiceData?.status?.toLowerCase() ?? '',
+    );
 
-        const isTerminal = ['success', 'failed', 'expired', 'canceled'].includes(
-            invoiceData.status?.toLowerCase() ?? '',
-        );
-        if (isTerminal) return;
-
-        const channel = (window as any).Echo.channel(`invoice.${invoiceNo}`);
-
-        channel.listen('.InvoiceStatusUpdated', (data: { status: string; payment_status: string }) => {
+    const handleInvoiceUpdate = useCallback(
+        (data: { status: string; payment_status: string }) => {
             setInvoiceData((prev: any) => ({
                 ...prev,
                 status: data.status,
                 payment_status: data.payment_status,
             }));
-        });
-
-        return () => {
-            (window as any).Echo.leaveChannel(`invoice.${invoiceNo}`);
-        };
-    }, [invoiceData?.invoice_no]);
+        },
+        [],
+    );
 
     const submit = (e: React.FormEvent) => {
         e.preventDefault();
@@ -1423,6 +1425,12 @@ export default function InvoiceSearch({
                     </div>
                 </div>
             )}
+        {invoiceData?.invoice_no && !isTerminal && (
+            <InvoiceRealtimeListener
+                invoiceNo={invoiceData.invoice_no}
+                onUpdate={handleInvoiceUpdate}
+            />
+        )}
         </GuestLayout>
     );
 }
