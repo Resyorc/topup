@@ -76,7 +76,7 @@ class CheckoutController extends Controller
         if ($validated['payment_method'] === 'COIN') {
             return $this->checkoutWithCoin(
                 $validated, $product, $qty, $merchantRef, $amount,
-                $customerName, $authenticatedUserId, $coinService
+                $customerName, $authenticatedUserId, $coinService, $request
             );
         }
 
@@ -182,6 +182,7 @@ class CheckoutController extends Controller
         string $customerName,
         ?int $authenticatedUserId,
         CoinService $coinService,
+        \Illuminate\Http\Request $request,
     ) {
         // Harus login untuk pakai coin
         if (!$authenticatedUserId) {
