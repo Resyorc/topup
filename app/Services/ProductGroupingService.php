@@ -24,13 +24,17 @@ class ProductGroupingService
         return $products
             ->map(function ($product) {
                 return [
-                    'id'         => $product->id,
-                    'name'       => $product->name,
-                    'price'      => (float) $product->price_sell,
-                    'extra'      => str_contains($product->name, '(')
+                    'id'               => $product->id,
+                    'name'             => $product->name,
+                    'price'            => (float) $product->price_sell,
+                    'original_price'   => $product->fake_price ? (float) $product->fake_price : null,
+                    'discount_percent' => $product->fake_price
+                        ? (int) round((($product->fake_price - $product->price_sell) / $product->fake_price) * 100)
+                        : 0,
+                    'extra'            => str_contains($product->name, '(')
                         ? substr($product->name, strpos($product->name, '('))
                         : null,
-                    'clean_name' => str_contains($product->name, '(')
+                    'clean_name'       => str_contains($product->name, '(')
                         ? trim(substr($product->name, 0, strpos($product->name, '(')))
                         : $product->name,
                 ];

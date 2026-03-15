@@ -68,6 +68,12 @@ TextInput::make('price_cost')
                     ->default(0.0)
                     ->prefix('Rp')
                     ->readOnly(),
+                TextInput::make('fake_price')
+                    ->label('Harga Coret (Rp)')
+                    ->numeric()
+                    ->nullable()
+                    ->prefix('Rp')
+                    ->helperText('Harga palsu yang ditampilkan dicoret. Badge "Disc X%" dihitung otomatis. Kosongkan jika tidak perlu.'),
                 Toggle::make('is_available')
                     ->default(true)
                     ->required(),
