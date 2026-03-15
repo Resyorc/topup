@@ -81,7 +81,8 @@ class CheckoutController extends Controller
         }
 
         // ===== TRIPAY PAYMENT =====
-        $expiredTime = time() + (1 * 60 * 60);
+        $expiredAt   = now()->addHour();
+        $expiredTime = $expiredAt->timestamp; // Unix timestamp untuk Tripay API
 
         $orderItems = [
             [
@@ -93,7 +94,7 @@ class CheckoutController extends Controller
         ];
 
         try {
-            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $orderItems, $customerName, $customerEmail, $tripayService, $authenticatedUserId, $expiredTime) {
+            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $orderItems, $customerName, $customerEmail, $tripayService, $authenticatedUserId, $expiredTime, $expiredAt) {
 
                 $paymentResponse = $tripayService->createTransaction(
                     $validated['payment_method'],
@@ -124,7 +125,7 @@ class CheckoutController extends Controller
                     'sn'                     => null,
                     'payment_url'            => $paymentResponse['checkout_url'] ?? null,
                     'reference_id_provider'  => $paymentResponse['reference'] ?? null,
-                    'expired_at'             => Carbon::createFromTimestamp($expiredTime),
+                    'expired_at'             => $expiredAt,
                     'payment_method'         => $paymentResponse['payment_method'] ?? null,
                     'payment_name'           => $paymentResponse['payment_name'] ?? null,
                     'pay_code'               => $paymentResponse['pay_code'] ?? null,
@@ -155,7 +156,7 @@ class CheckoutController extends Controller
                     'payment'     => $result['paymentResponse'],
                     'pay_code'    => $result['paymentResponse']['pay_code'] ?? null,
                     'amount'      => $amount,
-                    'expired_at'  => Carbon::createFromTimestamp($expiredTime)->toDateTimeString(),
+                    'expired_at'  => $expiredAt->toDateTimeString(),
                 ]
             ]);
 

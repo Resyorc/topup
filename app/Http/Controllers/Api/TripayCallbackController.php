@@ -50,7 +50,7 @@ class TripayCallbackController extends Controller
 
         // Sesuai dokumentasi Tripay — hanya proses closed payment (is_closed_payment = 1)
         // Open payment (0) tidak didukung karena jumlah bayar bisa berbeda
-        if (!isset($data->is_closed_payment) || $data->is_closed_payment !== 1) {
+        if (!isset($data->is_closed_payment) || !$data->is_closed_payment) {
             return response()->json([
                 'success' => false,
                 'message' => 'Open payment is not supported',
