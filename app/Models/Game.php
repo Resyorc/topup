@@ -14,6 +14,7 @@ class Game extends Model
 
     protected $casts = [
         'grouping_rules' => 'array',
+        'icon_rules' => 'array',
     ];
 
     public function category(): BelongsTo

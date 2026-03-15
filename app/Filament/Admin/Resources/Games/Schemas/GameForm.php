@@ -72,6 +72,45 @@ class GameForm
                         ->defaultItems(0),
                 ])
                 ->collapsible(),
+
+            Section::make('Icon Produk')
+                ->description('Atur icon produk berdasarkan grup atau rentang jumlah. Rules diproses berurutan — rule pertama yang cocok yang dipakai. Kosongkan jika ingin pakai icon default game.')
+                ->schema([
+                    Repeater::make('icon_rules')
+                        ->label('')
+                        ->schema([
+                            Select::make('type')
+                                ->label('Tipe Rule')
+                                ->options([
+                                    'group' => 'Nama Grup/Kategori',
+                                    'range' => 'Rentang Jumlah',
+                                ])
+                                ->live(),
+                            TextInput::make('match_group')
+                                ->label('Nama Grup (misal: Diamond, Weekly Diamond Pass)')
+                                ->hidden(fn (Get $get) => $get('type') !== 'group'),
+                            TextInput::make('amount_min')
+                                ->label('Jumlah Min')
+                                ->numeric()
+                                ->nullable()
+                                ->hidden(fn (Get $get) => $get('type') !== 'range'),
+                            TextInput::make('amount_max')
+                                ->label('Jumlah Maks (kosong = tak terbatas)')
+                                ->numeric()
+                                ->nullable()
+                                ->hidden(fn (Get $get) => $get('type') !== 'range'),
+                            FileUpload::make('icon')
+                                ->label('Icon')
+                                ->image()
+                                ->disk('public')
+                                ->directory('icons/products'),
+                        ])
+                        ->addActionLabel('Tambah Rule Icon')
+                        ->reorderable()
+                        ->collapsible()
+                        ->defaultItems(0),
+                ])
+                ->collapsible(),
         ]);
     }
 }

@@ -36,6 +36,7 @@ class GameController extends Controller
             'reviews_count' => $game->reviews_count >= 1000
                 ? number_format($game->reviews_count / 1000, 1) . 'K+'
                 : (string) $game->reviews_count,
+            'icon_rules' => $game->icon_rules ?? [],
         ];
 
         // 3. Group products via dedicated service (per-game dynamic rules)
@@ -53,7 +54,7 @@ class GameController extends Controller
             foreach ($channels as $channel) {
                 if (!$channel['active']) continue;
 
-                $group = $channel['group'];
+                $group = str_contains(strtoupper($channel['name']), 'QRIS') ? 'QRIS' : $channel['group'];
                 if (!isset($paymentMethods[$group])) {
                     $paymentMethods[$group] = [];
                 }
@@ -74,7 +75,7 @@ class GameController extends Controller
             $paymentMethods = [];
         }
 
-        // 5. Tambah Krysta Coin sebagai metode pembayaran
+        // 5. Tambah Krysta Coin lalu urutkan: Krysta Coin, QRIS, E-Wallet, Virtual Account, Convenience Store
         $user = auth()->user();
         $paymentMethods['Krysta Coin'] = [
             [
@@ -85,10 +86,24 @@ class GameController extends Controller
                 'fee_percent'    => 0,
                 'minimum_amount' => 0,
                 'is_coin'        => true,
-                'disabled'       => !$user,                    // disabled kalau belum login
-                'coin_balance'   => $user?->coin_balance ?? 0, // saldo coin user
+                'disabled'       => !$user,
+                'coin_balance'   => $user?->coin_balance ?? 0,
             ]
         ];
+
+        $order = ['Krysta Coin', 'QRIS', 'E-Wallet', 'Virtual Account', 'Convenience Store'];
+        $sorted = [];
+        foreach ($order as $key) {
+            if (isset($paymentMethods[$key])) {
+                $sorted[$key] = $paymentMethods[$key];
+            }
+        }
+        foreach ($paymentMethods as $key => $value) {
+            if (!isset($sorted[$key])) {
+                $sorted[$key] = $value;
+            }
+        }
+        $paymentMethods = $sorted;
 
         return Inertia::render('game-detail', [
             'game'           => $gameData,

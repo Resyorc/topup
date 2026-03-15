@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Head, useForm, router } from '@inertiajs/react';
 import GuestLayout from '@/layouts/guest-layout';
 import GameCard from '@/components/game-card';
@@ -10,6 +10,8 @@ interface Product {
     name: string;
     clean_name: string;
     price: number;
+    original_price: number | null;
+    discount_percent: number;
     extra: string | null;
 }
 
@@ -35,6 +37,13 @@ interface GameDetailProps {
         image: string | null;
         rating: number;
         reviews_count: string;
+        icon_rules: Array<{
+            type: 'group' | 'range';
+            match_group?: string;
+            amount_min?: number | null;
+            amount_max?: number | null;
+            icon: string;
+        }>;
     };
     productGroups: {
         [category: string]: Product[];
@@ -42,6 +51,36 @@ interface GameDetailProps {
     paymentMethods: {
         [category: string]: PaymentMethod[];
     };
+}
+
+function resolveProductIcon(
+    product: Product,
+    group: string,
+    rules: GameDetailProps['game']['icon_rules'],
+): string | null {
+    for (const rule of rules) {
+        if (rule.type === 'group') {
+            if (
+                rule.match_group &&
+                group.toLowerCase().includes(rule.match_group.toLowerCase())
+            ) {
+                return rule.icon ? '/storage/' + rule.icon : null;
+            }
+        } else if (rule.type === 'range') {
+            // Extract first number from clean_name, e.g. "86 Diamond" → 86
+            const match = product.clean_name.match(/\d+/);
+            const amount = match ? parseInt(match[0], 10) : null;
+            if (amount !== null) {
+                const minOk =
+                    rule.amount_min == null || amount >= rule.amount_min;
+                const maxOk =
+                    rule.amount_max == null || amount <= rule.amount_max;
+                if (minOk && maxOk)
+                    return rule.icon ? '/storage/' + rule.icon : null;
+            }
+        }
+    }
+    return null;
 }
 
 export default function GameDetail({
@@ -59,18 +98,14 @@ export default function GameDetail({
         promo_code: '',
     });
 
-    const [calculatedFees, setCalculatedFees] = useState<Record<
-        string,
-        number
-    > | null>(null);
-    const [isCalculatingFee, setIsCalculatingFee] = useState(false);
-
     const getImageUrl = (image: string | null) => {
         if (image && image.length > 0) {
             return image; // Base path is already appended by the Controller if it exists
         }
         return `https://ui-avatars.com/api/?name=${encodeURIComponent(game?.name || 'Topup')}&color=ffffff&background=8327d8&size=512&rounded=true&font-size=0.33`;
     };
+
+    const promoSectionRef = useRef<HTMLDivElement>(null);
 
     const [activeTab, setActiveTab] = useState<string>(
         Object.keys(productGroups)[0] || '',
@@ -93,7 +128,7 @@ export default function GameDetail({
     const [openCategories, setOpenCategories] = useState<
         Record<string, boolean>
     >(() =>
-        Object.fromEntries(Object.keys(paymentMethods).map((k) => [k, true])),
+        Object.fromEntries(Object.keys(paymentMethods).map((k) => [k, false])),
     );
 
     const toggleCategory = (category: string) => {
@@ -128,6 +163,9 @@ export default function GameDetail({
     const [isValidating, setIsValidating] = useState(false);
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [validatedUsername, setValidatedUsername] = useState<string | null>(
+        null,
+    );
+    const [validatedCountry, setValidatedCountry] = useState<string | null>(
         null,
     );
 
@@ -167,6 +205,7 @@ export default function GameDetail({
 
         if (!ready) {
             setValidatedUsername(null);
+            setValidatedCountry(null);
             return;
         }
 
@@ -181,6 +220,7 @@ export default function GameDetail({
 
                 if (response.data.success) {
                     setValidatedUsername(response.data.nickname);
+                    setValidatedCountry(response.data.country ?? null);
                 } else {
                     setValidatedUsername(
                         '❌ ' + (response.data.message || 'ID Tidak Valid'),
@@ -195,77 +235,85 @@ export default function GameDetail({
             } finally {
                 setIsValidating(false);
             }
-        }, 600);
+        }, 1600);
 
         return () => clearTimeout(t);
     }, [data.user_id, data.server_id, game.slug]);
 
-    // Handle dynamic fee calculation
+    // Auto-switch tab berdasarkan country hasil validasi
     useEffect(() => {
-        const fetchFee = async () => {
-            if (!data.product_id) {
-                setCalculatedFees(null);
-                return;
-            }
+        if (!validatedCountry) return;
+        const countryLower = validatedCountry.toLowerCase();
+        const match = Object.keys(productGroups).find(
+            (tab) =>
+                tab.toLowerCase().includes(countryLower) ||
+                countryLower.includes(tab.toLowerCase()),
+        );
+        if (match) setActiveTab(match);
+    }, [validatedCountry]);
 
-            const product = selectedProduct;
+    const [calculatedFees, setCalculatedFees] = useState<Record<
+        string,
+        number
+    > | null>(null);
+    const [feeProductId, setFeeProductId] = useState<string | null>(null);
 
-            if (product) {
-                try {
-                    setIsCalculatingFee(true);
-                    const subtotalAmount = product.price;
-                    const response = await axios.post('/api/calculate-fee', {
-                        amount: subtotalAmount,
-                    });
+    // Loading jika ada produk dipilih tapi fees belum untuk produk ini
+    const isCalculatingFee =
+        !!selectedProduct && feeProductId !== selectedProduct.id;
 
-                    if (response.data.success) {
-                        setCalculatedFees(response.data.data);
-                    }
-                } catch (error) {
-                    console.error('Failed to bulk calculate fees', error);
-                    setCalculatedFees(null);
-                } finally {
-                    setIsCalculatingFee(false);
+    useEffect(() => {
+        if (!selectedProduct) {
+            setCalculatedFees(null);
+            setFeeProductId(null);
+            return;
+        }
+
+        const controller = new AbortController();
+
+        axios
+            .post(
+                '/api/calculate-fee',
+                { amount: selectedProduct.price },
+                { signal: controller.signal },
+            )
+            .then((res) => {
+                if (res.data.success) {
+                    setCalculatedFees(res.data.data);
+                    setFeeProductId(selectedProduct.id);
                 }
-            }
-        };
+            })
+            .catch(() => {});
 
-        const timeoutId = setTimeout(fetchFee, 300); // Debounce
-        return () => clearTimeout(timeoutId);
-    }, [data.product_id, selectedProduct]);
+        return () => controller.abort();
+    }, [selectedProduct?.id]);
 
-    // Calculate cheapest payment method taking into account dynamic fees and subtotal
-    const cheapestPaymentMethodId = React.useMemo(() => {
-        if (!selectedProduct) return null;
+    // Cheapest overall & cheapest among Tripay-only methods
+    const { cheapestTripayId } = React.useMemo(() => {
+        if (!selectedProduct) return { cheapestTripayId: null };
 
-        let lowestTotal = Infinity;
-        let cheapestId: string | null = null;
+        let lowestTripayTotal = Infinity;
+        let cheapestTripay: string | null = null;
         const subtotal = selectedProduct.price;
 
         Object.values(paymentMethods)
             .flat()
             .forEach((method) => {
-                if (subtotal >= method.minimum_amount) {
-                    const staticAdminFee = Math.ceil(
-                        method.fee_flat + (subtotal * method.fee_percent) / 100,
-                    );
-                    const fetchedFee = calculatedFees
-                        ? calculatedFees[method.id]
-                        : null;
-                    const displayAdminFee =
-                        fetchedFee !== null && fetchedFee !== undefined
-                            ? fetchedFee
-                            : staticAdminFee;
-                    const total = subtotal + displayAdminFee;
+                if (subtotal < method.minimum_amount) return;
+                const staticAdminFee = Math.ceil(
+                    method.fee_flat + (subtotal * method.fee_percent) / 100,
+                );
+                const fetchedFee = calculatedFees?.[method.id] ?? null;
+                const fee = fetchedFee !== null ? fetchedFee : staticAdminFee;
+                const total = subtotal + fee;
 
-                    if (total < lowestTotal) {
-                        lowestTotal = total;
-                        cheapestId = method.id;
-                    }
+                if (!method.is_coin && total < lowestTripayTotal) {
+                    lowestTripayTotal = total;
+                    cheapestTripay = method.id;
                 }
             });
 
-        return cheapestId;
+        return { cheapestTripayId: cheapestTripay };
     }, [selectedProduct, calculatedFees, paymentMethods]);
 
     // Format WhatsApp Number (IndoPhone)
@@ -289,6 +337,13 @@ export default function GameDetail({
         return [COUNTRY_CODE, p1, p2, p3].filter(Boolean).join(' ');
     };
     const formattedWa = formatIndoPhone(waDigits);
+
+    // Guard: user must fill Section 1 & 2 before picking a product
+    const section1Complete =
+        data.user_id.trim() !== '' &&
+        (isMihoyoGame || data.server_id.trim() !== '');
+    const section2Complete = data.whatsapp !== '';
+    const canSelectProduct = section1Complete && section2Complete;
 
     // Deselect payment method if the current product price changes to below the minimum amount
     useEffect(() => {
@@ -318,7 +373,9 @@ export default function GameDetail({
             !validatedUsername ||
             validatedUsername.startsWith('❌')
         ) {
-            swalWarning('ID belum diisi atau tidak valid/ditemukan. Mohon periksa kembali.');
+            swalWarning(
+                'ID belum diisi atau tidak valid/ditemukan. Mohon periksa kembali.',
+            );
             return;
         }
 
@@ -636,6 +693,11 @@ export default function GameDetail({
                                                     <b className="ml-1 text-white">
                                                         {validatedUsername}
                                                     </b>
+                                                    {validatedCountry && (
+                                                        <span className="ml-2 text-white/50">
+                                                            ({validatedCountry})
+                                                        </span>
+                                                    )}
                                                 </>
                                             )}
                                         {!isValidating &&
@@ -684,7 +746,27 @@ export default function GameDetail({
                             </div>
 
                             {/* SECTION 3: Pilih Nominal */}
-                            <div className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg md:mt-6">
+                            <div className="relative mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg md:mt-6">
+                                {/* Overlay: locked until Section 1 & 2 filled */}
+                                {!canSelectProduct && (
+                                    <div
+                                        className="absolute inset-0 z-10 flex cursor-not-allowed flex-col items-center justify-center gap-2 rounded-xl bg-black/60 backdrop-blur-[2px]"
+                                        onClick={() =>
+                                            swalWarning(
+                                                !section1Complete
+                                                    ? 'Isi User ID dan Server terlebih dahulu.'
+                                                    : 'Isi nomor WhatsApp terlebih dahulu.',
+                                            )
+                                        }
+                                    >
+                                        <span className="text-2xl">🔒</span>
+                                        <p className="text-center text-xs font-semibold text-white/80">
+                                            {!section1Complete
+                                                ? 'Lengkapi informasi akun dulu'
+                                                : 'Lengkapi detail kontak dulu'}
+                                        </p>
+                                    </div>
+                                )}
                                 {/* Header */}
                                 <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
                                     <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
@@ -720,16 +802,58 @@ export default function GameDetail({
                                             (product) => (
                                                 <div
                                                     key={product.id}
-                                                    onClick={() =>
+                                                    onClick={() => {
+                                                        if (!canSelectProduct) {
+                                                            swalWarning(
+                                                                !section1Complete
+                                                                    ? 'Isi User ID dan Server terlebih dahulu.'
+                                                                    : 'Isi nomor WhatsApp terlebih dahulu.',
+                                                            );
+                                                            return;
+                                                        }
                                                         setData(
                                                             'product_id',
                                                             product.id,
-                                                        )
-                                                    }
-                                                    className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[#1A1A24] p-3 transition-all hover:border-[#6a359c] md:p-4 ${data.product_id === product.id ? 'border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)] ring-1 ring-primary' : 'border-[#31334c]'}`}
+                                                        );
+                                                        if (
+                                                            window.innerWidth <
+                                                            768
+                                                        ) {
+                                                            setTimeout(() => {
+                                                                const el =
+                                                                    promoSectionRef.current;
+                                                                if (!el) return;
+                                                                const top =
+                                                                    el.getBoundingClientRect()
+                                                                        .top +
+                                                                    window.scrollY -
+                                                                    124;
+                                                                window.scrollTo(
+                                                                    {
+                                                                        top,
+                                                                        behavior:
+                                                                            'smooth',
+                                                                    },
+                                                                );
+                                                            }, 50);
+                                                        }
+                                                    }}
+                                                    className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[#1A1A24] transition-all hover:border-[#6a359c] ${data.product_id === product.id ? 'border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)] ring-1 ring-primary' : 'border-[#31334c]'}`}
                                                 >
+                                                    {/* Discount header strip */}
+                                                    {product.discount_percent > 0 && (
+                                                        <div className="flex items-center justify-between bg-orange-500 px-2.5 py-1">
+                                                            <span className="text-[10px] font-bold text-white">
+                                                                Disc {product.discount_percent}%
+                                                            </span>
+                                                            <span className="text-[10px] text-white/70 line-through">
+                                                                Rp {product.original_price?.toLocaleString('id-ID')}
+                                                            </span>
+                                                        </div>
+                                                    )}
+
                                                     {/* Card Content */}
-                                                    <div className="relative z-10 flex h-full flex-col justify-between">
+                                                    <div className="relative z-10 flex flex-col justify-between p-3 md:p-4">
                                                         <div className="mb-2 flex items-start justify-between">
                                                             <div>
                                                                 <div className="text-sm leading-tight font-bold text-[#FFC107]">
@@ -746,18 +870,28 @@ export default function GameDetail({
                                                                 )}
                                                             </div>
                                                             <div className="flex h-6 w-6 shrink-0 items-center justify-center">
-                                                                <img
-                                                                    src="https://cdns.iconmonstr.com/wp-content/releases/preview/2012/240/iconmonstr-diamond-1.png"
-                                                                    alt="Diamond"
-                                                                    className="h-5 w-5 hue-rotate-[180deg] invert-[0.8] saturate-[3] sepia-[1]"
-                                                                />
+                                                                {(() => {
+                                                                    const iconUrl =
+                                                                        resolveProductIcon(
+                                                                            product,
+                                                                            activeTab,
+                                                                            game.icon_rules,
+                                                                        );
+                                                                    return iconUrl ? (
+                                                                        <img
+                                                                            src={
+                                                                                iconUrl
+                                                                            }
+                                                                            alt="icon"
+                                                                            className="h-5 w-5 object-contain"
+                                                                        />
+                                                                    ) : null;
+                                                                })()}
                                                             </div>
                                                         </div>
-                                                        <div className="mt-2 font-bold text-white">
+                                                        <div className="font-bold text-white">
                                                             Rp{' '}
-                                                            {product.price.toLocaleString(
-                                                                'id-ID',
-                                                            )}
+                                                            {product.price.toLocaleString('id-ID')}
                                                         </div>
                                                     </div>
 
@@ -780,7 +914,10 @@ export default function GameDetail({
                             </div>
 
                             {/* SECTION 4: Detail Pembelian */}
-                            <div className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg">
+                            <div
+                                ref={promoSectionRef}
+                                className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg"
+                            >
                                 {/* Header */}
                                 <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
                                     <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
@@ -820,9 +957,9 @@ export default function GameDetail({
                         </div>
 
                         {/* Right Column (Details & Payments) */}
-                        <div className="flex flex-col gap-4 md:gap-6">
+                        <div className="flex flex-col gap-4 md:sticky md:top-[150px] md:self-start">
                             {/* SECTION 5: Metode Pembayaran */}
-                            <div className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg">
+                            <div className="mt-0 flex flex-col overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg md:max-h-[calc(100vh-230px)]">
                                 {/* Header */}
                                 <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
                                     <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
@@ -834,7 +971,7 @@ export default function GameDetail({
                                         </h4>
                                     </div>
                                 </div>
-                                <div className="space-y-4 p-4">
+                                <div className="flex-1 space-y-4 overflow-y-auto p-4">
                                     {/* Iterating Categories */}
                                     {paymentMethodEntries.map(
                                         ([category, methods]) => {
@@ -905,8 +1042,8 @@ export default function GameDetail({
                                                                 )}
                                                         </div>
 
-                                                        {/* Icons preview — hanya untuk non-coin dan non-QRIS */}
-                                                        {!isCoin && !isQRIS && (
+                                                        {/* Icons preview — hanya untuk non-coin */}
+                                                        {!isCoin && (
                                                             <div className="flex items-center gap-3">
                                                                 <div className="flex gap-2">
                                                                     {methods
@@ -1198,11 +1335,11 @@ export default function GameDetail({
                                                                                             {method.is_coin ? (
                                                                                                 'Bebas Biaya Admin'
                                                                                             ) : isCalculatingFee ? (
-                                                                                                <span className="animate-pulse italic">
-                                                                                                    Menghitung...
-                                                                                                </span>
-                                                                                            ) : (
+                                                                                                <span className="inline-block h-3 w-16 animate-pulse rounded bg-white/10" />
+                                                                                            ) : selectedProduct ? (
                                                                                                 `Admin Rp ${displayAdminFee.toLocaleString('id-ID')}`
+                                                                                            ) : (
+                                                                                                'Admin: -'
                                                                                             )}
                                                                                         </p>
                                                                                     )}
@@ -1214,8 +1351,10 @@ export default function GameDetail({
                                                                                     Rp{' '}
                                                                                     {isCalculatingFee &&
                                                                                     !method.is_coin ? (
-                                                                                        <span className="animate-pulse italic">
-                                                                                            ...
+                                                                                        <span className="inline-block h-3.5 w-20 animate-pulse rounded bg-white/10" />
+                                                                                    ) : !selectedProduct ? (
+                                                                                        <span className="text-gray-500">
+                                                                                            -
                                                                                         </span>
                                                                                     ) : (
                                                                                         displayTotal.toLocaleString(
@@ -1223,20 +1362,20 @@ export default function GameDetail({
                                                                                         )
                                                                                     )}
                                                                                 </p>
-                                                                                {method.is_coin && (
-                                                                                    <span className="mt-1 inline-block rounded bg-[#c26eff] px-2 py-0.5 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(194,110,255,0.4)]">
-                                                                                        NO
-                                                                                        FEE
-                                                                                    </span>
-                                                                                )}
-                                                                                {!method.is_coin &&
+                                                                                {selectedProduct &&
                                                                                     method.id ===
-                                                                                        cheapestPaymentMethodId && (
-                                                                                        <span className="mt-1 inline-block rounded bg-purple-500 px-2 py-0.5 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]">
+                                                                                        cheapestTripayId && (
+                                                                                        <span className="mt-1 inline-block rounded bg-green-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(22,163,74,0.4)]">
                                                                                             BEST
                                                                                             PRICE
                                                                                         </span>
                                                                                     )}
+                                                                                {method.is_coin && (
+                                                                                    <span className="mt-1 inline-block rounded bg-green-600 px-2 py-0.5 text-[10px] font-bold text-white shadow-[0_0_10px_rgba(22,163,74,0.4)]">
+                                                                                        BEST
+                                                                                        PRICE
+                                                                                    </span>
+                                                                                )}
                                                                             </div>
                                                                         </button>
                                                                     );
@@ -1250,101 +1389,6 @@ export default function GameDetail({
                                     )}
                                 </div>
                             </div>
-
-                            {/* SECTION 6: Rincian Pembayaran — hidden on mobile */}
-                            {selectedProduct && selectedPayment && (
-                                <div className="mt-0 mb-20 hidden overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg md:mb-0 md:block">
-                                    <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
-                                        <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
-                                            6
-                                        </div>
-                                        <div className="flex flex-1 items-center bg-[#31334c] px-4">
-                                            <h4 className="text-sm font-semibold text-white">
-                                                Rincian Pembayaran
-                                            </h4>
-                                        </div>
-                                    </div>
-                                    <div className="space-y-3 p-5">
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-gray-400">
-                                                Harga Produk
-                                            </span>
-                                            <span className="font-medium text-white">
-                                                Rp{' '}
-                                                {(
-                                                    selectedProduct.price *
-                                                    1
-                                                ).toLocaleString('id-ID')}
-                                            </span>
-                                        </div>
-                                        <div className="flex items-center justify-between text-sm">
-                                            <span className="text-gray-400">
-                                                Biaya Admin (
-                                                {selectedPayment.name})
-                                            </span>
-                                            {isCalculatingFee ? (
-                                                <span className="animate-pulse text-xs text-gray-400 italic">
-                                                    Menghitung...
-                                                </span>
-                                            ) : (
-                                                <span className="font-medium text-white">
-                                                    Rp{' '}
-                                                    {(calculatedFees?.[
-                                                        selectedPayment.id
-                                                    ] !== undefined
-                                                        ? calculatedFees[
-                                                              selectedPayment.id
-                                                          ]
-                                                        : Math.ceil(
-                                                              selectedPayment.fee_flat +
-                                                                  (selectedProduct.price *
-                                                                      1 *
-                                                                      selectedPayment.fee_percent) /
-                                                                      100,
-                                                          )
-                                                    ).toLocaleString('id-ID')}
-                                                </span>
-                                            )}
-                                        </div>
-                                        {data.promo_code && (
-                                            <div className="flex items-center justify-between text-sm">
-                                                <span className="text-green-400">
-                                                    Diskon Promo
-                                                </span>
-                                                <span className="font-medium text-green-400">
-                                                    - Rp 0
-                                                </span>
-                                            </div>
-                                        )}
-                                        <hr className="my-3 border-dashed border-[#31334c] opacity-50" />
-                                        <div className="flex items-center justify-between">
-                                            <span className="text-base font-bold text-white">
-                                                Total Keseluruhan
-                                            </span>
-                                            <span className="text-lg font-black text-[#FFC107]">
-                                                Rp{' '}
-                                                {(
-                                                    selectedProduct.price *
-                                                        1 +
-                                                    (calculatedFees?.[
-                                                        selectedPayment.id
-                                                    ] !== undefined
-                                                        ? calculatedFees[
-                                                              selectedPayment.id
-                                                          ]
-                                                        : Math.ceil(
-                                                              selectedPayment.fee_flat +
-                                                                  (selectedProduct.price *
-                                                                      1 *
-                                                                      selectedPayment.fee_percent) /
-                                                                      100,
-                                                          ))
-                                                ).toLocaleString('id-ID')}
-                                            </span>
-                                        </div>
-                                    </div>
-                                </div>
-                            )}
                         </div>
                     </div>
                 </div>
@@ -1353,38 +1397,42 @@ export default function GameDetail({
             {/* Floating Action Menu (Bottom Docked) — positioned above bottom nav on mobile */}
             <div className="fixed bottom-[60px] left-0 z-[45] w-full border-t border-[#31334c] bg-[#1e1f29] shadow-[0_-10px_30px_rgba(0,0,0,0.5)] md:bottom-0">
                 <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-3 py-3 sm:flex-row sm:px-6 md:flex-row md:gap-4 md:px-4 md:py-4 lg:px-8">
-                    {/* Payment Breakdown — Mobile Only (displayed above total) */}
+                    {/* Payment Breakdown */}
                     {selectedProduct && selectedPayment && (
-                        <div className="w-full space-y-2 border-b border-[#31334c] pb-3 md:hidden">
+                        <div className="w-full space-y-1.5 border-b border-[#31334c] pb-3">
                             <div className="flex items-center justify-between text-xs">
                                 <span className="text-gray-400">
                                     Harga Produk
                                 </span>
                                 <span className="font-medium text-white">
                                     Rp{' '}
-                                    {(
-                                        selectedProduct.price
-                                    ).toLocaleString('id-ID')}
+                                    {selectedProduct.price.toLocaleString(
+                                        'id-ID',
+                                    )}
                                 </span>
                             </div>
                             <div className="flex items-center justify-between text-xs">
                                 <span className="text-gray-400">
                                     Biaya Admin ({selectedPayment.name})
                                 </span>
-                                <span className="font-medium text-white">
-                                    Rp{' '}
-                                    {(calculatedFees?.[selectedPayment.id] !==
-                                    undefined
-                                        ? calculatedFees[selectedPayment.id]
-                                        : Math.ceil(
-                                              selectedPayment.fee_flat +
-                                                  (selectedProduct.price *
-                                                      1 *
-                                                      selectedPayment.fee_percent) /
-                                                      100,
-                                          )
-                                    ).toLocaleString('id-ID')}
-                                </span>
+                                {isCalculatingFee ? (
+                                    <span className="inline-block h-3 w-20 animate-pulse rounded bg-white/10" />
+                                ) : (
+                                    <span className="font-medium text-white">
+                                        Rp{' '}
+                                        {(calculatedFees?.[
+                                            selectedPayment.id
+                                        ] !== undefined
+                                            ? calculatedFees[selectedPayment.id]
+                                            : Math.ceil(
+                                                  selectedPayment.fee_flat +
+                                                      (selectedProduct.price *
+                                                          selectedPayment.fee_percent) /
+                                                          100,
+                                              )
+                                        ).toLocaleString('id-ID')}
+                                    </span>
+                                )}
                             </div>
                         </div>
                     )}
@@ -1651,14 +1699,12 @@ export default function GameDetail({
                                 </button>
                                 <button
                                     onClick={submitOrder}
-                                    disabled={isSubmitting || isValidating || isCalculatingFee}
-                                    className={`rounded-xl px-4 py-3.5 font-bold text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] transition ${isSubmitting || isValidating || isCalculatingFee ? 'cursor-not-allowed bg-gray-500 shadow-none' : 'bg-primary hover:bg-primary/90'}`}
+                                    disabled={isSubmitting || isValidating}
+                                    className={`rounded-xl px-4 py-3.5 font-bold text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] transition ${isSubmitting || isValidating ? 'cursor-not-allowed bg-gray-500 shadow-none' : 'bg-primary hover:bg-primary/90'}`}
                                 >
                                     {isSubmitting
                                         ? 'Memproses...'
-                                        : isCalculatingFee
-                                            ? 'Menghitung...'
-                                            : 'Buat Pesanan!'}
+                                        : 'Buat Pesanan!'}
                                 </button>
                             </div>
                         </div>
