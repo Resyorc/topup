@@ -40,20 +40,32 @@ export default function InvoiceSearch({
     const [invoiceData, setInvoiceData] = useState<any>(initialInvoiceData);
     const [animatedStatus, setAnimatedStatus] = useState<number>(0);
     const [isPaymentOpen, setIsPaymentOpen] = useState<boolean>(true);
-    const [remainingSeconds, setRemainingSeconds] = useState<number | null>(null);
+    const [remainingSeconds, setRemainingSeconds] = useState<number | null>(
+        null,
+    );
 
     // Review state
-    const [hasReviewed, setHasReviewed] = useState<boolean>(initialInvoiceData?.has_reviewed ?? false);
+    const [hasReviewed, setHasReviewed] = useState<boolean>(
+        initialInvoiceData?.has_reviewed ?? false,
+    );
     const [reviewRating, setReviewRating] = useState<number>(0);
     const [reviewTags, setReviewTags] = useState<string[]>([]);
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
     const [reviewDone, setReviewDone] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
 
-    const REVIEW_TAGS = ['Proses Cepat', 'Terpercaya', 'Harga Terjangkau', 'Direkomendasikan', 'Pelayanan Ramah'];
+    const REVIEW_TAGS = [
+        'Proses Cepat',
+        'Terpercaya',
+        'Harga Terjangkau',
+        'Direkomendasikan',
+        'Pelayanan Ramah',
+    ];
 
     const toggleReviewTag = (tag: string) => {
-        setReviewTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]);
+        setReviewTags((prev) =>
+            prev.includes(tag) ? prev.filter((t) => t !== tag) : [...prev, tag],
+        );
     };
 
     const cancelOrder = async () => {
@@ -78,10 +90,14 @@ export default function InvoiceSearch({
         if (!result.isConfirmed) return;
 
         try {
-            await axios.post('/api/cancel', { invoice_id: invoiceData.invoice_no });
+            await axios.post('/api/cancel', {
+                invoice_id: invoiceData.invoice_no,
+            });
             setInvoiceData((prev: any) => ({ ...prev, status: 'canceled' }));
         } catch (error: any) {
-            swalError(error.response?.data?.message || 'Gagal membatalkan pesanan.');
+            swalError(
+                error.response?.data?.message || 'Gagal membatalkan pesanan.',
+            );
         }
     };
 
@@ -97,7 +113,9 @@ export default function InvoiceSearch({
             setReviewDone(true);
             setHasReviewed(true);
         } catch (error: any) {
-            swalError(error.response?.data?.message || 'Gagal mengirim ulasan.');
+            swalError(
+                error.response?.data?.message || 'Gagal mengirim ulasan.',
+            );
         } finally {
             setIsSubmittingReview(false);
         }
@@ -864,8 +882,8 @@ export default function InvoiceSearch({
                                                     Pesan
                                                 </div>
                                                 <div className="text-gray-300 sm:text-right">
-                                                    Transaksi berhasil pada{' '}
-                                                    {invoiceData.paid_at}
+                                                    Transaksi berhasil dibuat
+                                                    pada {invoiceData.paid_at}
                                                 </div>
                                             </div>
 
@@ -1012,7 +1030,9 @@ export default function InvoiceSearch({
                                                                                             </span>
                                                                                             <span
                                                                                                 dangerouslySetInnerHTML={{
-                                                                                                    __html: DOMPurify.sanitize(step),
+                                                                                                    __html: DOMPurify.sanitize(
+                                                                                                        step,
+                                                                                                    ),
                                                                                                 }}
                                                                                             />
                                                                                         </li>
@@ -1091,7 +1111,9 @@ export default function InvoiceSearch({
                                                                                         </span>
                                                                                         <span
                                                                                             dangerouslySetInnerHTML={{
-                                                                                                __html: DOMPurify.sanitize(step),
+                                                                                                __html: DOMPurify.sanitize(
+                                                                                                    step,
+                                                                                                ),
                                                                                             }}
                                                                                         />
                                                                                     </li>
@@ -1163,7 +1185,9 @@ export default function InvoiceSearch({
                                                                                         </span>
                                                                                         <span
                                                                                             dangerouslySetInnerHTML={{
-                                                                                                __html: DOMPurify.sanitize(step),
+                                                                                                __html: DOMPurify.sanitize(
+                                                                                                    step,
+                                                                                                ),
                                                                                             }}
                                                                                         />
                                                                                     </li>
@@ -1281,20 +1305,41 @@ export default function InvoiceSearch({
                                         </button>
                                     </div>
                                 </div>
-                            ) : invoiceData.status.toLowerCase() === 'processing' ? (
+                            ) : invoiceData.status.toLowerCase() ===
+                              'processing' ? (
                                 <div className="flex flex-col gap-3">
                                     <div className="flex items-center gap-3 rounded-xl border border-blue-500/20 bg-blue-500/5 px-4 py-3.5 text-sm text-blue-300">
-                                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="shrink-0 animate-spin">
+                                        <svg
+                                            width="18"
+                                            height="18"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            className="shrink-0 animate-spin"
+                                        >
                                             <path d="M21 12a9 9 0 1 1-6.219-8.56" />
                                         </svg>
-                                        Transaksi sedang diproses. Harap tunggu konfirmasi dari provider.
+                                        Transaksi sedang diproses. Harap tunggu
+                                        konfirmasi dari provider.
                                     </div>
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-4">
                                     <Link href="/">
                                         <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#9b4dec] px-4 py-3 font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:opacity-90 md:px-6 md:py-4">
-                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                            <svg
+                                                width="20"
+                                                height="20"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                            >
                                                 <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
                                                 <path d="M3 6h18" />
                                                 <path d="M16 10a4 4 0 0 1-8 0" />
@@ -1304,22 +1349,29 @@ export default function InvoiceSearch({
                                     </Link>
 
                                     {/* Tombol Beri Ulasan — hanya untuk transaksi game yang sudah success */}
-                                    {invoiceData.status.toLowerCase() === 'success' && invoiceData.type === 'transaction' && (
-                                        reviewDone || hasReviewed ? (
+                                    {invoiceData.status.toLowerCase() ===
+                                        'success' &&
+                                        invoiceData.type === 'transaction' &&
+                                        (reviewDone || hasReviewed ? (
                                             <div className="flex items-center justify-center gap-2 rounded-xl border border-green-500/20 bg-green-500/5 px-4 py-3 text-sm font-medium text-green-400">
                                                 <span>🎉</span>
-                                                <span>Terima kasih atas ulasanmu!</span>
+                                                <span>
+                                                    Terima kasih atas ulasanmu!
+                                                </span>
                                             </div>
                                         ) : (
                                             <button
-                                                onClick={() => setShowReviewModal(true)}
+                                                onClick={() =>
+                                                    setShowReviewModal(true)
+                                                }
                                                 className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 font-bold text-primary transition hover:bg-primary/20"
                                             >
-                                                <span className="text-lg">★</span>
+                                                <span className="text-lg">
+                                                    ★
+                                                </span>
                                                 Beri Ulasan
                                             </button>
-                                        )
-                                    )}
+                                        ))}
                                 </div>
                             )}
                         </div>
@@ -1335,20 +1387,42 @@ export default function InvoiceSearch({
                             {/* Icon */}
                             <div className="relative mb-4 h-20 w-20">
                                 <div className="absolute inset-0 flex items-center justify-center rounded-full bg-gradient-to-tr from-[#1e1f29] to-[#31334c] shadow-[0_0_30px_rgba(74,222,128,0.2)]">
-                                    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="#4ade80" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg
+                                        width="40"
+                                        height="40"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="#4ade80"
+                                        strokeWidth="3"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
                                         <polyline points="20 6 9 17 4 12" />
                                     </svg>
                                 </div>
                                 <div className="absolute -right-1 -bottom-1 rounded-full border-4 border-[#242533] bg-white p-1.5">
-                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#a855f7" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg
+                                        width="14"
+                                        height="14"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="#a855f7"
+                                        strokeWidth="2"
+                                        strokeLinecap="round"
+                                        strokeLinejoin="round"
+                                    >
                                         <path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" />
                                         <path d="M3 6h18" />
                                         <path d="M16 10a4 4 0 0 1-8 0" />
                                     </svg>
                                 </div>
                             </div>
-                            <h2 className="mb-1 text-xl font-bold text-white">Pesanan Selesai</h2>
-                            <p className="text-xs text-gray-400">Terimakasih telah mempercayai layanan kami.</p>
+                            <h2 className="mb-1 text-xl font-bold text-white">
+                                Pesanan Selesai
+                            </h2>
+                            <p className="text-xs text-gray-400">
+                                Terimakasih telah mempercayai layanan kami.
+                            </p>
                         </div>
 
                         {/* Body */}
@@ -1356,22 +1430,39 @@ export default function InvoiceSearch({
                             {reviewDone ? (
                                 <div className="flex flex-col items-center gap-2 py-6 text-center">
                                     <span className="text-4xl">🎉</span>
-                                    <p className="font-semibold text-green-400">Terima kasih atas ulasanmu!</p>
-                                    <p className="text-xs text-gray-500">Ulasanmu membantu pembeli lain.</p>
+                                    <p className="font-semibold text-green-400">
+                                        Terima kasih atas ulasanmu!
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                        Ulasanmu membantu pembeli lain.
+                                    </p>
                                 </div>
                             ) : (
                                 <div className="flex flex-col gap-4">
                                     {/* Stars */}
                                     <div>
-                                        <p className="mb-2 text-sm font-semibold text-gray-300">Berikan penilaian tentang transaksi ini</p>
+                                        <p className="mb-2 text-sm font-semibold text-gray-300">
+                                            Berikan penilaian tentang transaksi
+                                            ini
+                                        </p>
                                         <div className="flex gap-2">
                                             {[1, 2, 3, 4, 5].map((star) => (
                                                 <button
                                                     key={star}
-                                                    onClick={() => setReviewRating(star)}
+                                                    onClick={() =>
+                                                        setReviewRating(star)
+                                                    }
                                                     className="text-3xl transition-transform hover:scale-110"
                                                 >
-                                                    <span className={star <= reviewRating ? 'text-[#FFC107]' : 'text-gray-600'}>★</span>
+                                                    <span
+                                                        className={
+                                                            star <= reviewRating
+                                                                ? 'text-[#FFC107]'
+                                                                : 'text-gray-600'
+                                                        }
+                                                    >
+                                                        ★
+                                                    </span>
                                                 </button>
                                             ))}
                                         </div>
@@ -1379,12 +1470,16 @@ export default function InvoiceSearch({
 
                                     {/* Tags */}
                                     <div>
-                                        <p className="mb-2 text-sm font-semibold text-gray-300">Tambahkan ulasan kamu</p>
+                                        <p className="mb-2 text-sm font-semibold text-gray-300">
+                                            Tambahkan ulasan kamu
+                                        </p>
                                         <div className="flex flex-wrap gap-2">
                                             {REVIEW_TAGS.map((tag) => (
                                                 <button
                                                     key={tag}
-                                                    onClick={() => toggleReviewTag(tag)}
+                                                    onClick={() =>
+                                                        toggleReviewTag(tag)
+                                                    }
                                                     className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                                                         reviewTags.includes(tag)
                                                             ? 'border-primary bg-primary/20 text-primary'
@@ -1410,14 +1505,20 @@ export default function InvoiceSearch({
                                 {!reviewDone && (
                                     <button
                                         onClick={submitReview}
-                                        disabled={reviewRating === 0 || isSubmittingReview}
+                                        disabled={
+                                            reviewRating === 0 ||
+                                            isSubmittingReview
+                                        }
                                         className={`rounded-xl px-4 py-3 font-bold text-white transition ${
-                                            reviewRating === 0 || isSubmittingReview
+                                            reviewRating === 0 ||
+                                            isSubmittingReview
                                                 ? 'cursor-not-allowed bg-gray-600'
                                                 : 'bg-gradient-to-r from-primary to-[#9b4dec] hover:opacity-90'
                                         }`}
                                     >
-                                        {isSubmittingReview ? 'Mengirim...' : 'Kirim'}
+                                        {isSubmittingReview
+                                            ? 'Mengirim...'
+                                            : 'Kirim'}
                                     </button>
                                 )}
                             </div>
@@ -1425,12 +1526,12 @@ export default function InvoiceSearch({
                     </div>
                 </div>
             )}
-        {invoiceData?.invoice_no && !isTerminal && (
-            <InvoiceRealtimeListener
-                invoiceNo={invoiceData.invoice_no}
-                onUpdate={handleInvoiceUpdate}
-            />
-        )}
+            {invoiceData?.invoice_no && !isTerminal && (
+                <InvoiceRealtimeListener
+                    invoiceNo={invoiceData.invoice_no}
+                    onUpdate={handleInvoiceUpdate}
+                />
+            )}
         </GuestLayout>
     );
 }
