@@ -29,15 +29,18 @@ class ExpirePendingTransactions extends Command
     {
         $expiredCount = $transactionExpiryService->expireOverdue();
 
-        $expiredCoinTopups = CoinTopup::query()
+        $expiredCoinTopups = 0;
+        CoinTopup::query()
             ->where('status', 'pending')
             ->whereNotNull('expired_at')
             ->where('expired_at', '<=', now())
-            ->update([
-                'status' => 'expired',
-                'failure_reason' => 'Pembayaran melewati batas waktu (expired).',
-                'updated_at' => now(),
-            ]);
+            ->each(function (CoinTopup $coinTopup) use (&$expiredCoinTopups) {
+                $coinTopup->update([
+                    'status' => 'expired',
+                    'failure_reason' => 'Pembayaran melewati batas waktu (expired).',
+                ]);
+                $expiredCoinTopups++;
+            });
 
         $this->info("Expired {$expiredCount} pending transaction(s) and {$expiredCoinTopups} coin topup(s).");
 

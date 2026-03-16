@@ -45,8 +45,10 @@ export default function InvoiceSearch({
     );
 
     // Review state
+    const reviewStorageKey = `reviewed_${initialInvoiceData?.invoice_no ?? ''}`;
     const [hasReviewed, setHasReviewed] = useState<boolean>(
-        initialInvoiceData?.has_reviewed ?? false,
+        initialInvoiceData?.has_reviewed ||
+        (!!initialInvoiceData?.invoice_no && localStorage.getItem(reviewStorageKey) === '1'),
     );
     const [reviewRating, setReviewRating] = useState<number>(0);
     const [reviewTags, setReviewTags] = useState<string[]>([]);
@@ -112,6 +114,7 @@ export default function InvoiceSearch({
             });
             setReviewDone(true);
             setHasReviewed(true);
+            localStorage.setItem(reviewStorageKey, '1');
         } catch (error: any) {
             swalError(
                 error.response?.data?.message || 'Gagal mengirim ulasan.',

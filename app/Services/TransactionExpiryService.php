@@ -24,11 +24,16 @@ class TransactionExpiryService
             $query->where('user_id', $userId);
         }
 
-        return $query->update([
-            'status' => 'failed',
-            'payment_status' => 'expired',
-            'failure_reason' => 'Pembayaran melewati batas waktu (expired).',
-            'updated_at' => now(),
-        ]);
+        $count = 0;
+        $query->each(function (Transaction $transaction) use (&$count) {
+            $transaction->update([
+                'status' => 'failed',
+                'payment_status' => 'expired',
+                'failure_reason' => 'Pembayaran melewati batas waktu (expired).',
+            ]);
+            $count++;
+        });
+
+        return $count;
     }
 }

@@ -2,6 +2,8 @@
 
 namespace App\Filament\Admin\Widgets;
 
+use App\Models\Game;
+use App\Models\Product;
 use App\Models\Transaction;
 use App\Models\User;
 use Filament\Widgets\StatsOverviewWidget;
@@ -40,6 +42,8 @@ class DashboardStats extends StatsOverviewWidget
             ->count();
 
         $totalUsers = User::count();
+        $totalGames = Game::where('is_active', true)->count();
+        $totalProducts = Product::where('is_available', true)->count();
 
         return [
             Stat::make('Revenue Hari Ini', 'Rp ' . number_format($revenueToday, 0, ',', '.'))
@@ -75,6 +79,16 @@ class DashboardStats extends StatsOverviewWidget
             Stat::make('Total User Terdaftar', $totalUsers)
                 ->description('Semua pengguna terdaftar')
                 ->descriptionIcon('heroicon-m-users')
+                ->color('info'),
+
+            Stat::make('Game Aktif', $totalGames)
+                ->description('Total game yang aktif')
+                ->descriptionIcon('heroicon-m-puzzle-piece')
+                ->color('info'),
+
+            Stat::make('Produk Aktif', $totalProducts)
+                ->description('Total produk yang aktif')
+                ->descriptionIcon('heroicon-m-squares-2x2')
                 ->color('info'),
         ];
     }

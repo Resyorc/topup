@@ -85,14 +85,16 @@ export default function Welcome({
                                 </h2>
                                 <div className="mt-1 flex items-baseline gap-2">
                                     <span className="text-lg font-bold text-primary md:text-xl">
-                                        {trendingTotalSold.toLocaleString('id-ID')}
+                                        {trendingTotalSold.toLocaleString(
+                                            'id-ID',
+                                        )}
                                     </span>
                                     <span className="text-xs font-medium text-gray-400 md:text-sm">
-                                        Orang
+                                        Total Pesanan
                                     </span>
                                 </div>
                                 <p className="mt-1 text-[10px] text-gray-500 md:text-xs">
-                                    Telah membeli voucher dari game disamping
+                                    Paling banyak di pesan dari game disamping
                                 </p>
                             </div>
 

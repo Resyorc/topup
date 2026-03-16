@@ -25,8 +25,8 @@
                         </p>
                         <p class="mt-2 text-xs text-gray-400">Terakhir diperbarui: {{ now()->format('d M Y, H:i:s') }} WIB</p>
                     </div>
-                    <div class="rounded-full bg-primary-50 p-4 dark:bg-primary-950">
-                        <x-heroicon-o-banknotes class="h-10 w-10 text-primary-600 dark:text-primary-400" />
+                    <div class="rounded-full bg-primary-50 p-3 dark:bg-primary-950">
+                        <x-heroicon-o-banknotes class="h-6 w-6 text-primary-600 dark:text-primary-400" />
                     </div>
                 </div>
             </x-filament::section>

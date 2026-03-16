@@ -8,7 +8,7 @@ use Illuminate\Support\Carbon;
 
 class TransactionChart extends ChartWidget
 {
-    protected ?string $heading = 'Transaksi Sukses per Hari (Bulan Ini)';
+    protected ?string $heading = 'Transaksi Sukses per Minggu (Bulan Ini)';
 
     protected static ?int $sort = 2;
 
@@ -19,24 +19,26 @@ class TransactionChart extends ChartWidget
         $startOfMonth = Carbon::now()->startOfMonth();
         $endOfMonth = Carbon::now()->endOfMonth();
 
-        $days = [];
+        $weeks = [];
         $revenues = [];
         $counts = [];
 
-        $current = $startOfMonth->copy();
+        $current = $startOfMonth->copy()->startOfWeek();
         while ($current->lte($endOfMonth)) {
-            $date = $current->toDateString();
-            $days[] = $current->format('d/m');
+            $weekStart = $current->copy()->max($startOfMonth);
+            $weekEnd = $current->copy()->endOfWeek()->min($endOfMonth);
+
+            $weeks[] = $weekStart->format('d/m') . '–' . $weekEnd->format('d/m');
 
             $revenues[] = (int) Transaction::where('status', 'success')
-                ->whereDate('created_at', $date)
+                ->whereBetween('created_at', [$weekStart->startOfDay(), $weekEnd->endOfDay()])
                 ->sum('amount');
 
             $counts[] = Transaction::where('status', 'success')
-                ->whereDate('created_at', $date)
+                ->whereBetween('created_at', [$weekStart->startOfDay(), $weekEnd->endOfDay()])
                 ->count();
 
-            $current->addDay();
+            $current->addWeek();
         }
 
         return [
@@ -60,7 +62,7 @@ class TransactionChart extends ChartWidget
                     'yAxisID' => 'y1',
                 ],
             ],
-            'labels' => $days,
+            'labels' => $weeks,
         ];
     }
 

@@ -37,6 +37,7 @@ class GameController extends Controller
                 ? number_format($game->reviews_count / 1000, 1) . 'K+'
                 : (string) $game->reviews_count,
             'icon_rules' => $game->icon_rules ?? [],
+            'need_zone'  => (bool) (config("services.user_id_check.games.{$game->slug}.need_zone", false)),
         ];
 
         // 3. Group products via dedicated service (per-game dynamic rules)
