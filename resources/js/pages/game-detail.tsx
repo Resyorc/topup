@@ -44,6 +44,7 @@ interface GameDetailProps {
             amount_max?: number | null;
             icon: string;
         }>;
+        need_zone: boolean;
     };
     productGroups: {
         [category: string]: Product[];
@@ -169,22 +170,18 @@ export default function GameDetail({
         null,
     );
 
-    const MIHOYO_GAMES = ['hsr', 'genshin', 'zzz'];
+    const MIHOYO_GAMES = ['hsr', 'genshin-impact', 'zzz'];
     const isMihoyoGame = MIHOYO_GAMES.includes(game.slug);
 
     const detectMihoyoServer = (uid: string) => {
         if (!uid) return null;
+        if (uid.startsWith('18')) return { name: 'Asia', zone: 'os_asia' };
         switch (uid[0]) {
-            case '6':
-                return { name: 'America', zone: 'prod_official_usa' };
-            case '7':
-                return { name: 'Europe', zone: 'prod_official_eur' };
-            case '8':
-                return { name: 'Asia', zone: 'prod_official_asia' };
-            case '9':
-                return { name: 'SAR (TW/HK/MO)', zone: 'prod_official_cht' };
-            default:
-                return null;
+            case '6': return { name: 'America', zone: 'os_usa' };
+            case '7': return { name: 'Europe', zone: 'os_euro' };
+            case '8': return { name: 'Asia', zone: 'os_asia' };
+            case '9': return { name: 'SAR (TW/HK/MO)', zone: 'os_cht' };
+            default:  return null;
         }
     };
 
@@ -201,7 +198,7 @@ export default function GameDetail({
     useEffect(() => {
         const ready =
             data.user_id.length > 0 &&
-            (isMihoyoGame || data.server_id.length > 0);
+            (!game.need_zone || data.server_id.length > 0);
 
         if (!ready) {
             setValidatedUsername(null);
@@ -215,7 +212,7 @@ export default function GameDetail({
                 const response = await axios.post('/api/check-username', {
                     game: game.slug,
                     user_id: data.user_id,
-                    zone_id: isMihoyoGame ? null : data.server_id,
+                    zone_id: data.server_id || null,
                 });
 
                 if (response.data.success) {
@@ -235,7 +232,7 @@ export default function GameDetail({
             } finally {
                 setIsValidating(false);
             }
-        }, 1600);
+        }, 1000);
 
         return () => clearTimeout(t);
     }, [data.user_id, data.server_id, game.slug]);
@@ -341,7 +338,7 @@ export default function GameDetail({
     // Guard: user must fill Section 1 & 2 before picking a product
     const section1Complete =
         data.user_id.trim() !== '' &&
-        (isMihoyoGame || data.server_id.trim() !== '');
+        (!game.need_zone || data.server_id.trim() !== '');
     const section2Complete = data.whatsapp !== '';
     const canSelectProduct = section1Complete && section2Complete;
 
@@ -617,7 +614,7 @@ export default function GameDetail({
                                     </div>
                                 </div>
                                 <div className="space-y-4 p-5">
-                                    <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+                                    <div className={`grid grid-cols-1 gap-4 ${game.need_zone ? 'md:grid-cols-2' : ''}`}>
                                         <div>
                                             <label className="mb-1 block text-xs text-white/70">
                                                 User ID
@@ -626,44 +623,25 @@ export default function GameDetail({
                                                 type="text"
                                                 placeholder="Masukkan User ID"
                                                 value={data.user_id}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        'user_id',
-                                                        e.target.value,
-                                                    )
-                                                }
+                                                onChange={(e) => setData('user_id', e.target.value)}
                                                 className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
                                             />
                                         </div>
-                                        <div>
-                                            <label className="mb-1 block text-xs text-white/70">
-                                                Server
-                                            </label>
-                                            <input
-                                                type="text"
-                                                disabled={isMihoyoGame}
-                                                placeholder={
-                                                    isMihoyoGame
-                                                        ? 'Otomatis dari UID'
-                                                        : 'Masukkan Server'
-                                                }
-                                                value={
-                                                    isMihoyoGame
-                                                        ? detectMihoyoServer(
-                                                              data.user_id,
-                                                          )?.name || ''
-                                                        : data.server_id
-                                                }
-                                                onChange={(e) =>
-                                                    !isMihoyoGame &&
-                                                    setData(
-                                                        'server_id',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary disabled:bg-[#1a1a24] disabled:text-white/60"
-                                            />
-                                        </div>
+                                        {game.need_zone && (
+                                            <div>
+                                                <label className="mb-1 block text-xs text-white/70">
+                                                    Server
+                                                </label>
+                                                <input
+                                                    type="text"
+                                                    disabled={isMihoyoGame}
+                                                    placeholder={isMihoyoGame ? 'Otomatis dari UID' : 'Masukkan Server'}
+                                                    value={isMihoyoGame ? detectMihoyoServer(data.user_id)?.name || '' : data.server_id}
+                                                    onChange={(e) => !isMihoyoGame && setData('server_id', e.target.value)}
+                                                    className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary disabled:bg-[#1a1a24] disabled:text-white/60"
+                                                />
+                                            </div>
+                                        )}
                                     </div>
                                     <div
                                         className={`rounded-md px-4 py-2 text-xs ${
@@ -750,7 +728,7 @@ export default function GameDetail({
                                 {/* Overlay: locked until Section 1 & 2 filled */}
                                 {!canSelectProduct && (
                                     <div
-                                        className="absolute inset-0 z-10 flex cursor-not-allowed flex-col items-center justify-center gap-2 rounded-xl bg-black/60 backdrop-blur-[2px]"
+                                        className="absolute inset-0 z-10 flex cursor-not-allowed flex-col items-center justify-start gap-1 rounded-xl bg-black/60 pt-4 backdrop-blur-[2px]"
                                         onClick={() =>
                                             swalWarning(
                                                 !section1Complete
@@ -759,7 +737,7 @@ export default function GameDetail({
                                             )
                                         }
                                     >
-                                        <span className="text-2xl">🔒</span>
+                                        <span className="text-xl">🔒</span>
                                         <p className="text-center text-xs font-semibold text-white/80">
                                             {!section1Complete
                                                 ? 'Lengkapi informasi akun dulu'
@@ -841,13 +819,21 @@ export default function GameDetail({
                                                     className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[#1A1A24] transition-all hover:border-[#6a359c] ${data.product_id === product.id ? 'border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)] ring-1 ring-primary' : 'border-[#31334c]'}`}
                                                 >
                                                     {/* Discount header strip */}
-                                                    {product.discount_percent > 0 && (
+                                                    {product.discount_percent >
+                                                        0 && (
                                                         <div className="flex items-center justify-between bg-orange-500 px-2.5 py-1">
                                                             <span className="text-[10px] font-bold text-white">
-                                                                Disc {product.discount_percent}%
+                                                                Disc{' '}
+                                                                {
+                                                                    product.discount_percent
+                                                                }
+                                                                %
                                                             </span>
                                                             <span className="text-[10px] text-white/70 line-through">
-                                                                Rp {product.original_price?.toLocaleString('id-ID')}
+                                                                Rp{' '}
+                                                                {product.original_price?.toLocaleString(
+                                                                    'id-ID',
+                                                                )}
                                                             </span>
                                                         </div>
                                                     )}
@@ -891,7 +877,9 @@ export default function GameDetail({
                                                         </div>
                                                         <div className="font-bold text-white">
                                                             Rp{' '}
-                                                            {product.price.toLocaleString('id-ID')}
+                                                            {product.price.toLocaleString(
+                                                                'id-ID',
+                                                            )}
                                                         </div>
                                                     </div>
 
@@ -916,7 +904,7 @@ export default function GameDetail({
                             {/* SECTION 4: Detail Pembelian */}
                             <div
                                 ref={promoSectionRef}
-                                className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg"
+                                className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg md:mt-6"
                             >
                                 {/* Header */}
                                 <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
