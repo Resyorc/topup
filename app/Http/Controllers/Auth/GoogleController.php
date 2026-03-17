@@ -19,19 +19,22 @@ class GoogleController extends Controller
     {
         $googleUser = Socialite::driver('google')->user();
 
-        $user = User::firstOrCreate(
-            ['google_id' => $googleUser->getId()],
-            [
+        // Cari by google_id dulu, lalu by email (akun lama sebelum Google login)
+        $user = User::where('google_id', $googleUser->getId())->first()
+            ?? User::where('email', $googleUser->getEmail())->first();
+
+        if ($user) {
+            if (! $user->google_id) {
+                $user->update(['google_id' => $googleUser->getId()]);
+            }
+        } else {
+            $user = User::create([
+                'google_id'         => $googleUser->getId(),
                 'name'              => $googleUser->getName(),
                 'email'             => $googleUser->getEmail(),
                 'email_verified_at' => now(),
                 'password'          => bcrypt(Str::random(32)),
-            ]
-        );
-
-        // Jika user sudah ada dengan email yang sama tapi belum punya google_id
-        if (! $user->wasRecentlyCreated && ! $user->google_id) {
-            $user->update(['google_id' => $googleUser->getId()]);
+            ]);
         }
 
         Auth::login($user, remember: true);
