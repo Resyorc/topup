@@ -1,13 +1,19 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
 import UserLayout from '@/layouts/user-layout';
+import { useState, useEffect } from 'react';
+import axios from 'axios';
 
 export default function TopupSaldo() {
     const page = usePage().props as {
         coinsBalance?: number;
+        qrisCode?: string | null;
+        qrisName?: string;
         auth?: { user?: { phone?: string | null } };
     };
 
     const coinsBalance = page.coinsBalance ?? 0;
+    const qrisCode = page.qrisCode ?? null;
+    const qrisName = page.qrisName ?? 'QRIS';
 
     const { data, setData, post, processing, errors } = useForm({
         amount: 10000,
@@ -15,6 +21,36 @@ export default function TopupSaldo() {
     });
 
     const presetAmounts = [10000, 20000, 50000, 100000, 250000];
+
+    const [adminFee, setAdminFee] = useState<number | null>(null);
+    const [isCalculatingFee, setIsCalculatingFee] = useState(false);
+
+    useEffect(() => {
+        if (!qrisCode || !data.amount || data.amount < 10000) {
+            setAdminFee(null);
+            return;
+        }
+
+        setIsCalculatingFee(true);
+        const controller = new AbortController();
+
+        const timer = setTimeout(() => {
+            axios
+                .post('/api/calculate-fee', { amount: data.amount, method: qrisCode }, { signal: controller.signal })
+                .then((res) => {
+                    if (res.data.success) {
+                        setAdminFee(res.data.data.fee ?? 0);
+                    }
+                })
+                .catch(() => {})
+                .finally(() => setIsCalculatingFee(false));
+        }, 500);
+
+        return () => {
+            clearTimeout(timer);
+            controller.abort();
+        };
+    }, [data.amount, qrisCode]);
 
     return (
         <UserLayout title="Top Up Saldo">
@@ -82,11 +118,12 @@ export default function TopupSaldo() {
                                     type="number"
                                     min={10000}
                                     step={1000}
-                                    value={data.amount}
+                                    value={data.amount || ''}
+                                    onFocus={(e) => e.target.select()}
                                     onChange={(event) =>
                                         setData(
                                             'amount',
-                                            Number(event.target.value) || 0,
+                                            parseInt(event.target.value) || 0,
                                         )
                                     }
                                     className="w-full rounded-xl border border-[#31334c] bg-[#252834] px-4 py-3 text-white transition outline-none focus:border-primary"
@@ -144,6 +181,36 @@ export default function TopupSaldo() {
                                     Setelah invoice dibuat, pembayaran dan QR
                                     code akan ditampilkan di halaman invoice.
                                 </p>
+                            </div>
+
+                            {/* Rincian Pembayaran */}
+                            <div className="rounded-xl border border-[#31334c] bg-[#252834] p-4 space-y-2 text-sm">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-gray-400">Nominal Top Up</span>
+                                    <span className="font-medium text-white">
+                                        Rp {data.amount.toLocaleString('id-ID')}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-gray-400">Biaya Admin ({qrisName})</span>
+                                    {isCalculatingFee ? (
+                                        <span className="inline-block h-3.5 w-20 animate-pulse rounded bg-white/10" />
+                                    ) : (
+                                        <span className="font-medium text-white">
+                                            Rp {(adminFee ?? 0).toLocaleString('id-ID')}
+                                        </span>
+                                    )}
+                                </div>
+                                <div className="border-t border-[#31334c] pt-2 flex items-center justify-between">
+                                    <span className="font-semibold text-white">Total Bayar</span>
+                                    {isCalculatingFee ? (
+                                        <span className="inline-block h-4 w-24 animate-pulse rounded bg-white/10" />
+                                    ) : (
+                                        <span className="font-bold text-[#FFC107]">
+                                            Rp {(data.amount + (adminFee ?? 0)).toLocaleString('id-ID')}
+                                        </span>
+                                    )}
+                                </div>
                             </div>
 
                             <button
