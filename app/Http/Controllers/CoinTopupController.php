@@ -11,7 +11,7 @@ use Inertia\Inertia;
 
 class CoinTopupController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, TripayService $tripayService)
     {
         $user = $request->user();
 
@@ -26,8 +26,15 @@ class CoinTopupController extends Controller
                 'updated_at' => now(),
             ]);
 
+        $qrisMethod = null;
+        try {
+            $qrisMethod = $this->resolveQrisMethod($tripayService);
+        } catch (\Throwable) {}
+
         return Inertia::render('user/topup-saldo', [
             'coinsBalance' => (int) ($user->fresh()->coin_balance ?? 0),
+            'qrisCode'     => $qrisMethod['code'] ?? null,
+            'qrisName'     => $qrisMethod['name'] ?? 'QRIS',
         ]);
     }
 
