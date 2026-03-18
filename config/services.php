@@ -108,6 +108,7 @@ return [
             'lifeafter'                 => ['voucher_id' => 45798,   'price' => 1098977.0,  'voucher_type' => 'NETEASE_LIFEAFTER',  'need_zone' => true],
             'mobile-legends'            => ['voucher_id' => 27684,   'price' => 527250.0,   'voucher_type' => 'MOBILE_LEGENDS',     'need_zone' => true],
             'mobile-legends-adventure'  => ['voucher_id' => 36359,   'price' => 739000.0,   'voucher_type' => 'ADVENTURE',          'need_zone' => true, 'voucher_type_id' => 47],
+            'magic-chess-go-go'         => ['voucher_id' => 997117,  'price' => 1579,   'voucher_type' => '106-MAGIC_CHESS',      'need_zone' => true],
             'mu-origin-2'               => ['voucher_id' => 16273,   'price' => 550000.0,   'voucher_type' => 'OURPALM',            'need_zone' => true],
             'one-punch-man'             => ['voucher_id' => 77832,   'price' => 5500000.0,  'voucher_type' => 'ONE_PUNCH_MAN',      'need_zone' => true],
             'ragnarok-m'                => ['voucher_id' => 414041,  'price' => 1519050.0,  'voucher_type' => 'GRAVITY_RAGNAROK_M', 'need_zone' => true],
