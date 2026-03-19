@@ -22,7 +22,13 @@ interface Game {
     total_sold?: number;
 }
 
+interface Banner {
+    image: string;
+    link: string | null;
+}
+
 interface WelcomeProps {
+    banners: Banner[];
     categories: Category[];
     games: Game[];
     trendingGames: Game[];
@@ -32,6 +38,7 @@ interface WelcomeProps {
 }
 
 export default function Welcome({
+    banners,
     categories,
     games,
     trendingGames,
@@ -74,9 +81,9 @@ export default function Welcome({
         <GuestLayout>
             <Head title="Nuvelo: Top Up Game Murah - Top Up ML & Top Up FF Cepat dan Aman" />
 
-            <HeroBanner />
+            <HeroBanner banners={banners} />
 
-            <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ${banners.length === 0 ? 'pt-6 md:pt-8' : ''}`}>
                 {/* ===== Trending Section ===== */}
                 {/* On mobile: stacked layout (column). On desktop: side-by-side (row) — unchanged. */}
                 {trendingGames.length > 0 && (
