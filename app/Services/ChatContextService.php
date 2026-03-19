@@ -122,13 +122,15 @@ PROMPT;
     private function userContext(User $user): string
     {
         $coin = number_format((int) $user->coin_balance, 0, ',', '.');
+        $name = $this->sanitizeForPrompt($user->name);
+        $email = $this->sanitizeForPrompt($user->email);
 
         return <<<PROMPT
 ## Data Pelanggan Saat Ini
 
 Pelanggan yang sedang chat adalah pengguna terdaftar dengan data berikut:
-- Nama: {$user->name}
-- Email: {$user->email}
+- Nama: {$name}
+- Email: {$email}
 - Saldo Krysta Coin: Rp {$coin}
 - Email terverifikasi: {$this->bool($user->hasVerifiedEmail())}
 PROMPT;
@@ -158,16 +160,19 @@ PROMPT;
         $statusLabel = $statusMap[$transaction->status] ?? $transaction->status;
 
         $snLine = $transaction->sn
-            ? "\n- Kode Voucher / SN: {$transaction->sn}"
+            ? "\n- Kode Voucher / SN: ".$this->sanitizeForPrompt($transaction->sn)
             : '';
 
         $discountLine = $discount > 0
-            ? "\n- Diskon Voucher ({$transaction->voucher_code}): − Rp ".number_format($discount, 0, ',', '.')
+            ? "\n- Diskon Voucher (".$this->sanitizeForPrompt((string) $transaction->voucher_code)."): − Rp ".number_format($discount, 0, ',', '.')
             : '';
 
         $failLine = $transaction->failure_reason
-            ? "\n- Alasan Gagal: {$transaction->failure_reason}"
+            ? "\n- Alasan Gagal: ".$this->sanitizeForPrompt($transaction->failure_reason)
             : '';
+
+        $gameId = $this->sanitizeForPrompt($transaction->customer_game_id);
+        $paymentName = $this->sanitizeForPrompt((string) $transaction->payment_name);
 
         return <<<PROMPT
 ## Transaksi yang Sedang Dilihat Pelanggan
@@ -176,9 +181,9 @@ Pelanggan sedang membuka halaman invoice dengan detail berikut:
 - Invoice ID: {$transaction->invoice_id}
 - Game: {$game->name}
 - Produk: {$product->name}
-- ID Akun Game: {$transaction->customer_game_id}
+- ID Akun Game: {$gameId}
 - Status: {$statusLabel}
-- Metode Bayar: {$transaction->payment_name}
+- Metode Bayar: {$paymentName}
 - Harga Produk: Rp {$amount}{$discountLine}
 - Biaya Admin: Rp {$fee}
 - Total Bayar: Rp {$total}
@@ -320,5 +325,22 @@ PROMPT;
     private function bool(bool $v): string
     {
         return $v ? 'Ya' : 'Tidak';
+    }
+
+    /**
+     * Sanitasi nilai user-controlled sebelum diinterpolasi ke system prompt.
+     * Mencegah prompt injection dengan menghapus newline dan karakter markdown
+     * yang bisa dipakai untuk menyuntikkan instruksi baru ke AI.
+     */
+    private function sanitizeForPrompt(string $value, int $maxLen = 200): string
+    {
+        // Hapus newline — karakter paling umum untuk prompt injection
+        $value = str_replace(["\r\n", "\r", "\n"], ' ', $value);
+
+        // Hapus karakter kontrol non-printable
+        $value = preg_replace('/[\x00-\x1F\x7F]/u', '', $value);
+
+        // Batasi panjang untuk cegah context flooding
+        return mb_substr(trim($value), 0, $maxLen);
     }
 }
