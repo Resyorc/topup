@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Head, useForm, router } from '@inertiajs/react';
+import { Head, useForm, router, usePage } from '@inertiajs/react';
 import GuestLayout from '@/layouts/guest-layout';
 import GameCard from '@/components/game-card';
 import axios from 'axios';
 import { swalError, swalWarning } from '@/lib/swal';
+import { useGuestInvoice } from '@/contexts/guest-invoice-context';
 
 interface Product {
     id: string;
@@ -89,11 +90,24 @@ export default function GameDetail({
     productGroups,
     paymentMethods,
 }: GameDetailProps) {
+    const { addInvoice } = useGuestInvoice();
+    const { auth } = usePage<{ auth: { user: any } }>().props;
+    const userPhone: string = auth?.user?.phone ?? '';
+
+    const COUNTRY_CODE = '+62';
+    const parsePhoneToDigits = (phone: string): string => {
+        let digits = phone.replace(/\D/g, '');
+        if (digits.startsWith('62')) digits = digits.slice(2);
+        return digits.slice(0, 11);
+    };
+    const initialWaDigits = userPhone ? parsePhoneToDigits(userPhone) : '';
+    const phoneFromProfile = initialWaDigits.length >= 9;
+
     // Form State
     const { data, setData, post, processing, errors } = useForm({
         user_id: '',
         server_id: '',
-        whatsapp: '',
+        whatsapp: phoneFromProfile ? COUNTRY_CODE + initialWaDigits : '',
         product_id: '',
         payment_method: '',
         promo_code: '',
@@ -158,6 +172,45 @@ export default function GameDetail({
         }
 
         return subtotal + totalFee;
+    };
+
+    // Voucher state
+    const [voucherLoading, setVoucherLoading] = useState(false);
+    const [appliedVoucher, setAppliedVoucher] = useState<{ discount: number; message: string } | null>(null);
+    const [voucherError, setVoucherError] = useState<string | null>(null);
+
+    const handleApplyVoucher = async () => {
+        if (!data.promo_code.trim()) return;
+        if (!selectedProduct) {
+            setVoucherError('Pilih produk terlebih dahulu.');
+            return;
+        }
+        setVoucherLoading(true);
+        setAppliedVoucher(null);
+        setVoucherError(null);
+        try {
+            const res = await axios.post('/api/validate-voucher', {
+                code:   data.promo_code.trim(),
+                amount: selectedProduct.price,
+            });
+            if (res.data.valid) {
+                setAppliedVoucher({ discount: res.data.discount, message: res.data.message });
+            } else {
+                setVoucherError(res.data.message);
+            }
+        } catch (err: any) {
+            setVoucherError(err.response?.data?.message ?? 'Gagal memvalidasi voucher.');
+        } finally {
+            setVoucherLoading(false);
+        }
+    };
+
+    // Reset voucher ketika produk berubah
+    const handleProductSelect = (productId: string) => {
+        setData('product_id', productId);
+        setAppliedVoucher(null);
+        setVoucherError(null);
+        setData('promo_code', '');
     };
 
     // State for username validation
@@ -314,8 +367,7 @@ export default function GameDetail({
     }, [selectedProduct, calculatedFees, paymentMethods]);
 
     // Format WhatsApp Number (IndoPhone)
-    const [waDigits, setWaDigits] = useState('');
-    const COUNTRY_CODE = '+62';
+    const [waDigits, setWaDigits] = useState(initialWaDigits);
 
     const handleWaChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         let value = e.target.value.replace(/\D/g, '');
@@ -392,6 +444,7 @@ export default function GameDetail({
             customer_whatsapp: data.whatsapp,
             customer_name: validatedUsername,
             payment_method: data.payment_method,
+            promo_code: appliedVoucher && data.promo_code ? data.promo_code : undefined,
         };
 
         try {
@@ -401,10 +454,9 @@ export default function GameDetail({
                 response.data.success &&
                 response.data.data.transaction.invoice_id
             ) {
-                router.visit(
-                    '/invoice?invoice_id=' +
-                        response.data.data.transaction.invoice_id,
-                );
+                const invoiceId = response.data.data.transaction.invoice_id;
+                addInvoice(invoiceId);
+                router.visit('/invoice?invoice_id=' + invoiceId);
             } else {
                 swalError('Gagal membuat pesanan. Silakan coba lagi.');
             }
@@ -702,19 +754,29 @@ export default function GameDetail({
                                 </div>
                                 <div className="space-y-4 p-5">
                                     <div>
-                                        <label className="mb-1 block text-xs text-white/70">
-                                            No. WhatsApp
-                                        </label>
+                                        <div className="mb-1 flex items-center justify-between">
+                                            <label className="text-xs text-white/70">
+                                                No. WhatsApp
+                                            </label>
+                                            {phoneFromProfile && (
+                                                <span className="text-xs text-primary/80">
+                                                    dari profil
+                                                </span>
+                                            )}
+                                        </div>
                                         <input
                                             type="tel"
                                             placeholder="+62 8xxx xxxx xxxx"
                                             value={formattedWa}
                                             onChange={handleWaChange}
-                                            className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
+                                            readOnly={phoneFromProfile}
+                                            className={`w-full rounded-md border-none px-3 py-2 text-sm text-white placeholder-gray-500 outline-none ${phoneFromProfile ? 'cursor-default bg-[#1e1f29] opacity-70' : 'bg-[#2b2834] focus:ring-1 focus:ring-primary'}`}
                                         />
-                                        <p className="mt-2 text-xs text-white/50">
-                                            Contoh: +62 867 0XXX XXXX
-                                        </p>
+                                        {!phoneFromProfile && (
+                                            <p className="mt-2 text-xs text-white/50">
+                                                Contoh: +62 867 0XXX XXXX
+                                            </p>
+                                        )}
                                     </div>
                                     <div className="rounded-md bg-client-warning/15 px-4 py-2 text-xs text-[#FFC107]">
                                         Nomor ini akan kami hubungi jika terjadi
@@ -789,10 +851,7 @@ export default function GameDetail({
                                                             );
                                                             return;
                                                         }
-                                                        setData(
-                                                            'product_id',
-                                                            product.id,
-                                                        );
+                                                        handleProductSelect(product.id);
                                                         if (
                                                             window.innerWidth <
                                                             768
@@ -917,7 +976,7 @@ export default function GameDetail({
                                         </h4>
                                     </div>
                                 </div>
-                                <div className="p-4">
+                                <div className="p-4 space-y-3">
                                     <div>
                                         <label className="mb-1 block text-xs text-white/70">
                                             Kode Promo
@@ -925,21 +984,52 @@ export default function GameDetail({
                                         <div className="flex gap-2">
                                             <input
                                                 type="text"
-                                                placeholder="Masukkan kode promo"
+                                                placeholder="Masukkan kode voucher"
                                                 value={data.promo_code}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        'promo_code',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                className="w-full min-w-0 flex-1 rounded-lg border-none bg-[#2f2a3a] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
+                                                disabled={!!appliedVoucher}
+                                                onChange={(e) => {
+                                                    setData('promo_code', e.target.value.toUpperCase());
+                                                    setVoucherError(null);
+                                                }}
+                                                onKeyDown={(e) => e.key === 'Enter' && handleApplyVoucher()}
+                                                className="w-full min-w-0 flex-1 rounded-lg border-none bg-[#2f2a3a] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary disabled:opacity-60 disabled:cursor-not-allowed uppercase tracking-widest"
                                             />
-                                            <button className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary/80">
-                                                Pakai
-                                            </button>
+                                            {appliedVoucher ? (
+                                                <button
+                                                    onClick={() => {
+                                                        setAppliedVoucher(null);
+                                                        setData('promo_code', '');
+                                                        setVoucherError(null);
+                                                    }}
+                                                    className="shrink-0 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-400 transition hover:bg-red-500/20"
+                                                >
+                                                    Hapus
+                                                </button>
+                                            ) : (
+                                                <button
+                                                    onClick={handleApplyVoucher}
+                                                    disabled={voucherLoading || !data.promo_code.trim()}
+                                                    className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                >
+                                                    {voucherLoading ? '...' : 'Pakai'}
+                                                </button>
+                                            )}
                                         </div>
                                     </div>
+
+                                    {/* Feedback */}
+                                    {appliedVoucher && (
+                                        <div className="flex items-center gap-2 rounded-lg bg-green-500/10 px-3 py-2 text-xs text-green-400 border border-green-500/20">
+                                            <span>✅</span>
+                                            <span>{appliedVoucher.message}</span>
+                                        </div>
+                                    )}
+                                    {voucherError && (
+                                        <div className="flex items-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-400 border border-red-500/20">
+                                            <span>❌</span>
+                                            <span>{voucherError}</span>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
                         </div>
@@ -1378,6 +1468,38 @@ export default function GameDetail({
                                 </div>
                             </div>
                         </div>
+
+                        {/* Loyalty Reward Info Card — only for logged-in users */}
+                        {auth.user && <div className="overflow-hidden rounded-xl border border-yellow-500/20 bg-linear-to-br from-yellow-500/5 to-amber-500/5">
+                            <div className="flex items-start gap-3 p-4">
+                                <span className="mt-0.5 text-2xl leading-none">🪙</span>
+                                <div className="flex-1 min-w-0">
+                                    {selectedProduct && !selectedPayment?.is_coin && selectedProduct.price >= 5000 ? (
+                                        <>
+                                            <p className="text-xs font-bold text-yellow-400">
+                                                Kamu akan mendapat reward!
+                                            </p>
+                                            <p className="mt-0.5 text-[11px] text-gray-400 leading-relaxed">
+                                                Transaksi ini memberikan{' '}
+                                                <span className="font-semibold text-yellow-400">
+                                                    +{Math.floor(selectedProduct.price / 100).toLocaleString('id-ID')} Krysta Coin
+                                                </span>{' '}
+                                                sebagai reward loyalitas (berlaku untuk akun login).
+                                            </p>
+                                        </>
+                                    ) : (
+                                        <>
+                                            <p className="text-xs font-bold text-yellow-400">
+                                                Program Loyalitas
+                                            </p>
+                                            <p className="mt-0.5 text-[11px] text-gray-400 leading-relaxed">
+                                                Dapatkan <span className="font-semibold text-yellow-400">1% cashback</span> dalam bentuk Krysta Coin di setiap transaksi berhasil.
+                                            </p>
+                                        </>
+                                    )}
+                                </div>
+                            </div>
+                        </div>}
                     </div>
                 </div>
             </div>
@@ -1422,6 +1544,26 @@ export default function GameDetail({
                                     </span>
                                 )}
                             </div>
+                            {appliedVoucher && appliedVoucher.discount > 0 && (
+                                <div className="flex items-center justify-between text-xs">
+                                    <span className="flex items-center gap-1 text-green-400">
+                                        🏷️ Diskon Voucher
+                                    </span>
+                                    <span className="font-semibold text-green-400">
+                                        − Rp {appliedVoucher.discount.toLocaleString('id-ID')}
+                                    </span>
+                                </div>
+                            )}
+                            {auth.user && !selectedPayment.is_coin && selectedProduct.price >= 5000 && Math.floor(selectedProduct.price / 100) > 0 && (
+                                <div className="flex items-center justify-between text-xs">
+                                    <span className="flex items-center gap-1 text-yellow-400/90">
+                                        🪙 Reward Krysta Coin
+                                    </span>
+                                    <span className="font-semibold text-yellow-400">
+                                        +{Math.floor(selectedProduct.price / 100).toLocaleString('id-ID')} Coins
+                                    </span>
+                                </div>
+                            )}
                         </div>
                     )}
                     <div className="w-full text-left text-white md:w-auto">
@@ -1431,14 +1573,13 @@ export default function GameDetail({
                         <div className="text-base font-black text-[#FFC107] md:text-xl">
                             {selectedProduct && selectedPayment
                                 ? `Rp ${(
-                                      selectedProduct.price +
-                                      (calculatedFees?.[selectedPayment.id] !==
-                                      undefined
+                                      selectedProduct.price
+                                      - (appliedVoucher?.discount ?? 0)
+                                      + (calculatedFees?.[selectedPayment.id] !== undefined
                                           ? calculatedFees[selectedPayment.id]
                                           : Math.ceil(
                                                 selectedPayment.fee_flat +
-                                                    (selectedProduct.price *
-                                                        1 *
+                                                    ((selectedProduct.price - (appliedVoucher?.discount ?? 0)) *
                                                         selectedPayment.fee_percent) /
                                                         100,
                                             ))

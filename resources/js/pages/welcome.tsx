@@ -119,6 +119,31 @@ export default function Welcome({
                     </section>
                 )}
 
+                {/* ===== Loyalty Program Banner ===== */}
+                {auth.user && <section className="mb-6 md:mb-10">
+                    <div className="rounded-2xl border border-yellow-500/20 bg-gradient-to-r from-yellow-500/5 via-amber-500/5 to-yellow-500/5 px-4 py-3.5 md:px-6 md:py-4">
+                        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-yellow-500/15 text-xl md:h-11 md:w-11 md:text-2xl">
+                                🪙
+                            </div>
+                            <div className="flex-1">
+                                <h3 className="text-sm font-bold text-yellow-400 md:text-[0.9rem]">
+                                    Dapatkan Krysta Coin Setiap Top Up!
+                                </h3>
+                                <p className="mt-0.5 text-xs text-gray-400 leading-relaxed">
+                                    Setiap transaksi berhasil, kamu otomatis mendapat{' '}
+                                    <span className="font-semibold text-yellow-400">cashback 1%</span>{' '}
+                                    dalam bentuk Krysta Coin — bisa dipakai untuk top up berikutnya.
+                                </p>
+                            </div>
+                            <div className="flex shrink-0 flex-row items-center gap-4 rounded-xl border border-yellow-500/20 bg-yellow-500/8 px-4 py-2.5 sm:flex-col sm:gap-0">
+                                <p className="text-xl font-black text-yellow-400 leading-none">1%</p>
+                                <p className="text-[10px] text-gray-400 sm:mt-0.5">Cashback Coin</p>
+                            </div>
+                        </div>
+                    </div>
+                </section>}
+
                 {/* ===== Main Catalog Section ===== */}
                 <section className="mb-10 md:mb-16">
                     {/* Category Tabs — horizontally scrollable on mobile with smaller sizing */}

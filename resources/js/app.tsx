@@ -5,6 +5,7 @@ import { createRoot } from 'react-dom/client';
 import '../css/app.css';
 import { initializeTheme } from '@/hooks/use-appearance';
 import { configureEcho } from '@laravel/echo-react';
+import { GuestInvoiceProvider } from '@/contexts/guest-invoice-context';
 
 configureEcho({
     broadcaster: 'reverb',
@@ -24,7 +25,9 @@ createInertiaApp({
 
         root.render(
             <StrictMode>
-                <App {...props} />
+                <GuestInvoiceProvider>
+                    <App {...props} />
+                </GuestInvoiceProvider>
             </StrictMode>,
         );
     },

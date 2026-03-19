@@ -4,12 +4,14 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use App\Jobs\SendWhatsAppNotification;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Services\AuditLogger;
 use App\Services\TripayService;
 use App\Services\CoinService;
 use App\Services\DigiflazzService;
+use App\Services\VoucherService;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -20,7 +22,7 @@ class CheckoutController extends Controller
     /**
      * Handle the incoming checkout request.
      */
-    public function store(Request $request, TripayService $tripayService, CoinService $coinService)
+    public function store(Request $request, TripayService $tripayService, CoinService $coinService, VoucherService $voucherService)
     {
         $validated = $request->validate([
             'product_id'       => 'required|exists:products,id',
@@ -31,6 +33,7 @@ class CheckoutController extends Controller
             'customer_name'    => 'nullable|string|max:100',
             'customer_email'   => 'nullable|email',
             'qty'              => 'nullable|integer|min:1|max:100',
+            'promo_code'       => 'nullable|string|max:50',
         ]);
 
         $qty             = $validated['qty'] ?? 1;
@@ -72,11 +75,26 @@ class CheckoutController extends Controller
         $merchantRef = 'INV-' . strtoupper(Str::ulid());
         $amount      = (int) $product->price_sell * $qty;
 
+        // ===== VOUCHER =====
+        $discount    = 0;
+        $voucherCode = null;
+
+        if (!empty($validated['promo_code'])) {
+            $voucherResult = $voucherService->validate($validated['promo_code'], $amount);
+            if (!$voucherResult['valid']) {
+                return response()->json(['success' => false, 'message' => $voucherResult['message']], 422);
+            }
+            $discount    = $voucherResult['discount'];
+            $voucherCode = strtoupper(trim($validated['promo_code']));
+        }
+
+        $chargeAmount = $amount - $discount; // amount yang benar-benar ditagihkan
+
         // ===== COIN PAYMENT =====
         if ($validated['payment_method'] === 'COIN') {
             return $this->checkoutWithCoin(
-                $validated, $product, $qty, $merchantRef, $amount,
-                $customerName, $authenticatedUserId, $coinService, $request
+                $validated, $product, $qty, $merchantRef, $amount, $chargeAmount,
+                $discount, $voucherCode, $customerName, $authenticatedUserId, $coinService, $request
             );
         }
 
@@ -94,12 +112,12 @@ class CheckoutController extends Controller
         ];
 
         try {
-            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $orderItems, $customerName, $customerEmail, $tripayService, $authenticatedUserId, $expiredTime, $expiredAt) {
+            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $orderItems, $customerName, $customerEmail, $tripayService, $authenticatedUserId, $expiredTime, $expiredAt, $voucherService) {
 
                 $paymentResponse = $tripayService->createTransaction(
                     $validated['payment_method'],
                     $merchantRef,
-                    $amount,
+                    $chargeAmount,
                     $customerName,
                     $customerEmail,
                     $validated['customer_whatsapp'],
@@ -115,12 +133,14 @@ class CheckoutController extends Controller
                     'product_id'             => $product->id,
                     'customer_game_id'       => $validated['customer_game_id'],
                     'customer_zone_id'       => $validated['customer_zone_id'] ?? null,
-                    'customer_whatsapp'      => maskPhoneNumber($validated['customer_whatsapp']),
+                    'customer_whatsapp'      => $validated['customer_whatsapp'],
                     'customer_name'          => $customerName,
                     'customer_email'         => $customerEmail,
                     'amount'                 => $amount,
                     'fee'                    => $fee,
-                    'profit'                 => ($product->price_sell - $product->price_cost) * $qty,
+                    'discount'               => $discount,
+                    'voucher_code'           => $voucherCode,
+                    'profit'                 => ($product->price_sell - $product->price_cost) * $qty - $discount,
                     'status'                 => 'pending',
                     'sn'                     => null,
                     'payment_url'            => $paymentResponse['checkout_url'] ?? null,
@@ -133,6 +153,10 @@ class CheckoutController extends Controller
                     'pay_url'                => $paymentResponse['pay_url'] ?? null,
                     'api_logs'               => $paymentResponse,
                 ]);
+
+                if ($voucherCode) {
+                    $voucherService->markUsed($voucherCode);
+                }
 
                 return [
                     'transaction'    => $transaction,
@@ -147,6 +171,10 @@ class CheckoutController extends Controller
                 subjectId: $merchantRef,
                 request: $request,
             );
+
+            SendWhatsAppNotification::orderPending($result['transaction']->load('product.game'))
+                ->delay(now()->addSeconds(3))
+                ->dispatch();
 
             return response()->json([
                 'success' => true,
@@ -179,6 +207,9 @@ class CheckoutController extends Controller
         int $qty,
         string $merchantRef,
         int $amount,
+        int $chargeAmount,
+        int $discount,
+        ?string $voucherCode,
         string $customerName,
         ?int $authenticatedUserId,
         CoinService $coinService,
@@ -203,7 +234,7 @@ class CheckoutController extends Controller
         }
 
         // Cek saldo sebelum masuk transaksi
-        if (!$coinService->hasSufficientBalance($user, $amount)) {
+        if (!$coinService->hasSufficientBalance($user, $chargeAmount)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Saldo Krysta Coin tidak cukup. Saldo kamu: ' . $user->coin_balance . ' Coins.',
@@ -211,12 +242,12 @@ class CheckoutController extends Controller
         }
 
         try {
-            $transaction = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $customerName, $authenticatedUserId, $user, $coinService) {
+            $transaction = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $customerName, $authenticatedUserId, $user, $coinService) {
 
                 // 1. Potong saldo coin — otomatis rollback kalau gagal
                 $coinService->debit(
                     $user,
-                    $amount,
+                    $chargeAmount,
                     'Topup ' . $product->game->name . ' - ' . $product->name,
                     $merchantRef
                 );
@@ -228,17 +259,23 @@ class CheckoutController extends Controller
                     'product_id'        => $product->id,
                     'customer_game_id'  => $validated['customer_game_id'],
                     'customer_zone_id'  => $validated['customer_zone_id'] ?? null,
-                    'customer_whatsapp' => maskPhoneNumber($validated['customer_whatsapp']),
+                    'customer_whatsapp' => $validated['customer_whatsapp'],
                     'customer_name'     => $customerName,
                     'customer_email'    => $user->email,
                     'amount'            => $amount,
-                    'profit'            => ($product->price_sell - $product->price_cost) * $qty,
+                    'discount'          => $discount,
+                    'voucher_code'      => $voucherCode,
+                    'profit'            => ($product->price_sell - $product->price_cost) * $qty - $discount,
                     'status'            => 'processing', // langsung processing
                     'payment_status'    => 'paid',       // langsung paid
                     'payment_method'    => 'COIN',
                     'payment_name'      => 'Krysta Coin',
                     'sn'                => null,
                 ]);
+
+                if ($voucherCode) {
+                    app(VoucherService::class)->markUsed($voucherCode);
+                }
 
                 // 3. Kirim ke Digiflazz langsung
                 $digiflazzService = app(\App\Services\DigiflazzService::class);
@@ -258,6 +295,10 @@ class CheckoutController extends Controller
                 subjectId: $merchantRef,
                 request: $request,
             );
+
+            SendWhatsAppNotification::paymentReceived($transaction->load('product.game'))
+                ->delay(now()->addSeconds(3))
+                ->dispatch();
 
             return response()->json([
                 'success' => true,

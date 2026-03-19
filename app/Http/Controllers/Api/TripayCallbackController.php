@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendWhatsAppNotification;
 use App\Models\CoinTopup;
 use Illuminate\Http\Request;
 use App\Models\Transaction;
@@ -81,6 +82,9 @@ class TripayCallbackController extends Controller
                         'status' => 'paid',
                         'paid_at' => now(),
                     ]);
+
+                    SendWhatsAppNotification::coinTopupSuccess($lockedTopup->load('user'))
+                        ->dispatch();
                 } elseif (in_array($data->status, ['EXPIRED', 'FAILED'])) {
                     $lockedTopup->update([
                         'status' => $data->status === 'EXPIRED' ? 'expired' : 'failed',
@@ -129,6 +133,9 @@ class TripayCallbackController extends Controller
                     'payment_status' => 'paid',
                     'status'         => 'processing',
                 ]);
+
+                SendWhatsAppNotification::paymentReceived($transaction->load('product.game'))
+                    ->dispatch();
 
                 Log::info('Digiflazz Topup Result', ['ref' => $transaction->invoice_id, 'result' => $topupResult]);
 

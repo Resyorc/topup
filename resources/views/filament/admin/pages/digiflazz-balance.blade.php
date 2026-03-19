@@ -2,14 +2,12 @@
     <div class="space-y-6">
 
         @if ($errorMessage)
-            <x-filament::section>
-                <div class="flex items-center gap-3 text-danger-600 dark:text-danger-400">
-                    <x-heroicon-o-exclamation-triangle class="h-6 w-6 shrink-0" />
-                    <div>
-                        <p class="font-semibold">Gagal mengambil saldo</p>
-                        <p class="text-sm opacity-75">{{ $errorMessage }}</p>
-                    </div>
-                </div>
+            <x-filament::section
+                icon="heroicon-o-exclamation-triangle"
+                icon-color="danger"
+                heading="Gagal mengambil saldo"
+            >
+                <p class="text-sm text-danger-600 dark:text-danger-400">{{ $errorMessage }}</p>
             </x-filament::section>
         @else
             <x-filament::section>
@@ -26,7 +24,10 @@
                         <p class="mt-2 text-xs text-gray-400">Terakhir diperbarui: {{ now()->format('d M Y, H:i:s') }} WIB</p>
                     </div>
                     <div class="rounded-full bg-primary-50 p-3 dark:bg-primary-950">
-                        <x-heroicon-o-banknotes class="h-6 w-6 text-primary-600 dark:text-primary-400" />
+                        <x-filament::icon
+                            icon="heroicon-o-banknotes"
+                            class="h-6 w-6 text-primary-600 dark:text-primary-400"
+                        />
                     </div>
                 </div>
             </x-filament::section>

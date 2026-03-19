@@ -1,6 +1,7 @@
 import { Link, usePage } from '@inertiajs/react';
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import NewsTicker from '@/components/news-ticker';
+import LiveChat from '@/components/live-chat';
 import { useEcho } from '@laravel/echo-react';
 import { Toaster, toast } from 'sonner';
 
@@ -32,6 +33,21 @@ export default function GuestLayout({
                   '🔥 PROMO SPESIAL MINGGU INI!',
                   'TOP UP DI Nuvelo CEPAT & TERPERCAYA',
               ];
+
+    // Bangun chat context dari URL saat ini
+    const chatContext = useMemo(() => {
+        const ctx: Record<string, string> = { page: currentUrl };
+
+        // /invoice?invoice_id=INV-xxx
+        const invoiceMatch = currentUrl.match(/[?&]invoice_id=([^&]+)/);
+        if (invoiceMatch) ctx.invoice_id = decodeURIComponent(invoiceMatch[1]);
+
+        // /order/{slug}
+        const orderMatch = currentUrl.match(/^\/order\/([^?/]+)/);
+        if (orderMatch) ctx.game_slug = orderMatch[1];
+
+        return ctx;
+    }, [currentUrl]);
 
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
     const [notifOpen, setNotifOpen] = useState(false);
@@ -650,6 +666,7 @@ export default function GuestLayout({
         />
 
         {auth?.user && <TransactionNotifier userId={auth.user.id} onNotification={handleNotification} />}
+        <LiveChat context={chatContext} />
         </>
     );
 }

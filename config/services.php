@@ -55,6 +55,25 @@ return [
         'mode' => env('TRIPAY_MODE', 'sandbox'),
     ],
 
+    'fonnte' => [
+        'token' => env('FONNTE_TOKEN'),
+    ],
+
+    'anthropic' => [
+        'api_key' => env('ANTHROPIC_API_KEY'),
+    ],
+
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+    ],
+
+    'loyalty' => [
+        // Persentase reward dari harga produk (1 = 1%, artinya Rp10.000 → 100 Coin)
+        'rate_percent' => env('LOYALTY_RATE_PERCENT', 1),
+        // Minimum amount transaksi agar dapat reward
+        'min_amount'   => env('LOYALTY_MIN_AMOUNT', 5000),
+    ],
+
     'user_id_check' => [
         'endpoint'     => 'https://order-sg.codashop.com/initPayment.action',
         'timeout'      => 5,
