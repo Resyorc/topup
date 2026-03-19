@@ -75,7 +75,7 @@ class CoinTopupController extends Controller
             'invoice_id' => $merchantRef,
             'amount' => (int) $validated['amount'],
             'status' => 'pending',
-            'customer_whatsapp' => maskPhoneNumber($validated['customer_whatsapp']),
+            'customer_whatsapp' => $validated['customer_whatsapp'],
             'payment_method' => $paymentResponse['payment_method'] ?? $qrisMethod['code'],
             'payment_name' => $paymentResponse['payment_name'] ?? $qrisMethod['name'],
             'payment_url' => $paymentResponse['checkout_url'] ?? null,

@@ -9,7 +9,7 @@ class TransactionObserver
 {
     public function updated(Transaction $transaction): void
     {
-        if ($transaction->wasChanged('status') && $transaction->user_id) {
+        if ($transaction->wasChanged('status')) {
             TransactionStatusUpdated::dispatch($transaction);
         }
     }

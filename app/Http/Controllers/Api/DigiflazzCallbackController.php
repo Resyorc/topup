@@ -3,11 +3,13 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\SendWhatsAppNotification;
 use Illuminate\Http\Request;
 use App\Models\Game;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\CoinService;
+use App\Services\LoyaltyService;
 use Illuminate\Support\Facades\Log;
 
 class DigiflazzCallbackController extends Controller
@@ -70,10 +72,16 @@ class DigiflazzCallbackController extends Controller
             ]);
 
             // Increment total_sold di tabel games
-            $gameId = $transaction->load('product')->product->game_id ?? null;
+            $gameId = $transaction->load('product.game')->product->game_id ?? null;
             if ($gameId) {
                 Game::where('id', $gameId)->increment('total_sold');
             }
+
+            // Berikan reward loyalitas (hanya user login, bukan bayar via Coin)
+            app(LoyaltyService::class)->awardFromTransaction($transaction->load('product.game'));
+
+            // Refresh agar loyalty_coins sudah terisi sebelum dikirim ke WA
+            SendWhatsAppNotification::topupSuccess($transaction->refresh())->dispatch();
 
             Log::info("Digiflazz Topup SUKSES for Invoice: {$refId}");
         } elseif ($status === 'gagal') {
@@ -101,6 +109,8 @@ class DigiflazzCallbackController extends Controller
                     Log::error("Coin refund failed for invoice {$refId}: " . $e->getMessage());
                 }
             }
+
+            SendWhatsAppNotification::topupFailed($transaction->load('product.game'))->dispatch();
 
             Log::info("Digiflazz Topup GAGAL for Invoice: {$refId} - RC: {$rc}");
         }

@@ -29,7 +29,7 @@ class GameController extends Controller
             'id' => $game->id,
             'name' => $game->name,
             'slug' => $game->slug,
-            'publisher' => $game->publisher ?? 'Nebu Publisher',
+            'publisher' => $game->publisher ?? 'Nuvelo Publisher',
             'thumbnail' => $game->thumbnail ? '/storage/' . $game->thumbnail : null,
             'image' => $game->image ? '/storage/' . $game->image : null,
             'rating' => $game->reviews_count > 0 ? number_format($game->rating, 2) : '—',

@@ -128,7 +128,7 @@ class InvoiceController extends Controller
             'expired_at_unix'=> $transaction->expired_at?->timestamp,
             'game' => [
                 'name'      => $transaction->product->game->name,
-                'publisher' => $transaction->product->game->publisher ?? 'Nebu Publisher',
+                'publisher' => $transaction->product->game->publisher ?? 'Nuvelo Publisher',
                 'image'     => $transaction->product->game->image ?? '/storage/games/dummy-ml.jpg',
                 'slug'      => $transaction->product->game->slug ?? '',
             ],
@@ -153,10 +153,11 @@ class InvoiceController extends Controller
                 ? $transaction->api_logs['instructions']
                 : [],
 
-            'price' => (int) $transaction->amount,
-            'qty'   => 1,
-            'fee'   => (int) $transaction->fee,
-            'total' => (int) $transaction->amount + (int) $transaction->fee,
+            'price'         => (int) $transaction->amount,
+            'qty'           => 1,
+            'fee'           => (int) $transaction->fee,
+            'total'         => (int) $transaction->amount + (int) $transaction->fee,
+            'loyalty_coins' => (int) $transaction->loyalty_coins,
         ];
     }
 

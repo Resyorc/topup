@@ -12,10 +12,7 @@ export default function HeroBanner() {
                     <div className="relative z-10 flex h-full w-full flex-col justify-center p-8 md:w-2/3 md:p-12">
                         <div className="mb-4 hidden items-center gap-1 opacity-80 md:flex">
                             <span className="text-2xl font-black tracking-tighter text-white">
-                                N
-                            </span>
-                            <span className="-ml-1 text-2xl font-bold tracking-tighter text-white">
-                                ebu.
+                                Nuvelo
                             </span>
                         </div>
                         <h1 className="text-3xl leading-tight font-black tracking-tight text-white uppercase italic drop-shadow-lg md:text-5xl">

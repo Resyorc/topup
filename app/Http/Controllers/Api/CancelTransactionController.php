@@ -21,6 +21,13 @@ class CancelTransactionController extends Controller
         // Coba di transactions dulu
         $transaction = Transaction::where('invoice_id', $invoiceId)
             ->where('status', 'pending')
+            ->where(function ($q) {
+                if (auth()->check()) {
+                    $q->where(‘user_id’, auth()->id())->orWhereNull(‘user_id’);
+                } else {
+                    $q->whereNull(‘user_id’);
+                }
+            })
             ->first();
 
         if ($transaction) {
@@ -35,9 +42,17 @@ class CancelTransactionController extends Controller
             return response()->json(['success' => true]);
         }
 
-        // Coba di coin_topups
+        // Coba di coin_topups — hanya untuk user yang login
+        if (!auth()->check()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pesanan tidak ditemukan atau tidak bisa dibatalkan.',
+            ], 422);
+        }
+
         $coinTopup = CoinTopup::where('invoice_id', $invoiceId)
             ->where('status', 'pending')
+            ->where('user_id', auth()->id())
             ->first();
 
         if ($coinTopup) {
