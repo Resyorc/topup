@@ -83,7 +83,7 @@ class DigiflazzCallbackController extends Controller
             app(LoyaltyService::class)->awardFromTransaction($transaction->load('product.game'));
 
             // Refresh agar loyalty_coins sudah terisi sebelum dikirim ke WA
-            SendWhatsAppNotification::topupSuccess($transaction->refresh())->dispatch();
+            dispatch(SendWhatsAppNotification::topupSuccess($transaction->refresh()));
 
             Log::info("Digiflazz Topup SUKSES for Invoice: {$refId}");
         } elseif ($status === 'gagal') {
@@ -112,7 +112,7 @@ class DigiflazzCallbackController extends Controller
                 }
             }
 
-            SendWhatsAppNotification::topupFailed($transaction->load('product.game'))->dispatch();
+            dispatch(SendWhatsAppNotification::topupFailed($transaction->load('product.game')));
 
             Log::info("Digiflazz Topup GAGAL for Invoice: {$refId} - RC: {$rc}");
         }
