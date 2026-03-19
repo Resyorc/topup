@@ -45,7 +45,8 @@ class CheckoutController extends Controller
             return response()->json(['error' => 'Product is currently unavailable.'], 400);
         }
 
-        // Cegah double order: hanya untuk user yang login
+        // Cegah double order: early check di luar transaction untuk UX yang cepat.
+        // Re-check dengan lockForUpdate dilakukan di dalam DB::transaction (lihat bawah).
         if ($authenticatedUserId) {
             $existingTransaction = Transaction::where('product_id', $product->id)
                 ->where('customer_game_id', $validated['customer_game_id'])
@@ -109,8 +110,33 @@ class CheckoutController extends Controller
             ],
         ];
 
+        $duplicateInfo = null;
+
         try {
-            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $orderItems, $customerName, $customerEmail, $tripayService, $authenticatedUserId, $expiredTime, $expiredAt, $voucherService) {
+            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $orderItems, $customerName, $customerEmail, $tripayService, $authenticatedUserId, $expiredTime, $expiredAt, $voucherService, &$duplicateInfo) {
+
+                // Re-check double order di dalam transaction dengan lockForUpdate — cegah race condition.
+                if ($authenticatedUserId) {
+                    $duplicate = Transaction::where('product_id', $product->id)
+                        ->where('customer_game_id', $validated['customer_game_id'])
+                        ->where('user_id', $authenticatedUserId)
+                        ->whereIn('status', ['pending', 'processing'])
+                        ->where(function ($q) {
+                            $q->whereNull('expired_at')->orWhere('expired_at', '>', now());
+                        })
+                        ->lockForUpdate()
+                        ->first();
+
+                    if ($duplicate) {
+                        $duplicateInfo = [
+                            'invoice_id' => $duplicate->invoice_id,
+                            'status' => $duplicate->status,
+                            'expired_at' => $duplicate->expired_at?->toDateTimeString(),
+                        ];
+
+                        return null;
+                    }
+                }
 
                 $paymentResponse = $tripayService->createTransaction(
                     $validated['payment_method'],
@@ -152,8 +178,9 @@ class CheckoutController extends Controller
                     'api_logs' => $paymentResponse,
                 ]);
 
+                // Atomic: re-validasi + increment used_count dalam satu lock — cegah race condition voucher.
                 if ($voucherCode) {
-                    $voucherService->markUsed($voucherCode);
+                    $voucherService->validateAndClaim($voucherCode, $amount);
                 }
 
                 return [
@@ -161,6 +188,14 @@ class CheckoutController extends Controller
                     'paymentResponse' => $paymentResponse,
                 ];
             });
+
+            if ($duplicateInfo !== null) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kamu masih memiliki pesanan aktif untuk produk ini. Selesaikan atau tunggu pesanan sebelumnya expired.',
+                    'data' => $duplicateInfo,
+                ], 409);
+            }
 
             AuditLogger::log(
                 event: 'checkout',
@@ -187,6 +222,13 @@ class CheckoutController extends Controller
 
         } catch (\Exception $e) {
             Log::error('Checkout Error: '.$e->getMessage(), ['request' => $validated]);
+
+            // Voucher errors dari validateAndClaim — aman dikembalikan ke user
+            if (str_starts_with($e->getMessage(), 'Voucher')
+                || str_starts_with($e->getMessage(), 'Kode voucher')
+                || str_starts_with($e->getMessage(), 'Minimum pembelian')) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
 
             return response()->json([
                 'success' => false,
@@ -242,6 +284,21 @@ class CheckoutController extends Controller
         try {
             $transaction = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $customerName, $authenticatedUserId, $user, $coinService) {
 
+                // Re-check double order di dalam transaction dengan lockForUpdate — cegah race condition.
+                $duplicate = Transaction::where('product_id', $product->id)
+                    ->where('customer_game_id', $validated['customer_game_id'])
+                    ->where('user_id', $authenticatedUserId)
+                    ->whereIn('status', ['pending', 'processing'])
+                    ->where(function ($q) {
+                        $q->whereNull('expired_at')->orWhere('expired_at', '>', now());
+                    })
+                    ->lockForUpdate()
+                    ->first();
+
+                if ($duplicate) {
+                    throw new \Exception('DUPLICATE_ORDER');
+                }
+
                 // 1. Potong saldo coin — otomatis rollback kalau gagal
                 $coinService->debit(
                     $user,
@@ -271,8 +328,9 @@ class CheckoutController extends Controller
                     'sn' => null,
                 ]);
 
+                // Atomic: re-validasi + increment used_count dalam satu lock — cegah race condition voucher.
                 if ($voucherCode) {
-                    app(VoucherService::class)->markUsed($voucherCode);
+                    app(VoucherService::class)->validateAndClaim($voucherCode, $amount);
                 }
 
                 // 3. Kirim ke Digiflazz langsung
@@ -309,11 +367,27 @@ class CheckoutController extends Controller
         } catch (\Exception $e) {
             Log::error('Coin Checkout Error: '.$e->getMessage(), ['request' => $validated]);
 
+            if ($e->getMessage() === 'DUPLICATE_ORDER') {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kamu masih memiliki pesanan aktif untuk produk ini. Selesaikan atau tunggu pesanan sebelumnya expired.',
+                ], 409);
+            }
+
+            if ($e->getMessage() === 'Saldo coin tidak cukup.') {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
+            }
+
+            // Voucher errors dari validateAndClaim — aman dikembalikan ke user
+            if (str_starts_with($e->getMessage(), 'Voucher')
+                || str_starts_with($e->getMessage(), 'Kode voucher')
+                || str_starts_with($e->getMessage(), 'Minimum pembelian')) {
+                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+            }
+
             return response()->json([
                 'success' => false,
-                'message' => $e->getMessage() === 'Saldo coin tidak cukup.'
-                    ? $e->getMessage()
-                    : 'Checkout gagal. Silakan coba lagi.',
+                'message' => 'Checkout gagal. Silakan coba lagi.',
             ], 500);
         }
     }

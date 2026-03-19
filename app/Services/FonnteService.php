@@ -21,9 +21,10 @@ class FonnteService
         $target = ltrim($target, '+');
 
         try {
+            // Fonnte mengharapkan form-data (bukan JSON) — sesuai dokumentasi resmi
             $response = Http::withHeaders([
                 'Authorization' => $token,
-            ])->post('https://api.fonnte.com/send', [
+            ])->asForm()->post('https://api.fonnte.com/send', [
                 'target' => $target,
                 'message' => $message,
                 'countryCode' => '62',

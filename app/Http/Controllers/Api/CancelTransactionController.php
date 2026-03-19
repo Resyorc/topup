@@ -18,14 +18,15 @@ class CancelTransactionController extends Controller
 
         $invoiceId = $validated['invoice_id'];
 
-        // Coba di transactions dulu
+        // Coba di transactions dulu.
+        // User login hanya boleh cancel miliknya sendiri — tidak boleh cancel order guest (IDOR fix).
         $transaction = Transaction::where('invoice_id', $invoiceId)
             ->where('status', 'pending')
             ->where(function ($q) {
                 if (auth()->check()) {
-                    $q->where(‘user_id’, auth()->id())->orWhereNull(‘user_id’);
+                    $q->where('user_id', auth()->id());
                 } else {
-                    $q->whereNull(‘user_id’);
+                    $q->whereNull('user_id');
                 }
             })
             ->first();

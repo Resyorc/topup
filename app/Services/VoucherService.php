@@ -55,6 +55,47 @@ class VoucherService
     }
 
     /**
+     * Validasi dan tandai voucher terpakai dalam satu operasi atomik.
+     * Harus dipanggil di dalam DB::transaction aktif — menggunakan lockForUpdate
+     * untuk mencegah race condition (TOCTOU) saat voucher hampir habis kuota.
+     *
+     * @throws \Exception bila voucher tidak valid atau sudah habis
+     */
+    public function validateAndClaim(string $code, int $amount): int
+    {
+        $voucher = Voucher::where('code', strtoupper(trim($code)))
+            ->where('is_active', true)
+            ->lockForUpdate()
+            ->first();
+
+        if (! $voucher) {
+            throw new \Exception('Kode voucher tidak ditemukan.');
+        }
+
+        if ($voucher->valid_from && $voucher->valid_from->isFuture()) {
+            throw new \Exception('Voucher belum aktif.');
+        }
+
+        if ($voucher->valid_until && $voucher->valid_until->isPast()) {
+            throw new \Exception('Voucher sudah kadaluarsa.');
+        }
+
+        if ($voucher->usage_limit !== null && $voucher->used_count >= $voucher->usage_limit) {
+            throw new \Exception('Voucher sudah habis digunakan.');
+        }
+
+        if ($amount < $voucher->min_amount) {
+            throw new \Exception(
+                'Minimum pembelian Rp '.number_format($voucher->min_amount, 0, ',', '.').' untuk voucher ini.'
+            );
+        }
+
+        $voucher->increment('used_count');
+
+        return $voucher->calculateDiscount($amount);
+    }
+
+    /**
      * Tandai voucher terpakai (increment used_count).
      */
     public function markUsed(string $code): void

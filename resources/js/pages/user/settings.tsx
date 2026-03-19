@@ -1,5 +1,6 @@
 import { useForm, usePage, router } from '@inertiajs/react';
 import axios from 'axios';
+import DOMPurify from 'dompurify';
 import React, { useRef, useState } from 'react';
 import UserLayout from '@/layouts/user-layout';
 
@@ -569,7 +570,7 @@ export default function Settings() {
                                 </p>
                                 <div
                                     className="w-fit rounded-xl bg-white p-3"
-                                    dangerouslySetInnerHTML={{ __html: qrSvg }}
+                                    dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(qrSvg, { USE_PROFILES: { svg: true, svgFilters: true } }) }}
                                 />
                                 {secretKey && (
                                     <div>
