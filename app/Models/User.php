@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -11,14 +13,12 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\URL;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Permission\Traits\HasRoles;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
 
 class User extends Authenticatable implements FilamentUser, MustVerifyEmail
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable, TwoFactorAuthenticatable, HasRoles;
-    
+    use HasFactory, HasRoles, Notifiable, TwoFactorAuthenticatable;
+
     public function canAccessPanel(Panel $panel): bool
     {
         return $this->hasAnyRole(['Super Admin', 'Admin', 'Staff']);
@@ -40,7 +40,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             <div style="font-family: sans-serif; max-width: 600px; margin: 0 auto; padding: 24px;">
                 <h2>Verifikasi Email Anda</h2>
                 <p>Klik tombol di bawah untuk memverifikasi alamat email Anda.</p>
-                <a href="' . $verificationUrl . '"
+                <a href="'.$verificationUrl.'"
                    style="display: inline-block; padding: 12px 24px; background-color: #4F46E5;
                           color: white; text-decoration: none; border-radius: 6px; margin: 16px 0;">
                     Verifikasi Email
@@ -53,7 +53,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             ',
             function ($message) {
                 $message->to($this->email)
-                        ->subject('Verifikasi Email - ' . config('app.name'));
+                    ->subject('Verifikasi Email - '.config('app.name'));
             }
         );
     }

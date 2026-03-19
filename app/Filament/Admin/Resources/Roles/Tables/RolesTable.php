@@ -2,8 +2,8 @@
 
 namespace App\Filament\Admin\Resources\Roles\Tables;
 
-use Filament\Actions\EditAction;
 use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Table;
 

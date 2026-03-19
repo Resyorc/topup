@@ -1,4 +1,4 @@
-import { InertiaLinkProps, Link } from '@inertiajs/react';
+import { Link } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
 
 interface GameCardProps {
@@ -14,7 +14,6 @@ interface GameCardProps {
 }
 
 export default function GameCard({
-    id,
     cardSize = 'md',
     active = false,
     customClass = '',
@@ -44,21 +43,25 @@ export default function GameCard({
     const [loaded, setLoaded] = useState(false);
     const [error, setError] = useState(false);
     const [currentImgSrc, setCurrentImgSrc] = useState(imgSrc);
+    const [prevImgSrc, setPrevImgSrc] = useState(imgSrc);
     const imgRef = useRef<HTMLImageElement>(null);
 
     // Ensure images loaded from cache still trigger the 'loaded' state
     useEffect(() => {
-        if (imgRef.current && imgRef.current.complete) {
-            setLoaded(true);
+        const img = imgRef.current;
+        if (img && img.complete) {
+            const timerId = setTimeout(() => setLoaded(true), 0);
+            return () => clearTimeout(timerId);
         }
     }, [currentImgSrc]);
 
-    // Update if props change
-    useEffect(() => {
+    // Reset state when imgSrc prop changes (React derived-state pattern)
+    if (prevImgSrc !== imgSrc) {
+        setPrevImgSrc(imgSrc);
         setCurrentImgSrc(imgSrc);
         setLoaded(false);
         setError(false);
-    }, [imgSrc]);
+    }
 
     const handleImageError = () => {
         const fallback = `https://ui-avatars.com/api/?name=${encodeURIComponent(title)}&color=ffffff&background=8327d8&size=512&rounded=true&font-size=0.33`;

@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useRef } from 'react';
 import { Head, useForm, router, usePage } from '@inertiajs/react';
-import GuestLayout from '@/layouts/guest-layout';
-import GameCard from '@/components/game-card';
 import axios from 'axios';
-import { swalError, swalWarning } from '@/lib/swal';
+import React, { useState, useEffect, useRef } from 'react';
+import GameCard from '@/components/game-card';
 import { useGuestInvoice } from '@/contexts/guest-invoice-context';
+import GuestLayout from '@/layouts/guest-layout';
+import { swalError, swalWarning } from '@/lib/swal';
 
 interface Product {
     id: string;
@@ -104,7 +104,7 @@ export default function GameDetail({
     const phoneFromProfile = initialWaDigits.length >= 9;
 
     // Form State
-    const { data, setData, post, processing, errors } = useForm({
+    const { data, setData } = useForm({
         user_id: '',
         server_id: '',
         whatsapp: phoneFromProfile ? COUNTRY_CODE + initialWaDigits : '',
@@ -160,19 +160,6 @@ export default function GameDetail({
     const selectedPayment = Object.values(paymentMethods)
         .flat()
         .find((pm) => pm.id === data.payment_method); // Assuming paymentMethods might be grouped
-
-    // Calculate total including Tripay fees
-    const calculateTotal = (pm: PaymentMethod) => {
-        if (!selectedProduct) return 0;
-        const subtotal = selectedProduct.price;
-
-        let totalFee = pm.fee_flat;
-        if (pm.fee_percent > 0) {
-            totalFee += Math.ceil((subtotal * pm.fee_percent) / 100);
-        }
-
-        return subtotal + totalFee;
-    };
 
     // Voucher state
     const [voucherLoading, setVoucherLoading] = useState(false);
@@ -469,22 +456,6 @@ export default function GameDetail({
             setIsSubmitting(false);
             setShowModal(false);
         }
-    };
-
-    const handleCheckoutClick = () => {
-        if (!data.product_id) {
-            swalWarning('Silakan pilih produk terlebih dahulu!');
-            return;
-        }
-        if (!data.payment_method) {
-            swalWarning('Silakan pilih metode pembayaran!');
-            return;
-        }
-        setShowModal(true);
-    };
-
-    const confirmCheckout = () => {
-        setShowModal(false);
     };
 
     return (
@@ -1001,7 +972,7 @@ export default function GameDetail({
                                                         setData('promo_code', '');
                                                         setVoucherError(null);
                                                     }}
-                                                    className="shrink-0 rounded-lg border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm font-semibold text-red-400 transition hover:bg-red-500/20"
+                                                    className="shrink-0 rounded-lg border border-red-500/40 bg-red-500/10 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-red-400 transition hover:bg-red-500/20"
                                                 >
                                                     Hapus
                                                 </button>
@@ -1009,7 +980,7 @@ export default function GameDetail({
                                                 <button
                                                     onClick={handleApplyVoucher}
                                                     disabled={voucherLoading || !data.promo_code.trim()}
-                                                    className="shrink-0 rounded-lg bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    className="shrink-0 rounded-lg bg-primary px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white transition hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
                                                 >
                                                     {voucherLoading ? '...' : 'Pakai'}
                                                 </button>
@@ -1056,12 +1027,6 @@ export default function GameDetail({
                                             const isOpen =
                                                 openCategories[category] !==
                                                 false;
-                                            const isQRIS =
-                                                category.toUpperCase() ===
-                                                    'QRIS' ||
-                                                category
-                                                    .toUpperCase()
-                                                    .includes('QRIS');
                                             const isCoin =
                                                 category === 'Krysta Coin';
 
@@ -1172,10 +1137,7 @@ export default function GameDetail({
                                                     {(isOpen || isCoin) && (
                                                         <div className="space-y-2 bg-[#2f2a3a] p-3">
                                                             {methods.map(
-                                                                (
-                                                                    method,
-                                                                    index,
-                                                                ) => {
+                                                                (method) => {
                                                                     const subtotal =
                                                                         (selectedProduct?.price ||
                                                                             0) *
@@ -1471,8 +1433,8 @@ export default function GameDetail({
 
                         {/* Loyalty Reward Info Card — only for logged-in users */}
                         {auth.user && <div className="overflow-hidden rounded-xl border border-yellow-500/20 bg-linear-to-br from-yellow-500/5 to-amber-500/5">
-                            <div className="flex items-start gap-3 p-4">
-                                <span className="mt-0.5 text-2xl leading-none">🪙</span>
+                            <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4">
+                                <span className="mt-0.5 shrink-0 text-xl sm:text-2xl leading-none">🪙</span>
                                 <div className="flex-1 min-w-0">
                                     {selectedProduct && !selectedPayment?.is_coin && selectedProduct.price >= 5000 ? (
                                         <>
@@ -1509,9 +1471,9 @@ export default function GameDetail({
                 <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-3 py-3 sm:flex-row sm:px-6 md:flex-row md:gap-4 md:px-4 md:py-4 lg:px-8">
                     {/* Payment Breakdown */}
                     {selectedProduct && selectedPayment && (
-                        <div className="w-full space-y-1.5 border-b border-[#31334c] pb-3">
-                            <div className="flex items-center justify-between text-xs">
-                                <span className="text-gray-400">
+                        <div className="w-full space-y-1 sm:space-y-1.5 border-b border-[#31334c] pb-2 sm:pb-3">
+                            <div className="flex items-center justify-between gap-2 text-xs">
+                                <span className="shrink-0 text-gray-400">
                                     Harga Produk
                                 </span>
                                 <span className="font-medium text-white">
@@ -1521,8 +1483,8 @@ export default function GameDetail({
                                     )}
                                 </span>
                             </div>
-                            <div className="flex items-center justify-between text-xs">
-                                <span className="text-gray-400">
+                            <div className="flex items-center justify-between gap-2 text-xs">
+                                <span className="min-w-0 truncate text-gray-400">
                                     Biaya Admin ({selectedPayment.name})
                                 </span>
                                 {isCalculatingFee ? (
@@ -1545,8 +1507,8 @@ export default function GameDetail({
                                 )}
                             </div>
                             {appliedVoucher && appliedVoucher.discount > 0 && (
-                                <div className="flex items-center justify-between text-xs">
-                                    <span className="flex items-center gap-1 text-green-400">
+                                <div className="flex items-center justify-between gap-2 text-xs">
+                                    <span className="shrink-0 flex items-center gap-1 text-green-400">
                                         🏷️ Diskon Voucher
                                     </span>
                                     <span className="font-semibold text-green-400">
@@ -1555,9 +1517,9 @@ export default function GameDetail({
                                 </div>
                             )}
                             {auth.user && !selectedPayment.is_coin && selectedProduct.price >= 5000 && Math.floor(selectedProduct.price / 100) > 0 && (
-                                <div className="flex items-center justify-between text-xs">
-                                    <span className="flex items-center gap-1 text-yellow-400/90">
-                                        🪙 Reward Krysta Coin
+                                <div className="flex items-center justify-between gap-2 text-xs">
+                                    <span className="shrink-0 flex items-center gap-1 text-yellow-400/90">
+                                        🪙 Reward
                                     </span>
                                     <span className="font-semibold text-yellow-400">
                                         +{Math.floor(selectedProduct.price / 100).toLocaleString('id-ID')} Coins
@@ -1566,11 +1528,11 @@ export default function GameDetail({
                             )}
                         </div>
                     )}
-                    <div className="w-full text-left text-white md:w-auto">
-                        <div className="text-xs text-gray-400 md:text-sm">
+                    <div className="w-full text-left text-white sm:w-auto">
+                        <div className="text-xs text-gray-400 sm:text-sm">
                             Total Pembayaran
                         </div>
-                        <div className="text-base font-black text-[#FFC107] md:text-xl">
+                        <div className="text-base font-black text-[#FFC107] sm:text-lg md:text-xl">
                             {selectedProduct && selectedPayment
                                 ? `Rp ${(
                                       selectedProduct.price

@@ -24,7 +24,8 @@ class FortifyServiceProvider extends ServiceProvider
         $this->app->singleton(
             \Laravel\Fortify\Contracts\LoginResponse::class,
             function () {
-                return new class implements \Laravel\Fortify\Contracts\LoginResponse {
+                return new class implements \Laravel\Fortify\Contracts\LoginResponse
+                {
                     public function toResponse($request)
                     {
                         return redirect()->intended(config('fortify.home'));

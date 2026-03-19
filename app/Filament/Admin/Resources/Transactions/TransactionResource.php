@@ -4,7 +4,6 @@ namespace App\Filament\Admin\Resources\Transactions;
 
 use App\Filament\Admin\Clusters\MonitorCluster;
 use App\Filament\Admin\Resources\Transactions\Pages\ListTransactions;
-use App\Filament\Admin\Resources\Transactions\Pages\ViewTransaction;
 use App\Filament\Admin\Resources\Transactions\Schemas\TransactionForm;
 use App\Filament\Admin\Resources\Transactions\Tables\TransactionsTable;
 use App\Models\Transaction;

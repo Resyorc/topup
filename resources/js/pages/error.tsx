@@ -100,7 +100,7 @@ export default function ErrorPage({ status }: ErrorPageProps) {
                     </div>
 
                     {/* Divider line */}
-                    <div className="mx-auto my-6 h-px w-48 bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
+                    <div className="mx-auto my-4 sm:my-6 h-px w-32 sm:w-48 bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
 
                     {/* Title */}
                     <h1 className="text-2xl md:text-3xl font-semibold text-white mb-3">

@@ -26,9 +26,9 @@ class ReviewController extends Controller
     {
         $validated = $request->validate([
             'invoice_id' => 'required|string',
-            'rating'     => 'required|integer|min:1|max:5',
-            'tags'       => 'nullable|array|max:5',
-            'tags.*'     => 'string|in:' . implode(',', self::VALID_TAGS),
+            'rating' => 'required|integer|min:1|max:5',
+            'tags' => 'nullable|array|max:5',
+            'tags.*' => 'string|in:'.implode(',', self::VALID_TAGS),
         ]);
 
         // Autentikasi via invoice_id — hanya transaksi success yang boleh direview
@@ -37,7 +37,7 @@ class ReviewController extends Controller
             ->where('status', 'success')
             ->first();
 
-        if (!$transaction) {
+        if (! $transaction) {
             return response()->json([
                 'success' => false,
                 'message' => 'Transaksi tidak ditemukan atau belum selesai.',
@@ -56,19 +56,19 @@ class ReviewController extends Controller
 
         DB::transaction(function () use ($validated, $transaction, $gameId) {
             GameReview::create([
-                'game_id'        => $gameId,
+                'game_id' => $gameId,
                 'transaction_id' => $validated['invoice_id'],
-                'user_id'        => $transaction->user_id,
-                'rating'         => $validated['rating'],
-                'tags'           => $validated['tags'] ?? [],
+                'user_id' => $transaction->user_id,
+                'rating' => $validated['rating'],
+                'tags' => $validated['tags'] ?? [],
             ]);
 
             // Update cached rating & reviews_count di tabel games
-            $avg   = GameReview::where('game_id', $gameId)->avg('rating');
+            $avg = GameReview::where('game_id', $gameId)->avg('rating');
             $count = GameReview::where('game_id', $gameId)->count();
 
             Game::where('id', $gameId)->update([
-                'rating'        => round((float) $avg, 2),
+                'rating' => round((float) $avg, 2),
                 'reviews_count' => $count,
             ]);
         });
@@ -91,7 +91,7 @@ class ReviewController extends Controller
         $exists = GameReview::where('transaction_id', $validated['invoice_id'])->exists();
 
         return response()->json([
-            'success'      => true,
+            'success' => true,
             'has_reviewed' => $exists,
         ]);
     }

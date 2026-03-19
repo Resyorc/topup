@@ -21,12 +21,12 @@ class AuditLogsTable
                     ->label('Event')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'login'      => 'success',
-                        'register'   => 'info',
-                        'checkout'   => 'warning',
+                        'login' => 'success',
+                        'register' => 'info',
+                        'checkout' => 'warning',
                         'coin_topup' => 'warning',
-                        'cancel'     => 'danger',
-                        default      => 'gray',
+                        'cancel' => 'danger',
+                        default => 'gray',
                     })
                     ->searchable(),
                 TextColumn::make('user.name')
@@ -49,11 +49,11 @@ class AuditLogsTable
                 SelectFilter::make('event')
                     ->label('Event')
                     ->options([
-                        'login'      => 'Login',
-                        'register'   => 'Register',
-                        'checkout'   => 'Checkout',
+                        'login' => 'Login',
+                        'register' => 'Register',
+                        'checkout' => 'Checkout',
                         'coin_topup' => 'Top Up Coin',
-                        'cancel'     => 'Batal',
+                        'cancel' => 'Batal',
                     ]),
             ])
             ->recordActions([])

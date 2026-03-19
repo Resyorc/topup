@@ -3,19 +3,17 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Jobs\SendWhatsAppNotification;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Services\AuditLogger;
-use App\Services\TripayService;
 use App\Services\CoinService;
-use App\Services\DigiflazzService;
+use App\Services\TripayService;
 use App\Services\VoucherService;
-use Illuminate\Support\Str;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use Carbon\Carbon;
+use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
 {
@@ -25,25 +23,25 @@ class CheckoutController extends Controller
     public function store(Request $request, TripayService $tripayService, CoinService $coinService, VoucherService $voucherService)
     {
         $validated = $request->validate([
-            'product_id'       => 'required|exists:products,id',
+            'product_id' => 'required|exists:products,id',
             'customer_game_id' => 'required|string|max:50|regex:/^[a-zA-Z0-9._\-]+$/',
             'customer_zone_id' => 'nullable|string|max:20|regex:/^[0-9]+$/',
-            'customer_whatsapp'=> 'required|string|regex:/^\+?[0-9]{8,15}$/',
-            'payment_method'   => 'required|string',
-            'customer_name'    => 'nullable|string|max:100',
-            'customer_email'   => 'nullable|email',
-            'qty'              => 'nullable|integer|min:1|max:100',
-            'promo_code'       => 'nullable|string|max:50',
+            'customer_whatsapp' => 'required|string|regex:/^\+?[0-9]{8,15}$/',
+            'payment_method' => 'required|string',
+            'customer_name' => 'nullable|string|max:100',
+            'customer_email' => 'nullable|email',
+            'qty' => 'nullable|integer|min:1|max:100',
+            'promo_code' => 'nullable|string|max:50',
         ]);
 
-        $qty             = $validated['qty'] ?? 1;
-        $customerName    = $validated['customer_name'] ?? 'Guest';
-        $customerEmail   = $validated['customer_email'] ?? 'guest@nuvelo.com';
+        $qty = $validated['qty'] ?? 1;
+        $customerName = $validated['customer_name'] ?? 'Guest';
+        $customerEmail = $validated['customer_email'] ?? 'guest@nuvelo.com';
         $authenticatedUserId = auth()->id();
 
         $product = Product::findOrFail($validated['product_id']);
 
-        if (!$product->is_available) {
+        if (! $product->is_available) {
             return response()->json(['error' => 'Product is currently unavailable.'], 400);
         }
 
@@ -63,28 +61,28 @@ class CheckoutController extends Controller
                 return response()->json([
                     'success' => false,
                     'message' => 'Kamu masih memiliki pesanan aktif untuk produk ini. Selesaikan atau tunggu pesanan sebelumnya expired.',
-                    'data'    => [
+                    'data' => [
                         'invoice_id' => $existingTransaction->invoice_id,
-                        'status'     => $existingTransaction->status,
+                        'status' => $existingTransaction->status,
                         'expired_at' => $existingTransaction->expired_at?->toDateTimeString(),
                     ],
                 ], 409);
             }
         }
 
-        $merchantRef = 'INV-' . strtoupper(Str::ulid());
-        $amount      = (int) $product->price_sell * $qty;
+        $merchantRef = 'INV-'.strtoupper(Str::ulid());
+        $amount = (int) $product->price_sell * $qty;
 
         // ===== VOUCHER =====
-        $discount    = 0;
+        $discount = 0;
         $voucherCode = null;
 
-        if (!empty($validated['promo_code'])) {
+        if (! empty($validated['promo_code'])) {
             $voucherResult = $voucherService->validate($validated['promo_code'], $amount);
-            if (!$voucherResult['valid']) {
+            if (! $voucherResult['valid']) {
                 return response()->json(['success' => false, 'message' => $voucherResult['message']], 422);
             }
-            $discount    = $voucherResult['discount'];
+            $discount = $voucherResult['discount'];
             $voucherCode = strtoupper(trim($validated['promo_code']));
         }
 
@@ -99,16 +97,16 @@ class CheckoutController extends Controller
         }
 
         // ===== TRIPAY PAYMENT =====
-        $expiredAt   = now()->addHour();
+        $expiredAt = now()->addHour();
         $expiredTime = $expiredAt->timestamp; // Unix timestamp untuk Tripay API
 
         $orderItems = [
             [
-                'sku'      => $product->provider_sku,
-                'name'     => $product->game->name . ' - ' . $product->name,
-                'price'    => (int) $product->price_sell,
+                'sku' => $product->provider_sku,
+                'name' => $product->game->name.' - '.$product->name,
+                'price' => (int) $product->price_sell,
                 'quantity' => $qty,
-            ]
+            ],
         ];
 
         try {
@@ -128,30 +126,30 @@ class CheckoutController extends Controller
                 $fee = (int) ($paymentResponse['fee_customer'] ?? 0);
 
                 $transaction = Transaction::create([
-                    'invoice_id'             => $merchantRef,
-                    'user_id'                => $authenticatedUserId,
-                    'product_id'             => $product->id,
-                    'customer_game_id'       => $validated['customer_game_id'],
-                    'customer_zone_id'       => $validated['customer_zone_id'] ?? null,
-                    'customer_whatsapp'      => $validated['customer_whatsapp'],
-                    'customer_name'          => $customerName,
-                    'customer_email'         => $customerEmail,
-                    'amount'                 => $amount,
-                    'fee'                    => $fee,
-                    'discount'               => $discount,
-                    'voucher_code'           => $voucherCode,
-                    'profit'                 => ($product->price_sell - $product->price_cost) * $qty - $discount,
-                    'status'                 => 'pending',
-                    'sn'                     => null,
-                    'payment_url'            => $paymentResponse['checkout_url'] ?? null,
-                    'reference_id_provider'  => $paymentResponse['reference'] ?? null,
-                    'expired_at'             => $expiredAt,
-                    'payment_method'         => $paymentResponse['payment_method'] ?? null,
-                    'payment_name'           => $paymentResponse['payment_name'] ?? null,
-                    'pay_code'               => $paymentResponse['pay_code'] ?? null,
-                    'qr_url'                 => $paymentResponse['qr_url'] ?? null,
-                    'pay_url'                => $paymentResponse['pay_url'] ?? null,
-                    'api_logs'               => $paymentResponse,
+                    'invoice_id' => $merchantRef,
+                    'user_id' => $authenticatedUserId,
+                    'product_id' => $product->id,
+                    'customer_game_id' => $validated['customer_game_id'],
+                    'customer_zone_id' => $validated['customer_zone_id'] ?? null,
+                    'customer_whatsapp' => $validated['customer_whatsapp'],
+                    'customer_name' => $customerName,
+                    'customer_email' => $customerEmail,
+                    'amount' => $amount,
+                    'fee' => $fee,
+                    'discount' => $discount,
+                    'voucher_code' => $voucherCode,
+                    'profit' => ($product->price_sell - $product->price_cost) * $qty - $discount,
+                    'status' => 'pending',
+                    'sn' => null,
+                    'payment_url' => $paymentResponse['checkout_url'] ?? null,
+                    'reference_id_provider' => $paymentResponse['reference'] ?? null,
+                    'expired_at' => $expiredAt,
+                    'payment_method' => $paymentResponse['payment_method'] ?? null,
+                    'payment_name' => $paymentResponse['payment_name'] ?? null,
+                    'pay_code' => $paymentResponse['pay_code'] ?? null,
+                    'qr_url' => $paymentResponse['qr_url'] ?? null,
+                    'pay_url' => $paymentResponse['pay_url'] ?? null,
+                    'api_logs' => $paymentResponse,
                 ]);
 
                 if ($voucherCode) {
@@ -159,14 +157,14 @@ class CheckoutController extends Controller
                 }
 
                 return [
-                    'transaction'    => $transaction,
-                    'paymentResponse'=> $paymentResponse
+                    'transaction' => $transaction,
+                    'paymentResponse' => $paymentResponse,
                 ];
             });
 
             AuditLogger::log(
                 event: 'checkout',
-                description: 'Checkout ' . $product->name . ' — ' . $merchantRef,
+                description: 'Checkout '.$product->name.' — '.$merchantRef,
                 subjectType: 'Transaction',
                 subjectId: $merchantRef,
                 request: $request,
@@ -179,17 +177,18 @@ class CheckoutController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Checkout successful.',
-                'data'    => [
+                'data' => [
                     'transaction' => $result['transaction'],
-                    'payment'     => $result['paymentResponse'],
-                    'pay_code'    => $result['paymentResponse']['pay_code'] ?? null,
-                    'amount'      => $amount,
-                    'expired_at'  => $expiredAt->toDateTimeString(),
-                ]
+                    'payment' => $result['paymentResponse'],
+                    'pay_code' => $result['paymentResponse']['pay_code'] ?? null,
+                    'amount' => $amount,
+                    'expired_at' => $expiredAt->toDateTimeString(),
+                ],
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Checkout Error: ' . $e->getMessage(), ['request' => $validated]);
+            Log::error('Checkout Error: '.$e->getMessage(), ['request' => $validated]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Checkout failed. Please try again.',
@@ -216,7 +215,7 @@ class CheckoutController extends Controller
         \Illuminate\Http\Request $request,
     ) {
         // Harus login untuk pakai coin
-        if (!$authenticatedUserId) {
+        if (! $authenticatedUserId) {
             return response()->json([
                 'success' => false,
                 'message' => 'Kamu harus login untuk menggunakan Krysta Coin.',
@@ -226,7 +225,7 @@ class CheckoutController extends Controller
         $user = \App\Models\User::findOrFail($authenticatedUserId);
 
         // Harus verifikasi email untuk pakai coin
-        if (!$user->hasVerifiedEmail()) {
+        if (! $user->hasVerifiedEmail()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Kamu harus verifikasi email terlebih dahulu untuk menggunakan Krysta Coin.',
@@ -234,10 +233,10 @@ class CheckoutController extends Controller
         }
 
         // Cek saldo sebelum masuk transaksi
-        if (!$coinService->hasSufficientBalance($user, $chargeAmount)) {
+        if (! $coinService->hasSufficientBalance($user, $chargeAmount)) {
             return response()->json([
                 'success' => false,
-                'message' => 'Saldo Krysta Coin tidak cukup. Saldo kamu: ' . $user->coin_balance . ' Coins.',
+                'message' => 'Saldo Krysta Coin tidak cukup. Saldo kamu: '.$user->coin_balance.' Coins.',
             ], 400);
         }
 
@@ -248,29 +247,29 @@ class CheckoutController extends Controller
                 $coinService->debit(
                     $user,
                     $chargeAmount,
-                    'Topup ' . $product->game->name . ' - ' . $product->name,
+                    'Topup '.$product->game->name.' - '.$product->name,
                     $merchantRef
                 );
 
                 // 2. Buat transaksi — langsung paid & processing karena sudah bayar
                 $transaction = Transaction::create([
-                    'invoice_id'        => $merchantRef,
-                    'user_id'           => $authenticatedUserId,
-                    'product_id'        => $product->id,
-                    'customer_game_id'  => $validated['customer_game_id'],
-                    'customer_zone_id'  => $validated['customer_zone_id'] ?? null,
+                    'invoice_id' => $merchantRef,
+                    'user_id' => $authenticatedUserId,
+                    'product_id' => $product->id,
+                    'customer_game_id' => $validated['customer_game_id'],
+                    'customer_zone_id' => $validated['customer_zone_id'] ?? null,
                     'customer_whatsapp' => $validated['customer_whatsapp'],
-                    'customer_name'     => $customerName,
-                    'customer_email'    => $user->email,
-                    'amount'            => $amount,
-                    'discount'          => $discount,
-                    'voucher_code'      => $voucherCode,
-                    'profit'            => ($product->price_sell - $product->price_cost) * $qty - $discount,
-                    'status'            => 'processing', // langsung processing
-                    'payment_status'    => 'paid',       // langsung paid
-                    'payment_method'    => 'COIN',
-                    'payment_name'      => 'Krysta Coin',
-                    'sn'                => null,
+                    'customer_name' => $customerName,
+                    'customer_email' => $user->email,
+                    'amount' => $amount,
+                    'discount' => $discount,
+                    'voucher_code' => $voucherCode,
+                    'profit' => ($product->price_sell - $product->price_cost) * $qty - $discount,
+                    'status' => 'processing', // langsung processing
+                    'payment_status' => 'paid',       // langsung paid
+                    'payment_method' => 'COIN',
+                    'payment_name' => 'Krysta Coin',
+                    'sn' => null,
                 ]);
 
                 if ($voucherCode) {
@@ -281,7 +280,7 @@ class CheckoutController extends Controller
                 $digiflazzService = app(\App\Services\DigiflazzService::class);
                 $digiflazzService->createTransaction(
                     $product->provider_sku,
-                    $transaction->customer_game_id . ($transaction->customer_zone_id ?? ''),
+                    $transaction->customer_game_id.($transaction->customer_zone_id ?? ''),
                     $transaction->invoice_id,
                 );
 
@@ -290,7 +289,7 @@ class CheckoutController extends Controller
 
             AuditLogger::log(
                 event: 'checkout',
-                description: 'Checkout COIN ' . $product->name . ' — ' . $merchantRef,
+                description: 'Checkout COIN '.$product->name.' — '.$merchantRef,
                 subjectType: 'Transaction',
                 subjectId: $merchantRef,
                 request: $request,
@@ -303,14 +302,15 @@ class CheckoutController extends Controller
             return response()->json([
                 'success' => true,
                 'message' => 'Checkout berhasil! Topup sedang diproses.',
-                'data'    => [
+                'data' => [
                     'transaction' => $transaction,
-                    'amount'      => $amount,
-                ]
+                    'amount' => $amount,
+                ],
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Coin Checkout Error: ' . $e->getMessage(), ['request' => $validated]);
+            Log::error('Coin Checkout Error: '.$e->getMessage(), ['request' => $validated]);
+
             return response()->json([
                 'success' => false,
                 'message' => $e->getMessage() === 'Saldo coin tidak cukup.'
@@ -327,17 +327,17 @@ class CheckoutController extends Controller
     {
         $validated = $request->validate([
             'amount' => 'required|numeric|min:1',
-            'method' => 'nullable|string'
+            'method' => 'nullable|string',
         ]);
 
         try {
             $methodParam = $validated['method'] ?? null;
-            $feeCalc     = $tripayService->calculateFee((int) $validated['amount'], $methodParam);
+            $feeCalc = $tripayService->calculateFee((int) $validated['amount'], $methodParam);
 
             if ($methodParam) {
                 $feeData = $feeCalc[0] ?? null;
 
-                if (!$feeData) {
+                if (! $feeData) {
                     return response()->json([
                         'success' => false,
                         'message' => 'Cannot calculate fee from Tripay.',
@@ -348,16 +348,16 @@ class CheckoutController extends Controller
 
                 return response()->json([
                     'success' => true,
-                    'data'    => [
-                        'fee'   => $customerFee,
-                        'total' => $validated['amount'] + $customerFee
-                    ]
+                    'data' => [
+                        'fee' => $customerFee,
+                        'total' => $validated['amount'] + $customerFee,
+                    ],
                 ]);
             }
 
             $bulkFees = [];
             foreach ($feeCalc as $feeData) {
-                $code        = $feeData['code'] ?? null;
+                $code = $feeData['code'] ?? null;
                 $customerFee = $feeData['total_fee']['customer'] ?? 0;
                 if ($code) {
                     $bulkFees[$code] = $customerFee;
@@ -366,11 +366,12 @@ class CheckoutController extends Controller
 
             return response()->json([
                 'success' => true,
-                'data'    => $bulkFees
+                'data' => $bulkFees,
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Calculate Fee Error: ' . $e->getMessage());
+            Log::error('Calculate Fee Error: '.$e->getMessage());
+
             return response()->json([
                 'success' => false,
                 'message' => 'Failed to calculate fee. Please try again.',

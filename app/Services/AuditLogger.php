@@ -20,13 +20,13 @@ class AuditLogger
         $request ??= app(Request::class);
 
         AuditLog::create([
-            'user_id'      => $userId ?? auth()->id(),
-            'event'        => $event,
-            'description'  => $description,
+            'user_id' => $userId ?? auth()->id(),
+            'event' => $event,
+            'description' => $description,
             'subject_type' => $subjectType,
-            'subject_id'   => $subjectId,
-            'ip_address'   => $request->ip(),
-            'user_agent'   => $request->userAgent(),
+            'subject_id' => $subjectId,
+            'ip_address' => $request->ip(),
+            'user_agent' => $request->userAgent(),
         ]);
     }
 }

@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppNotification;
-use Illuminate\Http\Request;
 use App\Models\Game;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\CoinService;
 use App\Services\LoyaltyService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
 class DigiflazzCallbackController extends Controller
@@ -23,10 +23,11 @@ class DigiflazzCallbackController extends Controller
         $signature = $request->header('x-hub-signature');
         $secret = config('services.digiflazz.webhook_secret'); // Secret used by Digiflazz as HMAC key
 
-        $computedSignature = 'sha1=' . hash_hmac('sha1', $payload, $secret);
+        $computedSignature = 'sha1='.hash_hmac('sha1', $payload, $secret);
 
-        if (!hash_equals($computedSignature, (string) $signature)) {
+        if (! hash_equals($computedSignature, (string) $signature)) {
             Log::warning('Digiflazz Callback Invalid Signature', ['received' => $signature, 'calculated' => $computedSignature]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid signature',
@@ -35,7 +36,7 @@ class DigiflazzCallbackController extends Controller
 
         $data = json_decode($payload, true);
 
-        if (!isset($data['data']) || !isset($data['data']['ref_id'])) {
+        if (! isset($data['data']) || ! isset($data['data']['ref_id'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid data payload representation',
@@ -44,11 +45,12 @@ class DigiflazzCallbackController extends Controller
 
         $trxData = $data['data'];
         $refId = $trxData['ref_id'];
-        
+
         $transaction = Transaction::where('invoice_id', $refId)->first();
 
-        if (!$transaction) {
-            Log::error('Digiflazz Callback Transaction Not Found: ' . $refId);
+        if (! $transaction) {
+            Log::error('Digiflazz Callback Transaction Not Found: '.$refId);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Transaction not found',
@@ -64,7 +66,7 @@ class DigiflazzCallbackController extends Controller
 
         // Processing the final top-up status from Provider
         $status = strtolower($trxData['status']);
-        
+
         if ($status === 'sukses') {
             $transaction->update([
                 'status' => 'success',
@@ -100,13 +102,13 @@ class DigiflazzCallbackController extends Controller
                         app(CoinService::class)->credit(
                             $user,
                             $refundAmount,
-                            'Refund pesanan gagal: ' . $transaction->invoice_id,
+                            'Refund pesanan gagal: '.$transaction->invoice_id,
                             $transaction->invoice_id,
                         );
                         Log::info("Coin refunded {$refundAmount} to user {$user->id} for failed invoice: {$refId}");
                     }
                 } catch (\Exception $e) {
-                    Log::error("Coin refund failed for invoice {$refId}: " . $e->getMessage());
+                    Log::error("Coin refund failed for invoice {$refId}: ".$e->getMessage());
                 }
             }
 

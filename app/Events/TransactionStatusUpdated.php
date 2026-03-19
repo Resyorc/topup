@@ -22,11 +22,11 @@ class TransactionStatusUpdated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         $channels = [
-            new Channel('invoice.' . $this->transaction->invoice_id),
+            new Channel('invoice.'.$this->transaction->invoice_id),
         ];
 
         if ($this->transaction->user_id) {
-            $channels[] = new PrivateChannel('transactions.' . $this->transaction->user_id);
+            $channels[] = new PrivateChannel('transactions.'.$this->transaction->user_id);
         }
 
         return $channels;
@@ -40,10 +40,10 @@ class TransactionStatusUpdated implements ShouldBroadcast
     public function broadcastWith(): array
     {
         return [
-            'invoice_id'     => $this->transaction->invoice_id,
-            'status'         => $this->transaction->status,
+            'invoice_id' => $this->transaction->invoice_id,
+            'status' => $this->transaction->status,
             'payment_status' => $this->transaction->payment_status,
-            'product_name'   => $this->transaction->product->name ?? '-',
+            'product_name' => $this->transaction->product->name ?? '-',
         ];
     }
 }

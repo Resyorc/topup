@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Services\TopupPriceService;
+use Illuminate\Console\Command;
 
 class SyncDigiflazzProducts extends Command
 {
@@ -27,7 +27,7 @@ class SyncDigiflazzProducts extends Command
     public function handle(TopupPriceService $priceService)
     {
         $this->info('Starting Digiflazz product synchronization...');
-        
+
         $priceService->syncPrices();
 
         $this->info('Synchronization completed successfully!');

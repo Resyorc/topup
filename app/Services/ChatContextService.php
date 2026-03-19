@@ -2,8 +2,8 @@
 
 namespace App\Services;
 
-use App\Models\Transaction;
 use App\Models\Game;
+use App\Models\Transaction;
 use App\Models\User;
 use App\Models\Voucher;
 use Illuminate\Support\Facades\Cache;
@@ -22,14 +22,14 @@ class ChatContextService
         $parts[] = $this->baseContext();
         $parts[] = $this->catalogContext();
 
-        if (!empty($context['user_id'])) {
+        if (! empty($context['user_id'])) {
             $user = User::find($context['user_id']);
             if ($user) {
                 $parts[] = $this->userContext($user);
             }
         }
 
-        if (!empty($context['invoice_id'])) {
+        if (! empty($context['invoice_id'])) {
             $transaction = Transaction::with('product.game')
                 ->where('invoice_id', $context['invoice_id'])
                 ->first();
@@ -37,7 +37,7 @@ class ChatContextService
             if ($transaction) {
                 // Guest hanya boleh akses invoice mereka sendiri via session invoice list,
                 // bukan semua guest invoice — cek via context invoice yang dikirim frontend
-                $isOwner = !empty($context['user_id'])
+                $isOwner = ! empty($context['user_id'])
                     && (int) $context['user_id'] === (int) $transaction->user_id;
 
                 if ($isOwner) {
@@ -46,8 +46,8 @@ class ChatContextService
             }
         }
 
-        if (!empty($context['game_slug'])) {
-            $game = Game::with(['products' => fn($q) => $q->where('is_available', true)->orderBy('price_sell')])
+        if (! empty($context['game_slug'])) {
+            $game = Game::with(['products' => fn ($q) => $q->where('is_available', true)->orderBy('price_sell')])
                 ->where('slug', $context['game_slug'])
                 ->where('is_active', true)
                 ->first();
@@ -57,7 +57,7 @@ class ChatContextService
             }
         }
 
-        $parts[] = $this->voucherContext(!empty($context['user_id']));
+        $parts[] = $this->voucherContext(! empty($context['user_id']));
         $parts[] = $this->faqContext();
         $parts[] = $this->rulesContext();
 
@@ -68,7 +68,7 @@ class ChatContextService
 
     private function baseContext(): string
     {
-        return <<<PROMPT
+        return <<<'PROMPT'
 Kamu adalah **Nova**, asisten virtual dari **Nuvelo** — platform top up game online terpercaya di Indonesia.
 
 Tugasmu membantu pelanggan dengan:
@@ -101,7 +101,7 @@ PROMPT;
             return Game::where('is_active', true)
                 ->orderBy('name')
                 ->pluck('name')
-                ->map(fn($name) => "  - {$name}")
+                ->map(fn ($name) => "  - {$name}")
                 ->implode("\n");
         });
 
@@ -136,24 +136,24 @@ PROMPT;
 
     private function transactionContext(Transaction $transaction): string
     {
-        $product   = $transaction->product;
-        $game      = $product->game;
-        $amount    = number_format((int) $transaction->amount, 0, ',', '.');
-        $fee       = number_format((int) $transaction->fee, 0, ',', '.');
-        $discount  = (int) $transaction->discount;
-        $total     = number_format((int) $transaction->amount - $discount + (int) $transaction->fee, 0, ',', '.');
+        $product = $transaction->product;
+        $game = $product->game;
+        $amount = number_format((int) $transaction->amount, 0, ',', '.');
+        $fee = number_format((int) $transaction->fee, 0, ',', '.');
+        $discount = (int) $transaction->discount;
+        $total = number_format((int) $transaction->amount - $discount + (int) $transaction->fee, 0, ',', '.');
         $expiredAt = $transaction->expired_at
-            ? $transaction->expired_at->timezone('Asia/Jakarta')->format('d M Y H:i') . ' WIB'
+            ? $transaction->expired_at->timezone('Asia/Jakarta')->format('d M Y H:i').' WIB'
             : '-';
-        $createdAt = $transaction->created_at->timezone('Asia/Jakarta')->format('d M Y H:i') . ' WIB';
+        $createdAt = $transaction->created_at->timezone('Asia/Jakarta')->format('d M Y H:i').' WIB';
 
         $statusMap = [
-            'pending'    => 'Menunggu Pembayaran',
+            'pending' => 'Menunggu Pembayaran',
             'processing' => 'Sedang Diproses (menunggu konfirmasi dari provider)',
-            'success'    => 'Berhasil — item sudah masuk ke akun game',
-            'failed'     => 'Gagal',
-            'expired'    => 'Kedaluwarsa — batas waktu bayar terlewat',
-            'canceled'   => 'Dibatalkan',
+            'success' => 'Berhasil — item sudah masuk ke akun game',
+            'failed' => 'Gagal',
+            'expired' => 'Kedaluwarsa — batas waktu bayar terlewat',
+            'canceled' => 'Dibatalkan',
         ];
         $statusLabel = $statusMap[$transaction->status] ?? $transaction->status;
 
@@ -162,7 +162,7 @@ PROMPT;
             : '';
 
         $discountLine = $discount > 0
-            ? "\n- Diskon Voucher ({$transaction->voucher_code}): − Rp " . number_format($discount, 0, ',', '.')
+            ? "\n- Diskon Voucher ({$transaction->voucher_code}): − Rp ".number_format($discount, 0, ',', '.')
             : '';
 
         $failLine = $transaction->failure_reason
@@ -193,11 +193,12 @@ PROMPT;
     {
         $products = $game->products->take(20)->map(function ($p) {
             $price = number_format((int) $p->price_sell, 0, ',', '.');
+
             return "  - {$p->name}: Rp {$price}";
         })->implode("\n");
 
         $more = $game->products->count() > 20
-            ? "\n  ... dan " . ($game->products->count() - 20) . " produk lainnya"
+            ? "\n  ... dan ".($game->products->count() - 20).' produk lainnya'
             : '';
 
         return <<<PROMPT
@@ -218,7 +219,7 @@ PROMPT;
 
         $vouchers = Cache::remember($cacheKey, 300, function () use ($isLoggedIn) {
             return Voucher::where('is_active', true)
-                ->when(!$isLoggedIn, fn ($q) => $q->where('is_public', true))
+                ->when(! $isLoggedIn, fn ($q) => $q->where('is_public', true))
                 ->where(fn ($q) => $q->whereNull('valid_until')->orWhere('valid_until', '>', now()))
                 ->where(fn ($q) => $q->whereNull('valid_from')->orWhere('valid_from', '<=', now()))
                 ->where(fn ($q) => $q->whereNull('usage_limit')->orWhereColumn('used_count', '<', 'usage_limit'))
@@ -229,24 +230,25 @@ PROMPT;
             $msg = $isLoggedIn
                 ? 'Tidak ada kode promo yang aktif saat ini.'
                 : 'Tidak ada kode promo publik yang aktif saat ini. User yang sudah login mungkin memiliki akses ke promo eksklusif.';
+
             return "## Promo & Voucher\n\n{$msg}";
         }
 
         $list = $vouchers->map(function (Voucher $v) {
             $nilai = $v->type === 'percent'
                 ? "{$v->value}% diskon"
-                : 'diskon Rp ' . number_format($v->value, 0, ',', '.');
+                : 'diskon Rp '.number_format($v->value, 0, ',', '.');
 
             $minNote = $v->min_amount > 0
-                ? ' (min. transaksi Rp ' . number_format($v->min_amount, 0, ',', '.') . ')'
+                ? ' (min. transaksi Rp '.number_format($v->min_amount, 0, ',', '.').')'
                 : '';
 
             $capNote = $v->type === 'percent' && $v->max_discount
-                ? ', maks. Rp ' . number_format($v->max_discount, 0, ',', '.')
+                ? ', maks. Rp '.number_format($v->max_discount, 0, ',', '.')
                 : '';
 
             $expNote = $v->valid_until
-                ? ' — berlaku s/d ' . $v->valid_until->timezone('Asia/Jakarta')->format('d M Y')
+                ? ' — berlaku s/d '.$v->valid_until->timezone('Asia/Jakarta')->format('d M Y')
                 : '';
 
             return "  - **{$v->code}** → {$nilai}{$capNote}{$minNote}{$expNote}";
@@ -265,7 +267,7 @@ PROMPT;
 
     private function faqContext(): string
     {
-        return <<<PROMPT
+        return <<<'PROMPT'
 ## FAQ — Pertanyaan yang Sering Ditanya
 
 **Q: Apakah ada kode promo atau voucher diskon?**
@@ -296,7 +298,7 @@ PROMPT;
 
     private function rulesContext(): string
     {
-        return <<<PROMPT
+        return <<<'PROMPT'
 ## Panduan Menjawab
 
 - Jawab dalam **Bahasa Indonesia** yang ramah dan sopan

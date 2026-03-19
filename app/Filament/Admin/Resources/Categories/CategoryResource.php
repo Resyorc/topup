@@ -2,12 +2,12 @@
 
 namespace App\Filament\Admin\Resources\Categories;
 
+use App\Filament\Admin\Clusters\CatalogCluster;
 use App\Filament\Admin\Resources\Categories\Pages\CreateCategory;
 use App\Filament\Admin\Resources\Categories\Pages\EditCategory;
 use App\Filament\Admin\Resources\Categories\Pages\ListCategories;
 use App\Filament\Admin\Resources\Categories\Schemas\CategoryForm;
 use App\Filament\Admin\Resources\Categories\Tables\CategoriesTable;
-use App\Filament\Admin\Clusters\CatalogCluster;
 use App\Models\Category;
 use BackedEnum;
 use Filament\Resources\Resource;

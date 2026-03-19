@@ -43,12 +43,12 @@ class UserTransactionController extends Controller
 
                 $query->where(function ($subQuery) use ($search) {
                     $subQuery
-                        ->where('invoice_id', 'like', '%' . $search . '%')
+                        ->where('invoice_id', 'like', '%'.$search.'%')
                         ->orWhereHas('product', function ($productQuery) use ($search) {
                             $productQuery
-                                ->where('name', 'like', '%' . $search . '%')
+                                ->where('name', 'like', '%'.$search.'%')
                                 ->orWhereHas('game', function ($gameQuery) use ($search) {
-                                    $gameQuery->where('name', 'like', '%' . $search . '%');
+                                    $gameQuery->where('name', 'like', '%'.$search.'%');
                                 });
                         });
                 });

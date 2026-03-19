@@ -4,15 +4,18 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Client\PendingRequest;
 use Exception;
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Facades\Http;
 
 class TripayService
 {
     private string $apiKey;
+
     private string $privateKey;
+
     private string $merchantCode;
+
     private string $baseUrl;
 
     public function __construct()
@@ -20,10 +23,10 @@ class TripayService
         $this->apiKey = config('services.tripay.api_key') ?? '';
         $this->privateKey = config('services.tripay.private_key') ?? '';
         $this->merchantCode = config('services.tripay.merchant_code') ?? '';
-        
+
         $mode = config('services.tripay.mode') ?? 'sandbox';
-        $this->baseUrl = $mode === 'production' 
-            ? 'https://tripay.co.id/api/' 
+        $this->baseUrl = $mode === 'production'
+            ? 'https://tripay.co.id/api/'
             : 'https://tripay.co.id/api-sandbox/';
     }
 
@@ -34,22 +37,24 @@ class TripayService
             ->withToken($this->apiKey)
             ->withHeaders([
                 'Accept' => 'application/json',
-                'Content-Type' => 'application/json'
+                'Content-Type' => 'application/json',
             ]);
     }
 
     public function generateSignature(string $merchantRef, int $amount): string
     {
-        $signaturePayload = $this->merchantCode . $merchantRef . $amount;
+        $signaturePayload = $this->merchantCode.$merchantRef.$amount;
+
         return hash_hmac('sha256', $signaturePayload, $this->privateKey);
     }
 
     public function getPaymentChannels(): array
     {
         $response = $this->client()->get('merchant/payment-channel');
-        if (!$response->successful()) {
-            throw new Exception('Tripay API Error: ' . $response->body());
+        if (! $response->successful()) {
+            throw new Exception('Tripay API Error: '.$response->body());
         }
+
         return $response->json('data') ?? [];
     }
 
@@ -60,17 +65,18 @@ class TripayService
             $payload['code'] = $method;
         }
         $response = $this->client()->get('merchant/fee-calculator', $payload);
-        if (!$response->successful()) {
-            throw new Exception('Tripay API Error: ' . $response->body());
+        if (! $response->successful()) {
+            throw new Exception('Tripay API Error: '.$response->body());
         }
+
         return $response->json('data') ?? [];
     }
 
     /**
      * Create a payment transaction
      *
-     * @param int $expiredTime Unix timestamp kapan transaksi expired.
-     *                         Default 0 = otomatis set 1 jam dari sekarang.
+     * @param  int  $expiredTime  Unix timestamp kapan transaksi expired.
+     *                            Default 0 = otomatis set 1 jam dari sekarang.
      */
     public function createTransaction(
         string $method,
@@ -88,21 +94,21 @@ class TripayService
         }
 
         $payload = [
-            'method'         => $method,
-            'merchant_ref'   => $merchantRef,
-            'amount'         => $amount,
-            'customer_name'  => $customerName,
+            'method' => $method,
+            'merchant_ref' => $merchantRef,
+            'amount' => $amount,
+            'customer_name' => $customerName,
             'customer_email' => $customerEmail,
             'customer_phone' => $customerPhone,
-            'order_items'    => $orderItems,
-            'expired_time'   => $expiredTime,
-            'signature'      => $this->generateSignature($merchantRef, $amount),
+            'order_items' => $orderItems,
+            'expired_time' => $expiredTime,
+            'signature' => $this->generateSignature($merchantRef, $amount),
         ];
 
         $response = $this->client()->post('transaction/create', $payload);
 
-        if (!$response->successful()) {
-            throw new Exception('Tripay Create Transaction Error: ' . $response->body());
+        if (! $response->successful()) {
+            throw new Exception('Tripay Create Transaction Error: '.$response->body());
         }
 
         return $response->json('data') ?? [];

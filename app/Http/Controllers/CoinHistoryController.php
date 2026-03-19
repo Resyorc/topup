@@ -26,15 +26,15 @@ class CoinHistoryController extends Controller
             ->latest()
             ->limit(100)
             ->get()
-            ->map(fn($tx) => [
-                'id'           => 'tx_' . $tx->id,
-                'source'       => 'transaction',
-                'type'         => $tx->type,
-                'amount'       => $tx->amount,
-                'description'  => $tx->description,
+            ->map(fn ($tx) => [
+                'id' => 'tx_'.$tx->id,
+                'source' => 'transaction',
+                'type' => $tx->type,
+                'amount' => $tx->amount,
+                'description' => $tx->description,
                 'reference_id' => $tx->reference_id,
-                'status'       => null,
-                'created_at'   => $tx->created_at?->toISOString(),
+                'status' => null,
+                'created_at' => $tx->created_at?->toISOString(),
             ]);
 
         $topups = CoinTopup::query()
@@ -42,15 +42,15 @@ class CoinHistoryController extends Controller
             ->latest()
             ->limit(100)
             ->get()
-            ->map(fn($topup) => [
-                'id'           => 'topup_' . $topup->id,
-                'source'       => 'topup',
-                'type'         => 'credit',
-                'amount'       => $topup->amount,
-                'description'  => 'Top Up Krysta Coin',
+            ->map(fn ($topup) => [
+                'id' => 'topup_'.$topup->id,
+                'source' => 'topup',
+                'type' => 'credit',
+                'amount' => $topup->amount,
+                'description' => 'Top Up Krysta Coin',
                 'reference_id' => $topup->invoice_id,
-                'status'       => $topup->status,
-                'created_at'   => $topup->created_at?->toISOString(),
+                'status' => $topup->status,
+                'created_at' => $topup->created_at?->toISOString(),
             ]);
 
         $history = $transactions
@@ -60,7 +60,7 @@ class CoinHistoryController extends Controller
 
         return Inertia::render('user/coin-history', [
             'coinBalance' => (int) ($user->fresh()->coin_balance ?? 0),
-            'history'     => $history,
+            'history' => $history,
         ]);
     }
 }

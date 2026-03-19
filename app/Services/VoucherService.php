@@ -16,7 +16,7 @@ class VoucherService
             ->where('is_active', true)
             ->first();
 
-        if (!$voucher) {
+        if (! $voucher) {
             return ['valid' => false, 'discount' => 0, 'message' => 'Kode voucher tidak ditemukan.'];
         }
 
@@ -34,9 +34,9 @@ class VoucherService
 
         if ($amount < $voucher->min_amount) {
             return [
-                'valid'    => false,
+                'valid' => false,
                 'discount' => 0,
-                'message'  => 'Minimum pembelian Rp ' . number_format($voucher->min_amount, 0, ',', '.') . ' untuk voucher ini.',
+                'message' => 'Minimum pembelian Rp '.number_format($voucher->min_amount, 0, ',', '.').' untuk voucher ini.',
             ];
         }
 
@@ -44,13 +44,13 @@ class VoucherService
 
         $label = $voucher->type === 'percent'
             ? "{$voucher->value}%"
-            : 'Rp ' . number_format($voucher->value, 0, ',', '.');
+            : 'Rp '.number_format($voucher->value, 0, ',', '.');
 
         return [
-            'valid'    => true,
+            'valid' => true,
             'discount' => $discount,
-            'message'  => "Voucher {$label} berhasil diterapkan! Hemat Rp " . number_format($discount, 0, ',', '.'),
-            'voucher'  => $voucher,
+            'message' => "Voucher {$label} berhasil diterapkan! Hemat Rp ".number_format($discount, 0, ',', '.'),
+            'voucher' => $voucher,
         ];
     }
 

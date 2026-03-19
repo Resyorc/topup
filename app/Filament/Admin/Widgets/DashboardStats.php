@@ -46,17 +46,17 @@ class DashboardStats extends StatsOverviewWidget
         $totalProducts = Product::where('is_available', true)->count();
 
         return [
-            Stat::make('Revenue Hari Ini', 'Rp ' . number_format($revenueToday, 0, ',', '.'))
+            Stat::make('Revenue Hari Ini', 'Rp '.number_format($revenueToday, 0, ',', '.'))
                 ->description('Total omzet transaksi sukses hari ini')
                 ->descriptionIcon('heroicon-m-arrow-trending-up')
                 ->color('success'),
 
-            Stat::make('Revenue Bulan Ini', 'Rp ' . number_format($revenueMonth, 0, ',', '.'))
+            Stat::make('Revenue Bulan Ini', 'Rp '.number_format($revenueMonth, 0, ',', '.'))
                 ->description('Total omzet transaksi sukses bulan ini')
                 ->descriptionIcon('heroicon-m-calendar-days')
                 ->color('success'),
 
-            Stat::make('Profit Bulan Ini', 'Rp ' . number_format($profitMonth, 0, ',', '.'))
+            Stat::make('Profit Bulan Ini', 'Rp '.number_format($profitMonth, 0, ',', '.'))
                 ->description('Keuntungan bersih bulan ini')
                 ->descriptionIcon('heroicon-m-currency-dollar')
                 ->color('primary'),

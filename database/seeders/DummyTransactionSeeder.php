@@ -2,12 +2,12 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
-use App\Models\User;
 use App\Models\Category;
 use App\Models\Game;
 use App\Models\Product;
 use App\Models\Transaction;
+use App\Models\User;
+use Illuminate\Database\Seeder;
 use Illuminate\Support\Str;
 
 class DummyTransactionSeeder extends Seeder
@@ -18,11 +18,11 @@ class DummyTransactionSeeder extends Seeder
     public function run(): void
     {
         $user = User::first() ?? User::factory()->create();
-        
+
         $category = Category::firstOrCreate(['slug' => 'top-up'], [
-            'name' => 'Top Up Games'
+            'name' => 'Top Up Games',
         ]);
-        
+
         // Ensure we don't duplicate constraints, but create a solid dummy game
         $game = Game::firstOrCreate(['slug' => 'mobile-legends-dummy'], [
             'category_id' => $category->id,
@@ -32,7 +32,7 @@ class DummyTransactionSeeder extends Seeder
             'image' => '/storage/games/dummy-bg.jpg',
             'is_active' => true,
         ]);
-        
+
         $products = collect();
         if ($game->products()->count() == 0) {
             $products->push(Product::create([
@@ -69,31 +69,32 @@ class DummyTransactionSeeder extends Seeder
             $products = $game->products;
         }
 
-        if($products->isEmpty()) {
+        if ($products->isEmpty()) {
             $this->command->error('No products found. Please create products first.');
+
             return;
         }
-        
+
         $statuses = ['pending', 'paid', 'processing', 'success', 'failed'];
-        
+
         for ($i = 0; $i < 15; $i++) {
             $product = $products->random();
             Transaction::create([
-                'invoice_id' => 'INV-' . strtoupper(Str::random(10)),
+                'invoice_id' => 'INV-'.strtoupper(Str::random(10)),
                 'user_id' => $user->id,
                 'product_id' => $product->id,
-                'customer_game_id' => 'USER' . rand(1000, 9999),
+                'customer_game_id' => 'USER'.rand(1000, 9999),
                 'customer_zone_id' => rand(10, 99),
                 'amount' => $product->price_sell,
                 'profit' => $product->margin_flat,
                 'status' => collect($statuses)->random(),
-                'sn' => 'SN-' . Str::random(8),
+                'sn' => 'SN-'.Str::random(8),
                 'payment_url' => 'https://tripay.co.id/checkout/xxx',
-                'reference_id_provider' => 'DGF-' . Str::random(8),
+                'reference_id_provider' => 'DGF-'.Str::random(8),
                 'created_at' => now()->subDays(rand(0, 30))->subHours(rand(0, 24)),
             ]);
         }
-        
+
         $this->command->info('15 Dummy transactions (along with Category, Game, and Products) created successfully.');
     }
 }

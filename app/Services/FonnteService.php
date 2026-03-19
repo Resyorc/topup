@@ -13,6 +13,7 @@ class FonnteService
 
         if (empty($token)) {
             Log::warning('FonnteService: token tidak dikonfigurasi, notifikasi WA dilewati.');
+
             return false;
         }
 
@@ -23,25 +24,27 @@ class FonnteService
             $response = Http::withHeaders([
                 'Authorization' => $token,
             ])->post('https://api.fonnte.com/send', [
-                'target'      => $target,
-                'message'     => $message,
+                'target' => $target,
+                'message' => $message,
                 'countryCode' => '62',
             ]);
 
             $data = $response->json();
 
-            if (!($data['status'] ?? false)) {
+            if (! ($data['status'] ?? false)) {
                 Log::warning('FonnteService: gagal mengirim pesan', [
-                    'target'   => substr($target, 0, 6) . '****',
+                    'target' => substr($target, 0, 6).'****',
                     'response' => $data,
                 ]);
+
                 return false;
             }
 
             return true;
 
         } catch (\Exception $e) {
-            Log::error('FonnteService: exception saat kirim WA — ' . $e->getMessage());
+            Log::error('FonnteService: exception saat kirim WA — '.$e->getMessage());
+
             return false;
         }
     }

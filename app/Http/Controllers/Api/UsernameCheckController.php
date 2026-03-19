@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Services\UserIdCheckService;
+use Illuminate\Http\Request;
 
 class UsernameCheckController extends Controller
 {
@@ -22,10 +22,10 @@ class UsernameCheckController extends Controller
             $validated['zone_id'] ?? null,
         );
 
-        if (!$result['success']) {
+        if (! $result['success']) {
             return response()->json([
                 'success' => false,
-                'message' => $result['message']
+                'message' => $result['message'],
             ], 400);
         }
 

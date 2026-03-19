@@ -1,7 +1,7 @@
 import { Head, useForm, usePage } from '@inertiajs/react';
-import UserLayout from '@/layouts/user-layout';
-import { useState, useEffect } from 'react';
 import axios from 'axios';
+import { useState, useEffect } from 'react';
+import UserLayout from '@/layouts/user-layout';
 
 export default function TopupSaldo() {
     const page = usePage().props as {
@@ -25,16 +25,16 @@ export default function TopupSaldo() {
     const [adminFee, setAdminFee] = useState<number | null>(null);
     const [isCalculatingFee, setIsCalculatingFee] = useState(false);
 
-    useEffect(() => {
-        if (!qrisCode || !data.amount || data.amount < 10000) {
-            setAdminFee(null);
-            return;
-        }
+    const canFetch = Boolean(qrisCode && data.amount && data.amount >= 10000);
+    const displayFee = canFetch ? adminFee : null;
 
-        setIsCalculatingFee(true);
+    useEffect(() => {
+        if (!canFetch) return;
+
         const controller = new AbortController();
 
         const timer = setTimeout(() => {
+            setIsCalculatingFee(true);
             axios
                 .post('/api/calculate-fee', { amount: data.amount, method: qrisCode }, { signal: controller.signal })
                 .then((res) => {
@@ -50,7 +50,7 @@ export default function TopupSaldo() {
             clearTimeout(timer);
             controller.abort();
         };
-    }, [data.amount, qrisCode]);
+    }, [canFetch, data.amount, qrisCode]);
 
     return (
         <UserLayout title="Top Up Saldo">
@@ -184,30 +184,30 @@ export default function TopupSaldo() {
                             </div>
 
                             {/* Rincian Pembayaran */}
-                            <div className="rounded-xl border border-[#31334c] bg-[#252834] p-4 space-y-2 text-sm">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-gray-400">Nominal Top Up</span>
+                            <div className="rounded-xl border border-[#31334c] bg-[#252834] p-3 sm:p-4 space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="shrink-0 text-gray-400">Nominal Top Up</span>
                                     <span className="font-medium text-white">
                                         Rp {data.amount.toLocaleString('id-ID')}
                                     </span>
                                 </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-gray-400">Biaya Admin ({qrisName})</span>
+                                <div className="flex items-center justify-between gap-2">
+                                    <span className="min-w-0 truncate text-gray-400">Biaya Admin ({qrisName})</span>
                                     {isCalculatingFee ? (
-                                        <span className="inline-block h-3.5 w-20 animate-pulse rounded bg-white/10" />
+                                        <span className="inline-block h-3.5 w-16 shrink-0 animate-pulse rounded bg-white/10" />
                                     ) : (
-                                        <span className="font-medium text-white">
-                                            Rp {(adminFee ?? 0).toLocaleString('id-ID')}
+                                        <span className="shrink-0 font-medium text-white">
+                                            Rp {(displayFee ?? 0).toLocaleString('id-ID')}
                                         </span>
                                     )}
                                 </div>
-                                <div className="border-t border-[#31334c] pt-2 flex items-center justify-between">
-                                    <span className="font-semibold text-white">Total Bayar</span>
+                                <div className="flex items-center justify-between gap-2 border-t border-[#31334c] pt-1.5 sm:pt-2">
+                                    <span className="shrink-0 font-semibold text-white">Total Bayar</span>
                                     {isCalculatingFee ? (
-                                        <span className="inline-block h-4 w-24 animate-pulse rounded bg-white/10" />
+                                        <span className="inline-block h-4 w-20 shrink-0 animate-pulse rounded bg-white/10" />
                                     ) : (
-                                        <span className="font-bold text-[#FFC107]">
-                                            Rp {(data.amount + (adminFee ?? 0)).toLocaleString('id-ID')}
+                                        <span className="shrink-0 font-bold text-[#FFC107]">
+                                            Rp {(data.amount + (displayFee ?? 0)).toLocaleString('id-ID')}
                                         </span>
                                     )}
                                 </div>

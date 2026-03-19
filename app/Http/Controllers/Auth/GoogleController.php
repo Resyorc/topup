@@ -29,11 +29,11 @@ class GoogleController extends Controller
             }
         } else {
             $user = User::create([
-                'google_id'         => $googleUser->getId(),
-                'name'              => $googleUser->getName(),
-                'email'             => $googleUser->getEmail(),
+                'google_id' => $googleUser->getId(),
+                'name' => $googleUser->getName(),
+                'email' => $googleUser->getEmail(),
                 'email_verified_at' => now(),
-                'password'          => bcrypt(Str::random(32)),
+                'password' => bcrypt(Str::random(32)),
             ]);
         }
 

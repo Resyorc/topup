@@ -34,16 +34,17 @@ class CancelTransactionController extends Controller
             $transaction->update(['status' => 'canceled']);
             AuditLogger::log(
                 event: 'cancel',
-                description: 'Transaksi dibatalkan: ' . $invoiceId,
+                description: 'Transaksi dibatalkan: '.$invoiceId,
                 subjectType: 'Transaction',
                 subjectId: $invoiceId,
                 request: $request,
             );
+
             return response()->json(['success' => true]);
         }
 
         // Coba di coin_topups — hanya untuk user yang login
-        if (!auth()->check()) {
+        if (! auth()->check()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Pesanan tidak ditemukan atau tidak bisa dibatalkan.',
@@ -59,11 +60,12 @@ class CancelTransactionController extends Controller
             $coinTopup->update(['status' => 'canceled']);
             AuditLogger::log(
                 event: 'cancel',
-                description: 'Top up coin dibatalkan: ' . $invoiceId,
+                description: 'Top up coin dibatalkan: '.$invoiceId,
                 subjectType: 'CoinTopup',
                 subjectId: $invoiceId,
                 request: $request,
             );
+
             return response()->json(['success' => true]);
         }
 

@@ -4,7 +4,6 @@ namespace App\Filament\Admin\Resources\Vouchers\Tables;
 
 use Filament\Actions\DeleteAction;
 use Filament\Actions\EditAction;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -29,25 +28,25 @@ class VouchersTable
                     ->badge()
                     ->color(fn ($state) => match ($state) {
                         'percent' => 'info',
-                        'flat'    => 'success',
-                        default   => 'gray',
+                        'flat' => 'success',
+                        default => 'gray',
                     })
                     ->formatStateUsing(fn ($state) => match ($state) {
                         'percent' => 'Persentase',
-                        'flat'    => 'Nominal',
-                        default   => $state,
+                        'flat' => 'Nominal',
+                        default => $state,
                     }),
 
                 TextColumn::make('value')
                     ->label('Nilai')
                     ->formatStateUsing(fn ($state, $record) => $record->type === 'percent'
                         ? "{$state}%"
-                        : 'Rp ' . number_format($state, 0, ',', '.')),
+                        : 'Rp '.number_format($state, 0, ',', '.')),
 
                 TextColumn::make('min_amount')
                     ->label('Min. Transaksi')
                     ->formatStateUsing(fn ($state) => $state > 0
-                        ? 'Rp ' . number_format($state, 0, ',', '.')
+                        ? 'Rp '.number_format($state, 0, ',', '.')
                         : '—'),
 
                 TextColumn::make('used_count')

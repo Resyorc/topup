@@ -2,12 +2,12 @@
 
 namespace App\Filament\Admin\Resources\Products;
 
+use App\Filament\Admin\Clusters\CatalogCluster;
 use App\Filament\Admin\Resources\Products\Pages\CreateProduct;
 use App\Filament\Admin\Resources\Products\Pages\EditProduct;
 use App\Filament\Admin\Resources\Products\Pages\ListProducts;
 use App\Filament\Admin\Resources\Products\Schemas\ProductForm;
 use App\Filament\Admin\Resources\Products\Tables\ProductsTable;
-use App\Filament\Admin\Clusters\CatalogCluster;
 use App\Models\Product;
 use BackedEnum;
 use Filament\Resources\Resource;

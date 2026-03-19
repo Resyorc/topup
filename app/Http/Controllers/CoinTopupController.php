@@ -29,12 +29,13 @@ class CoinTopupController extends Controller
         $qrisMethod = null;
         try {
             $qrisMethod = $this->resolveQrisMethod($tripayService);
-        } catch (\Throwable) {}
+        } catch (\Throwable) {
+        }
 
         return Inertia::render('user/topup-saldo', [
             'coinsBalance' => (int) ($user->fresh()->coin_balance ?? 0),
-            'qrisCode'     => $qrisMethod['code'] ?? null,
-            'qrisName'     => $qrisMethod['name'] ?? 'QRIS',
+            'qrisCode' => $qrisMethod['code'] ?? null,
+            'qrisName' => $qrisMethod['name'] ?? 'QRIS',
         ]);
     }
 
@@ -49,7 +50,7 @@ class CoinTopupController extends Controller
 
         $qrisMethod = $this->resolveQrisMethod($tripayService);
 
-        $merchantRef = 'CTP-' . strtoupper(Str::ulid());
+        $merchantRef = 'CTP-'.strtoupper(Str::ulid());
         $expiredTime = time() + 3600;
 
         $orderItems = [[
@@ -89,7 +90,7 @@ class CoinTopupController extends Controller
 
         AuditLogger::log(
             event: 'coin_topup',
-            description: 'Top up coin sebesar Rp ' . number_format((int) $validated['amount'], 0, ',', '.') . ' — ' . $merchantRef,
+            description: 'Top up coin sebesar Rp '.number_format((int) $validated['amount'], 0, ',', '.').' — '.$merchantRef,
             subjectType: 'CoinTopup',
             subjectId: $merchantRef,
             request: $request,
@@ -103,7 +104,7 @@ class CoinTopupController extends Controller
         $channels = $tripayService->getPaymentChannels();
 
         foreach ($channels as $channel) {
-            if (!($channel['active'] ?? false)) {
+            if (! ($channel['active'] ?? false)) {
                 continue;
             }
 

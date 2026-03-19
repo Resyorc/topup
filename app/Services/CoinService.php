@@ -4,10 +4,10 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\User;
 use App\Models\CoinTransaction;
-use Illuminate\Support\Facades\DB;
+use App\Models\User;
 use Exception;
+use Illuminate\Support\Facades\DB;
 
 class CoinService
 {
@@ -23,10 +23,10 @@ class CoinService
             $user->increment('coin_balance', $amount);
 
             return CoinTransaction::create([
-                'user_id'      => $user->id,
-                'amount'       => $amount,
-                'type'         => 'credit',
-                'description'  => $description,
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'type' => 'credit',
+                'description' => $description,
                 'reference_id' => $referenceId,
             ]);
         });
@@ -49,10 +49,10 @@ class CoinService
             $user->decrement('coin_balance', $amount);
 
             return CoinTransaction::create([
-                'user_id'      => $user->id,
-                'amount'       => $amount,
-                'type'         => 'debit',
-                'description'  => $description,
+                'user_id' => $user->id,
+                'amount' => $amount,
+                'type' => 'debit',
+                'description' => $description,
                 'reference_id' => $referenceId,
             ]);
         });

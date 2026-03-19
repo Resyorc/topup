@@ -5,12 +5,12 @@ namespace App\Filament\Admin\Pages;
 use App\Filament\Admin\Clusters\Settings\SettingsCluster;
 use App\Models\Setting;
 use BackedEnum;
-use Filament\Schemas\Components\Section;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 
@@ -41,7 +41,7 @@ class LoyaltySettings extends Page implements HasForms
     {
         $this->form->fill([
             'rate_percent' => (float) Setting::get('loyalty_rate_percent', config('services.loyalty.rate_percent', 1)),
-            'min_amount'   => (int)   Setting::get('loyalty_min_amount', config('services.loyalty.min_amount', 5000)),
+            'min_amount' => (int) Setting::get('loyalty_min_amount', config('services.loyalty.min_amount', 5000)),
         ]);
     }
 
@@ -80,7 +80,7 @@ class LoyaltySettings extends Page implements HasForms
         $data = $this->form->getState();
 
         Setting::set('loyalty_rate_percent', $data['rate_percent']);
-        Setting::set('loyalty_min_amount',   $data['min_amount']);
+        Setting::set('loyalty_min_amount', $data['min_amount']);
 
         Notification::make()
             ->title('Pengaturan tersimpan')

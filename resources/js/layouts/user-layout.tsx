@@ -1,6 +1,6 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import GuestLayout from '@/layouts/guest-layout';
 import React from 'react';
+import GuestLayout from '@/layouts/guest-layout';
 
 export default function UserLayout({
     children,

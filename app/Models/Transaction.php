@@ -43,10 +43,10 @@ class Transaction extends Model
     ];
 
     protected $casts = [
-        'api_logs'      => 'array',
-        'expired_at'    => 'datetime',
+        'api_logs' => 'array',
+        'expired_at' => 'datetime',
         'loyalty_coins' => 'integer',
-        'discount'      => 'integer',
+        'discount' => 'integer',
     ];
 
     public function product(): BelongsTo

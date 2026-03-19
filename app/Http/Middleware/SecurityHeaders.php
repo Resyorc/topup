@@ -29,7 +29,7 @@ class SecurityHeaders
 
         // Content Security Policy — hanya aktif di production
         // Di local, Vite HMR pakai IPv6 [::1] yang tidak bisa di-whitelist via CSP wildcard
-        if (!app()->isLocal()) {
+        if (! app()->isLocal()) {
             $response->headers->set('Content-Security-Policy', implode('; ', [
                 "default-src 'self'",
                 "script-src 'self' 'unsafe-inline' 'unsafe-eval'",

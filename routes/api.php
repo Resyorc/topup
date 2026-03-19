@@ -1,16 +1,15 @@
 <?php
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Route;
-
-use App\Http\Controllers\Api\CheckoutController;
-use App\Http\Controllers\Api\ReviewController;
-use App\Http\Controllers\Api\TripayCallbackController;
-use App\Http\Controllers\Api\DigiflazzCallbackController;
-use App\Http\Controllers\Api\UsernameCheckController;
 use App\Http\Controllers\Api\CancelTransactionController;
 use App\Http\Controllers\Api\ChatController;
+use App\Http\Controllers\Api\CheckoutController;
+use App\Http\Controllers\Api\DigiflazzCallbackController;
+use App\Http\Controllers\Api\ReviewController;
+use App\Http\Controllers\Api\TripayCallbackController;
+use App\Http\Controllers\Api\UsernameCheckController;
 use App\Http\Controllers\Api\ValidateVoucherController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/user', function (Request $request) {
     return $request->user();
@@ -40,5 +39,5 @@ Route::middleware(['web', 'throttle:10,1'])->post('/cancel', [CancelTransactionC
 Route::middleware(['web', 'throttle:20,1'])->post('/chat', [ChatController::class, 'send']);
 
 // Webhook / Callbacks Integration
-Route::post('/callback/tripay', [TripayCallbackController::class, 'handle'])->middleware('throttle:60,1');;
-Route::post('/callback/digiflazz', [DigiflazzCallbackController::class, 'handle'])->middleware('throttle:60,1');;
+Route::post('/callback/tripay', [TripayCallbackController::class, 'handle'])->middleware('throttle:60,1');
+Route::post('/callback/digiflazz', [DigiflazzCallbackController::class, 'handle'])->middleware('throttle:60,1');
