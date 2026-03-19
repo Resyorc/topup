@@ -205,9 +205,8 @@ class CheckoutController extends Controller
                 request: $request,
             );
 
-            SendWhatsAppNotification::orderPending($result['transaction']->load('product.game'))
-                ->delay(now()->addSeconds(3))
-                ->dispatch();
+            dispatch(SendWhatsAppNotification::orderPending($result['transaction']->load('product.game')))
+                ->delay(now()->addSeconds(3));
 
             return response()->json([
                 'success' => true,
@@ -353,9 +352,8 @@ class CheckoutController extends Controller
                 request: $request,
             );
 
-            SendWhatsAppNotification::paymentReceived($transaction->load('product.game'))
-                ->delay(now()->addSeconds(3))
-                ->dispatch();
+            dispatch(SendWhatsAppNotification::paymentReceived($transaction->load('product.game')))
+                ->delay(now()->addSeconds(3));
 
             return response()->json([
                 'success' => true,

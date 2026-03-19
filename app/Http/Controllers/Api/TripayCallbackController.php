@@ -84,8 +84,7 @@ class TripayCallbackController extends Controller
                         'paid_at' => now(),
                     ]);
 
-                    SendWhatsAppNotification::coinTopupSuccess($lockedTopup->load('user'))
-                        ->dispatch();
+                    dispatch(SendWhatsAppNotification::coinTopupSuccess($lockedTopup->load('user')));
                 } elseif (in_array($data->status, ['EXPIRED', 'FAILED'])) {
                     $lockedTopup->update([
                         'status' => $data->status === 'EXPIRED' ? 'expired' : 'failed',
@@ -136,8 +135,7 @@ class TripayCallbackController extends Controller
                     'status' => 'processing',
                 ]);
 
-                SendWhatsAppNotification::paymentReceived($transaction->load('product.game'))
-                    ->dispatch();
+                dispatch(SendWhatsAppNotification::paymentReceived($transaction->load('product.game')));
 
                 Log::info('Digiflazz Topup Result', ['ref' => $transaction->invoice_id, 'result' => $topupResult]);
 
