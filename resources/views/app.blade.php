@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
     {{-- Inline script to detect system dark mode preference and apply it immediately --}}
-    <script>
+    <script nonce="{{ Vite::cspNonce() }}">
         (function() {
                 const appearance = '{{ $appearance ?? "system" }}';
 
@@ -32,8 +32,8 @@
     </style>
 
     <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC29SDR832"></script>
-    <script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC29SDR832" nonce="{{ Vite::cspNonce() }}"></script>
+    <script nonce="{{ Vite::cspNonce() }}">
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
