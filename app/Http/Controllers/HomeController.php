@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Banner;
 use App\Models\Category;
 use App\Models\Game;
 use App\Models\Setting;
@@ -33,7 +34,13 @@ class HomeController extends Controller
 
         $trendingTotalSold = $trendingGames->sum('total_sold');
 
+        // 4. Active banners ordered by sort_order
+        $banners = Banner::where('is_active', true)
+            ->orderBy('sort_order')
+            ->get(['image', 'link']);
+
         return Inertia::render('welcome', [
+            'banners' => $banners,
             'categories' => $categories,
             'games' => $games,
             'trendingGames' => $trendingGames,
