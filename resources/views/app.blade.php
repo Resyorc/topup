@@ -31,6 +31,16 @@
         }
     </style>
 
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC29SDR832"></script>
+    <script>
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+
+        gtag('config', 'G-VC29SDR832');
+    </script>
+
     <title inertia>{{ config('app.name', 'Nuvelo') }}</title>
 
     <link rel="icon" href="/favicon.ico" sizes="any">
