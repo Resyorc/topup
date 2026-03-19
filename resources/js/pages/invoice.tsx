@@ -1374,7 +1374,7 @@ export default function InvoiceSearch({
                                         invoiceData.type === 'transaction' &&
                                         (invoiceData.loyalty_coins ?? 0) > 0 && (
                                         <div className="flex items-center gap-3 rounded-xl border border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 px-4 py-3">
-                                            <span className="text-2xl">🪙</span>
+                                            <img src="/coin.png" alt="Coin" className="h-8 w-8 object-contain" />
                                             <div>
                                                 <p className="text-sm font-bold text-yellow-400">
                                                     +{invoiceData.loyalty_coins.toLocaleString('id-ID')} Krysta Coin

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Game;
+use App\Models\Setting;
 use Inertia\Inertia;
 
 class HomeController extends Controller
@@ -37,6 +38,8 @@ class HomeController extends Controller
             'games' => $games,
             'trendingGames' => $trendingGames,
             'trendingTotalSold' => $trendingTotalSold,
+            'loyaltyMinAmount' => (int) Setting::get('loyalty_min_amount', config('services.loyalty.min_amount', 5000)),
+            'loyaltyRate' => (float) Setting::get('loyalty_rate_percent', config('services.loyalty.rate_percent', 1)),
         ]);
     }
 }

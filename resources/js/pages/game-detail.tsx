@@ -1431,37 +1431,6 @@ export default function GameDetail({
                             </div>
                         </div>
 
-                        {/* Loyalty Reward Info Card — only for logged-in users */}
-                        {auth.user && <div className="overflow-hidden rounded-xl border border-yellow-500/20 bg-linear-to-br from-yellow-500/5 to-amber-500/5">
-                            <div className="flex items-start gap-2 sm:gap-3 p-3 sm:p-4">
-                                <span className="mt-0.5 shrink-0 text-xl sm:text-2xl leading-none">🪙</span>
-                                <div className="flex-1 min-w-0">
-                                    {selectedProduct && !selectedPayment?.is_coin && selectedProduct.price >= 5000 ? (
-                                        <>
-                                            <p className="text-xs font-bold text-yellow-400">
-                                                Kamu akan mendapat reward!
-                                            </p>
-                                            <p className="mt-0.5 text-[11px] text-gray-400 leading-relaxed">
-                                                Transaksi ini memberikan{' '}
-                                                <span className="font-semibold text-yellow-400">
-                                                    +{Math.floor(selectedProduct.price / 100).toLocaleString('id-ID')} Krysta Coin
-                                                </span>{' '}
-                                                sebagai reward loyalitas (berlaku untuk akun login).
-                                            </p>
-                                        </>
-                                    ) : (
-                                        <>
-                                            <p className="text-xs font-bold text-yellow-400">
-                                                Program Loyalitas
-                                            </p>
-                                            <p className="mt-0.5 text-[11px] text-gray-400 leading-relaxed">
-                                                Dapatkan <span className="font-semibold text-yellow-400">1% cashback</span> dalam bentuk Krysta Coin di setiap transaksi berhasil.
-                                            </p>
-                                        </>
-                                    )}
-                                </div>
-                            </div>
-                        </div>}
                     </div>
                 </div>
             </div>
@@ -1519,7 +1488,7 @@ export default function GameDetail({
                             {auth.user && !selectedPayment.is_coin && selectedProduct.price >= 5000 && Math.floor(selectedProduct.price / 100) > 0 && (
                                 <div className="flex items-center justify-between gap-2 text-xs">
                                     <span className="shrink-0 flex items-center gap-1 text-yellow-400/90">
-                                        🪙 Reward
+                                        <img src="/coin.png" alt="Coin" className="h-3.5 w-3.5 object-contain" /> Reward
                                     </span>
                                     <span className="font-semibold text-yellow-400">
                                         +{Math.floor(selectedProduct.price / 100).toLocaleString('id-ID')} Coins
