@@ -31,7 +31,7 @@ return new class extends Migration
                 'codashop_voucher_id',
                 'codashop_price',
                 'codashop_voucher_type',
-                'codashop_need_zone'
+                'codashop_need_zone',
             ]);
         });
     }

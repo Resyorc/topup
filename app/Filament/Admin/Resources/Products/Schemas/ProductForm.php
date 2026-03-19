@@ -2,13 +2,13 @@
 
 namespace App\Filament\Admin\Resources\Products\Schemas;
 
+use App\Services\TopupPriceService;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
-use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
-use App\Services\TopupPriceService;
+use Filament\Schemas\Schema;
 
 class ProductForm
 {
@@ -23,7 +23,7 @@ class ProductForm
                     ->required(),
                 TextInput::make('name')
                     ->required(),
-TextInput::make('price_cost')
+                TextInput::make('price_cost')
                     ->required()
                     ->numeric()
                     ->default(0.0)

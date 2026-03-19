@@ -1,5 +1,5 @@
-import React, { useState, useRef, useEffect } from 'react';
 import axios from 'axios';
+import React, { useState, useRef, useEffect } from 'react';
 
 interface Message {
     role: 'user' | 'assistant';
@@ -108,7 +108,7 @@ export default function LiveChat({ context = {} }: LiveChatProps) {
         <>
             {/* Chat Window */}
             {open && (
-                <div className="fixed bottom-[5.5rem] right-4 z-[300] flex w-[340px] flex-col overflow-hidden rounded-2xl border border-[#31334c] bg-[#1e1f29] shadow-2xl md:bottom-6 md:right-6">
+                <div className="fixed inset-x-0 bottom-15 z-300 flex flex-col overflow-hidden border-t border-[#31334c] bg-[#1e1f29] shadow-2xl md:inset-x-auto md:bottom-6 md:right-6 md:w-85 md:rounded-2xl md:border">
                     {/* Header */}
                     <div className="flex items-center justify-between bg-[#26273b] px-4 py-3">
                         <div className="flex items-center gap-2.5">
@@ -129,7 +129,7 @@ export default function LiveChat({ context = {} }: LiveChatProps) {
                         </div>
                         <button
                             onClick={() => setOpen(false)}
-                            className="flex h-7 w-7 items-center justify-center rounded-full text-gray-400 transition hover:bg-white/10 hover:text-white"
+                            className="flex h-8 w-8 items-center justify-center rounded-full text-gray-400 transition hover:bg-white/10 hover:text-white"
                         >
                             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round">
                                 <path d="M18 6L6 18M6 6l12 12" />
@@ -138,7 +138,10 @@ export default function LiveChat({ context = {} }: LiveChatProps) {
                     </div>
 
                     {/* Messages */}
-                    <div className="flex flex-1 flex-col gap-2.5 overflow-y-auto p-4" style={{ maxHeight: '340px', minHeight: '200px' }}>
+                    <div
+                        className="flex flex-1 flex-col gap-2.5 overflow-y-auto p-4"
+                        style={{ height: 'min(50vh, 340px)', minHeight: '180px' }}
+                    >
                         {messages.map((msg, i) => (
                             <ChatBubble key={i} role={msg.role} content={msg.content} />
                         ))}
@@ -180,21 +183,15 @@ export default function LiveChat({ context = {} }: LiveChatProps) {
                 </div>
             )}
 
-            {/* FAB Toggle Button */}
+            {/* FAB Toggle Button — hidden on mobile when chat is open (close via header) */}
             <button
                 onClick={() => setOpen((o) => !o)}
-                className="fixed bottom-[4.75rem] right-4 z-[300] flex h-13 w-13 items-center justify-center rounded-full bg-primary shadow-[0_0_20px_rgba(131,39,216,0.5)] transition hover:scale-105 hover:bg-primary/90 md:bottom-6 md:right-6"
+                className={`fixed bottom-19 right-4 z-300 h-13 w-13 items-center justify-center rounded-full bg-primary shadow-[0_0_20px_rgba(131,39,216,0.5)] transition hover:scale-105 hover:bg-primary/90 md:bottom-6 md:right-6 md:flex ${open ? 'hidden' : 'flex'}`}
                 aria-label="Buka live chat"
             >
-                {open ? (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round">
-                        <path d="M18 6L6 18M6 6l12 12" />
-                    </svg>
-                ) : (
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
-                    </svg>
-                )}
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+                </svg>
             </button>
         </>
     );

@@ -2,12 +2,12 @@
 
 namespace App\Filament\Admin\Resources\Games;
 
+use App\Filament\Admin\Clusters\CatalogCluster;
 use App\Filament\Admin\Resources\Games\Pages\CreateGame;
 use App\Filament\Admin\Resources\Games\Pages\EditGame;
 use App\Filament\Admin\Resources\Games\Pages\ListGames;
 use App\Filament\Admin\Resources\Games\Schemas\GameForm;
 use App\Filament\Admin\Resources\Games\Tables\GamesTable;
-use App\Filament\Admin\Clusters\CatalogCluster;
 use App\Models\Game;
 use BackedEnum;
 use Filament\Resources\Resource;

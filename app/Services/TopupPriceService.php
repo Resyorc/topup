@@ -20,10 +20,10 @@ class TopupPriceService
     public function syncPrices(): void
     {
         $digiflazz = app(DigiflazzService::class);
-        
+
         try {
             $apiProducts = $digiflazz->getPrepaidProducts();
-            
+
             // Pluck API products by SKU for O(1) matching
             $apiProductMap = collect($apiProducts)->keyBy('buyer_sku_code');
 
@@ -32,7 +32,7 @@ class TopupPriceService
                 foreach ($products as $product) {
                     if ($apiProductMap->has($product->provider_sku)) {
                         $providerData = $apiProductMap->get($product->provider_sku);
-                        
+
                         $cost = (float) $providerData['price'];
                         // Digiflazz depends on both seller and buyer status
                         $isAvailable = $providerData['buyer_product_status'] === true && $providerData['seller_product_status'] === true;
@@ -49,7 +49,7 @@ class TopupPriceService
                 }
             });
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Digiflazz Sync Failed: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::error('Digiflazz Sync Failed: '.$e->getMessage());
         }
     }
 }

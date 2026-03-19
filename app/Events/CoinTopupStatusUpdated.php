@@ -18,7 +18,7 @@ class CoinTopupStatusUpdated implements ShouldBroadcast
     public function broadcastOn(): array
     {
         return [
-            new Channel('invoice.' . $this->coinTopup->invoice_id),
+            new Channel('invoice.'.$this->coinTopup->invoice_id),
         ];
     }
 
@@ -30,22 +30,22 @@ class CoinTopupStatusUpdated implements ShouldBroadcast
     public function broadcastWith(): array
     {
         $status = match ($this->coinTopup->status) {
-            'paid'    => 'success',
+            'paid' => 'success',
             'expired' => 'failed',
-            default   => $this->coinTopup->status,
+            default => $this->coinTopup->status,
         };
 
         $paymentStatus = match ($this->coinTopup->status) {
-            'paid'    => 'paid',
+            'paid' => 'paid',
             'expired' => 'expired',
-            default   => $this->coinTopup->status,
+            default => $this->coinTopup->status,
         };
 
         return [
-            'invoice_id'     => $this->coinTopup->invoice_id,
-            'status'         => $status,
+            'invoice_id' => $this->coinTopup->invoice_id,
+            'status' => $status,
             'payment_status' => $paymentStatus,
-            'product_name'   => 'Krysta Coins',
+            'product_name' => 'Krysta Coins',
         ];
     }
 }

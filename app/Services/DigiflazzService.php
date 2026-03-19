@@ -4,14 +4,16 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use Illuminate\Support\Facades\Http;
-use Illuminate\Http\Client\PendingRequest;
 use Exception;
+use Illuminate\Http\Client\PendingRequest;
+use Illuminate\Support\Facades\Http;
 
 class DigiflazzService
 {
     private string $username;
+
     private string $apiKey;
+
     private string $baseUrl;
 
     public function __construct()
@@ -30,7 +32,7 @@ class DigiflazzService
             ->timeout(30)
             ->withHeaders([
                 'Accept' => 'application/json',
-                'Content-Type' => 'application/json'
+                'Content-Type' => 'application/json',
             ]);
     }
 
@@ -39,7 +41,7 @@ class DigiflazzService
      */
     private function generateSignature(string $postfix): string
     {
-        return md5($this->username . $this->apiKey . $postfix);
+        return md5($this->username.$this->apiKey.$postfix);
     }
 
     /**
@@ -55,8 +57,8 @@ class DigiflazzService
 
         $response = $this->client()->post('/cek-saldo', $payload);
 
-        if (!$response->successful()) {
-            throw new Exception('Digiflazz API Error: ' . $response->body());
+        if (! $response->successful()) {
+            throw new Exception('Digiflazz API Error: '.$response->body());
         }
 
         return $response->json('data') ?? [];
@@ -75,8 +77,8 @@ class DigiflazzService
 
         $response = $this->client()->post('/price-list', $payload);
 
-        if (!$response->successful()) {
-            throw new Exception('Digiflazz API Error: ' . $response->body());
+        if (! $response->successful()) {
+            throw new Exception('Digiflazz API Error: '.$response->body());
         }
 
         return $response->json('data') ?? [];
@@ -97,14 +99,14 @@ class DigiflazzService
 
         $response = $this->client()->post('/transaction', $payload);
 
-        if (!$response->successful()) {
-            throw new Exception('Digiflazz API Error: ' . $response->body());
+        if (! $response->successful()) {
+            throw new Exception('Digiflazz API Error: '.$response->body());
         }
 
         $data = $response->json('data') ?? [];
 
         if (isset($data['status']) && strtolower($data['status']) === 'gagal') {
-            throw new Exception('Digiflazz Transaction Error: ' . ($data['message'] ?? 'Unknown error'));
+            throw new Exception('Digiflazz Transaction Error: '.($data['message'] ?? 'Unknown error'));
         }
 
         return $data;
@@ -125,8 +127,8 @@ class DigiflazzService
 
         $response = $this->client()->post('/deposit', $payload);
 
-        if (!$response->successful()) {
-            throw new Exception('Digiflazz API Error: ' . $response->body());
+        if (! $response->successful()) {
+            throw new Exception('Digiflazz API Error: '.$response->body());
         }
 
         return $response->json('data') ?? [];

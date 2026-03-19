@@ -13,8 +13,8 @@ return new class extends Migration
     {
         Schema::table('transactions', function (Blueprint $table) {
             $table->enum('payment_status', ['unpaid', 'paid', 'expired'])
-              ->default('unpaid')
-              ->after('status');
+                ->default('unpaid')
+                ->after('status');
         });
     }
 

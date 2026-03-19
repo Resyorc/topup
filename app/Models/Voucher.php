@@ -21,10 +21,10 @@ class Voucher extends Model
     ];
 
     protected $casts = [
-        'valid_from'  => 'datetime',
+        'valid_from' => 'datetime',
         'valid_until' => 'datetime',
-        'is_active'   => 'boolean',
-        'is_public'   => 'boolean',
+        'is_active' => 'boolean',
+        'is_public' => 'boolean',
     ];
 
     /**

@@ -37,8 +37,8 @@ class LoyaltyService
             return 0;
         }
 
-        $rate        = (float) Setting::get('loyalty_rate_percent', config('services.loyalty.rate_percent', 1));
-        $minAmount   = (int)   Setting::get('loyalty_min_amount',   config('services.loyalty.min_amount', 5000));
+        $rate = (float) Setting::get('loyalty_rate_percent', config('services.loyalty.rate_percent', 1));
+        $minAmount = (int) Setting::get('loyalty_min_amount', config('services.loyalty.min_amount', 5000));
 
         // Guard: minimum amount
         if ((int) $transaction->amount < $minAmount) {
@@ -59,20 +59,20 @@ class LoyaltyService
                     ->first();
 
                 // Re-check setelah dikunci (callback kedua akan berhenti di sini)
-                if (!$locked || $locked->loyalty_coins > 0) {
+                if (! $locked || $locked->loyalty_coins > 0) {
                     return 0;
                 }
 
                 $user = User::find($locked->user_id);
 
-                if (!$user) {
+                if (! $user) {
                     return 0;
                 }
 
                 app(CoinService::class)->credit(
                     $user,
                     $coins,
-                    'Reward loyalitas — ' . ($transaction->product->game->name ?? 'Topup') . ' ' . ($transaction->product->name ?? ''),
+                    'Reward loyalitas — '.($transaction->product->game->name ?? 'Topup').' '.($transaction->product->name ?? ''),
                     $locked->invoice_id,
                 );
 
@@ -84,7 +84,8 @@ class LoyaltyService
             });
 
         } catch (\Exception $e) {
-            Log::error("Loyalty reward gagal untuk {$transaction->invoice_id}: " . $e->getMessage());
+            Log::error("Loyalty reward gagal untuk {$transaction->invoice_id}: ".$e->getMessage());
+
             return 0;
         }
     }
@@ -94,8 +95,8 @@ class LoyaltyService
      */
     public function calculatePreview(int $amount): int
     {
-        $rate      = (float) Setting::get('loyalty_rate_percent', config('services.loyalty.rate_percent', 1));
-        $minAmount = (int)   Setting::get('loyalty_min_amount',   config('services.loyalty.min_amount', 5000));
+        $rate = (float) Setting::get('loyalty_rate_percent', config('services.loyalty.rate_percent', 1));
+        $minAmount = (int) Setting::get('loyalty_min_amount', config('services.loyalty.min_amount', 5000));
 
         if ($amount < $minAmount) {
             return 0;

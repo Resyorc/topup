@@ -18,6 +18,7 @@ class DummyProductSeeder extends Seeder
 
         if ($games->isEmpty()) {
             $this->command->warn('No games found. Please create games from Admin Panel or DatabaseSeeder first.');
+
             return;
         }
 
@@ -48,12 +49,12 @@ class DummyProductSeeder extends Seeder
 
         foreach ($products as $index => $prod) {
             // Adapt name for PUBG/FF if needed, but for dummy just use diamond names
-            $itemName = str_replace('Diamonds', str_contains(strtolower($game->name), 'pubg') ? 'UC' : 
+            $itemName = str_replace('Diamonds', str_contains(strtolower($game->name), 'pubg') ? 'UC' :
                                     (str_contains(strtolower($game->name), 'valorant') ? 'VP' : 'Diamonds'), $prod['name']);
-            
+
             Product::create([
                 'game_id' => $game->id,
-                'provider_sku' => Str::slug($game->name . '-' . $itemName) . '-' . rand(1000, 9999),
+                'provider_sku' => Str::slug($game->name.'-'.$itemName).'-'.rand(1000, 9999),
                 'name' => $itemName,
                 'price_cost' => $prod['price_cost'],
                 'margin_flat' => $prod['price_sell'] - $prod['price_cost'],

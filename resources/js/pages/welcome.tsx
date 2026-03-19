@@ -1,9 +1,9 @@
+import { Head, usePage } from '@inertiajs/react';
 import { useState } from 'react';
-import { Head, Link, usePage } from '@inertiajs/react';
-import GuestLayout from '@/layouts/guest-layout';
+import GameCard from '@/components/game-card';
 import HeroBanner from '@/components/hero-banner';
 import PromoBanner from '@/components/promo-banner';
-import GameCard from '@/components/game-card';
+import GuestLayout from '@/layouts/guest-layout';
 
 interface Category {
     id: number;

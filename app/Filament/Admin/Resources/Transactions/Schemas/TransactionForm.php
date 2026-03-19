@@ -3,8 +3,8 @@
 namespace App\Filament\Admin\Resources\Transactions\Schemas;
 
 use Filament\Forms\Components\Select;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class TransactionForm
@@ -33,12 +33,12 @@ class TransactionForm
                     ->default(0.0),
                 Select::make('status')
                     ->options([
-            'pending' => 'Pending',
-            'paid' => 'Paid',
-            'processing' => 'Processing',
-            'success' => 'Success',
-            'failed' => 'Failed',
-        ])
+                        'pending' => 'Pending',
+                        'paid' => 'Paid',
+                        'processing' => 'Processing',
+                        'success' => 'Success',
+                        'failed' => 'Failed',
+                    ])
                     ->default('pending')
                     ->required(),
                 TextInput::make('sn'),

@@ -11,7 +11,7 @@ class LogRegistered
     {
         AuditLogger::log(
             event: 'register',
-            description: 'Akun baru dibuat: ' . $event->user->email,
+            description: 'Akun baru dibuat: '.$event->user->email,
             userId: $event->user->id,
         );
     }

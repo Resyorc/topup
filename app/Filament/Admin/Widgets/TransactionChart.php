@@ -28,7 +28,7 @@ class TransactionChart extends ChartWidget
             $weekStart = $current->copy()->max($startOfMonth);
             $weekEnd = $current->copy()->endOfWeek()->min($endOfMonth);
 
-            $weeks[] = $weekStart->format('d/m') . '–' . $weekEnd->format('d/m');
+            $weeks[] = $weekStart->format('d/m').'–'.$weekEnd->format('d/m');
 
             $revenues[] = (int) Transaction::where('status', 'success')
                 ->whereBetween('created_at', [$weekStart->startOfDay(), $weekEnd->endOfDay()])

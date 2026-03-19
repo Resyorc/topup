@@ -1,18 +1,17 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { useEchoPublic } from '@laravel/echo-react';
 import { Head, useForm, Link, usePage } from '@inertiajs/react';
-import DOMPurify from 'dompurify';
+import { useEchoPublic } from '@laravel/echo-react';
 import axios from 'axios';
-import { swalError } from '@/lib/swal';
+import DOMPurify from 'dompurify';
+import React, { useState, useEffect, useCallback } from 'react';
 import Swal from 'sweetalert2';
-import GuestLayout from '@/layouts/guest-layout';
 import GameCard from '@/components/game-card';
+import { useGuestInvoice } from '@/contexts/guest-invoice-context';
+import GuestLayout from '@/layouts/guest-layout';
 import {
     getPaymentStatusBadge,
     getTransactionStatusBadge,
-    formatCurrency,
 } from '@/lib';
-import { useGuestInvoice } from '@/contexts/guest-invoice-context';
+import { swalError } from '@/lib/swal';
 
 function InvoiceRealtimeListener({
     invoiceNo,
@@ -39,7 +38,7 @@ export default function InvoiceSearch({
     const isGuest = !auth.user;
 
     // Guest ownership check: if guest tries to view an invoice they don't own, block it
-    const [accessDenied, setAccessDenied] = useState<boolean>(() => {
+    const [accessDenied] = useState<boolean>(() => {
         if (!isGuest || !initialInvoiceData?.invoice_no) return false;
         return !ownsInvoice(initialInvoiceData.invoice_no);
     });

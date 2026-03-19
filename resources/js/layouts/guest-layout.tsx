@@ -1,9 +1,9 @@
 import { Link, usePage } from '@inertiajs/react';
-import { useState, useRef, useEffect, useMemo } from 'react';
-import NewsTicker from '@/components/news-ticker';
-import LiveChat from '@/components/live-chat';
 import { useEcho } from '@laravel/echo-react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { Toaster, toast } from 'sonner';
+import LiveChat from '@/components/live-chat';
+import NewsTicker from '@/components/news-ticker';
 
 const STATUS_LABEL: Record<string, { label: string; type: 'success' | 'error' | 'info' }> = {
     success:    { label: 'berhasil diproses', type: 'success' },

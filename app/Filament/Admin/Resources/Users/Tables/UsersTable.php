@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\Users\Tables;
 
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
@@ -33,7 +32,7 @@ class UsersTable
                 IconColumn::make('email_verified_at')
                     ->label('Verifikasi Email')
                     ->boolean()
-                    ->getStateUsing(fn ($record) => !is_null($record->email_verified_at))
+                    ->getStateUsing(fn ($record) => ! is_null($record->email_verified_at))
                     ->trueIcon('heroicon-o-check-badge')
                     ->falseIcon('heroicon-o-x-circle')
                     ->trueColor('success')

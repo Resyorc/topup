@@ -54,9 +54,9 @@ class VoucherResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index'  => ListVouchers::route('/'),
+            'index' => ListVouchers::route('/'),
             'create' => CreateVoucher::route('/create'),
-            'edit'   => EditVoucher::route('/{record}/edit'),
+            'edit' => EditVoucher::route('/{record}/edit'),
         ];
     }
 }

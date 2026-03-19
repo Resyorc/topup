@@ -1,7 +1,7 @@
 import { useForm, usePage, router } from '@inertiajs/react';
-import UserLayout from '@/layouts/user-layout';
-import React, { useRef, useState } from 'react';
 import axios from 'axios';
+import React, { useRef, useState } from 'react';
+import UserLayout from '@/layouts/user-layout';
 
 export default function Settings() {
     const { auth } = usePage().props as any;

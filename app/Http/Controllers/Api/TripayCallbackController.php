@@ -5,12 +5,12 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppNotification;
 use App\Models\CoinTopup;
-use Illuminate\Http\Request;
 use App\Models\Transaction;
 use App\Services\CoinService;
 use App\Services\DigiflazzService;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class TripayCallbackController extends Controller
 {
@@ -25,15 +25,16 @@ class TripayCallbackController extends Controller
 
         $signature = hash_hmac('sha256', $json, $privateKey);
 
-        if (!hash_equals($signature, (string) $callbackSignature)) {
+        if (! hash_equals($signature, (string) $callbackSignature)) {
             Log::warning('Tripay Callback Invalid Signature', ['received' => $callbackSignature, 'calculated' => $signature]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid signature',
             ], 403);
         }
 
-        if ('payment_status' !== $request->header('X-Callback-Event')) {
+        if ($request->header('X-Callback-Event') !== 'payment_status') {
             return response()->json([
                 'success' => false,
                 'message' => 'Not a payment event',
@@ -42,7 +43,7 @@ class TripayCallbackController extends Controller
 
         $data = json_decode($json);
 
-        if (!isset($data->reference) || !isset($data->merchant_ref)) {
+        if (! isset($data->reference) || ! isset($data->merchant_ref)) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid data payload representation',
@@ -51,7 +52,7 @@ class TripayCallbackController extends Controller
 
         // Sesuai dokumentasi Tripay — hanya proses closed payment (is_closed_payment = 1)
         // Open payment (0) tidak didukung karena jumlah bayar bisa berbeda
-        if (!isset($data->is_closed_payment) || !$data->is_closed_payment) {
+        if (! isset($data->is_closed_payment) || ! $data->is_closed_payment) {
             return response()->json([
                 'success' => false,
                 'message' => 'Open payment is not supported',
@@ -101,8 +102,9 @@ class TripayCallbackController extends Controller
         // Check existence first before acquiring lock
         $transaction = Transaction::where('invoice_id', $data->merchant_ref)->first();
 
-        if (!$transaction) {
-            Log::error('Tripay Callback Transaction Not Found: ' . $data->merchant_ref);
+        if (! $transaction) {
+            Log::error('Tripay Callback Transaction Not Found: '.$data->merchant_ref);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Invoice not found',
@@ -125,13 +127,13 @@ class TripayCallbackController extends Controller
                 $product = $transaction->product;
                 $topupResult = $digiflazzService->createTransaction(
                     $product->provider_sku,
-                    $transaction->customer_game_id . $transaction->customer_zone_id,
+                    $transaction->customer_game_id.$transaction->customer_zone_id,
                     $transaction->invoice_id,
                 );
 
                 $transaction->update([
                     'payment_status' => 'paid',
-                    'status'         => 'processing',
+                    'status' => 'processing',
                 ]);
 
                 SendWhatsAppNotification::paymentReceived($transaction->load('product.game'))
@@ -142,7 +144,7 @@ class TripayCallbackController extends Controller
             } elseif (in_array($data->status, ['EXPIRED', 'FAILED'])) {
                 $transaction->update([
                     'payment_status' => 'expired',
-                    'status'         => 'failed',
+                    'status' => 'failed',
                 ]);
             }
         });
