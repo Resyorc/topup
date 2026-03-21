@@ -1,3 +1,4 @@
+import SearchBar from '@/components/search-bar';
 import { Link, usePage } from '@inertiajs/react';
 import { useEcho } from '@laravel/echo-react';
 import { useState, useRef, useEffect, useMemo } from 'react';
@@ -130,38 +131,13 @@ export default function GuestLayout({
                             </picture>
                         </Link>
 
-                        {/* Desktop Search Bar — unchanged, hidden on mobile */}
-                        <form className="hidden flex-1 items-center rounded-lg border border-gray-500 transition-all duration-300 focus-within:border-primary focus-within:shadow-[0_0_0_2px_rgba(168,85,247,0.2)] md:flex">
-                            <input
-                                type="text"
-                                placeholder="Cari Game atau Voucher"
-                                className="my-auto w-full bg-transparent px-5 py-2.5 text-sm text-gray-800 placeholder-gray-400 focus:outline-none"
+                        {/* Desktop Search Bar */}
+                        <div className="hidden flex-1 md:flex">
+                            <SearchBar
+                                inputClassName="text-white my-auto"
+                                buttonClassName="px-5 py-2.5"
                             />
-                            <button
-                                type="button"
-                                className="flex cursor-pointer items-center justify-center rounded-r-lg bg-primary px-5 py-2.5 transition-colors duration-300 hover:bg-primary/90"
-                            >
-                                <svg
-                                    width="20"
-                                    height="20"
-                                    viewBox="0 0 24 24"
-                                    fill="none"
-                                    stroke="currentColor"
-                                    strokeWidth="2.5"
-                                    strokeLinecap="round"
-                                    strokeLinejoin="round"
-                                    className="text-white"
-                                >
-                                    <circle cx="11" cy="11" r="8"></circle>
-                                    <line
-                                        x1="21"
-                                        y1="21"
-                                        x2="16.65"
-                                        y2="16.65"
-                                    ></line>
-                                </svg>
-                            </button>
-                        </form>
+                        </div>
 
                         {/* Right Side — Auth / Icons */}
                         <div className="flex items-center gap-2 md:gap-3">
@@ -252,7 +228,7 @@ export default function GuestLayout({
                                                 <div className="max-h-72 overflow-y-auto">
                                                     {notifications.length ===
                                                     0 ? (
-                                                        <p className="py-6 text-center text-xs text-gray-500">
+                                                        <p className="py-6 text-center text-xs text-gray-300">
                                                             Tidak ada notifikasi
                                                         </p>
                                                     ) : (
@@ -282,7 +258,7 @@ export default function GuestLayout({
                                                                                         }
                                                                                     </span>
                                                                                 </p>
-                                                                                <p className="text-xs text-gray-500">
+                                                                                <p className="text-xs text-gray-400">
                                                                                     {
                                                                                         n.invoice_id
                                                                                     }{' '}
@@ -329,7 +305,7 @@ export default function GuestLayout({
                                     {/* Masuk button — shown on mobile (next to search) and desktop */}
                                     <Link
                                         href="/login"
-                                        className="rounded-md border border-primary bg-transparent px-3 py-1.5 text-xs font-semibold text-primary transition hover:bg-primary/10 md:px-4 md:py-2 md:text-sm"
+                                        className="rounded-md border border-white/70 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20 md:px-4 md:py-2 md:text-sm"
                                     >
                                         Masuk
                                     </Link>
@@ -348,38 +324,11 @@ export default function GuestLayout({
                     {/* ===== Mobile Search Bar — slides down when toggled ===== */}
                     {mobileSearchOpen && (
                         <div className="px-4 pb-3 md:hidden">
-                            <form className="flex items-center rounded-lg border border-gray-500 transition-all duration-300 focus-within:border-primary focus-within:shadow-[0_0_0_2px_rgba(168,85,247,0.2)]">
-                                <input
-                                    type="text"
-                                    placeholder="Cari Game atau Voucher"
-                                    className="w-full bg-transparent px-4 py-2.5 text-sm text-white placeholder-gray-400 focus:outline-none"
-                                    autoFocus
-                                />
-                                <button
-                                    type="button"
-                                    className="flex cursor-pointer items-center justify-center rounded-r-lg bg-primary px-4 py-2.5 transition-colors duration-300 hover:bg-primary/90"
-                                >
-                                    <svg
-                                        width="18"
-                                        height="18"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2.5"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="text-white"
-                                    >
-                                        <circle cx="11" cy="11" r="8"></circle>
-                                        <line
-                                            x1="21"
-                                            y1="21"
-                                            x2="16.65"
-                                            y2="16.65"
-                                        ></line>
-                                    </svg>
-                                </button>
-                            </form>
+                            <SearchBar
+                                inputClassName="text-white"
+                                buttonClassName="px-4 py-2.5"
+                                autoFocus
+                            />
                         </div>
                     )}
 
@@ -590,7 +539,10 @@ export default function GuestLayout({
                                 className="mb-3 flex items-center md:mb-4"
                             >
                                 <picture>
-                                    <source srcSet="/logo.webp" type="image/webp" />
+                                    <source
+                                        srcSet="/logo.webp"
+                                        type="image/webp"
+                                    />
                                     <img
                                         src="/logo.png"
                                         alt="Nuvelo"
@@ -690,7 +642,9 @@ export default function GuestLayout({
                             </h3>
                             <div className="flex gap-4">
                                 <a
-                                    href="#"
+                                    href="https://www.instagram.com/nuvelo.id?igsh=YnA5eXhzNjA3eTdw"
+                                    target="_blank"
+                                    aria-label="Ikuti kami di Instagram"
                                     className="flex h-8 w-8 items-center justify-center rounded-full bg-[#26273b] text-gray-300 transition hover:bg-primary hover:text-white"
                                 >
                                     <svg
@@ -721,8 +675,9 @@ export default function GuestLayout({
                                         />
                                     </svg>
                                 </a>
-                                <a
+                                {/* <a
                                     href="#"
+                                    aria-label="Ikuti kami di TikTok"
                                     className="flex h-8 w-8 items-center justify-center rounded-full bg-[#26273b] text-gray-300 transition hover:bg-primary hover:text-white"
                                 >
                                     <svg
@@ -738,24 +693,24 @@ export default function GuestLayout({
                                     >
                                         <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
                                     </svg>
-                                </a>
+                                </a> */}
                             </div>
                         </div>
                     </div>
 
                     {/* Footer Bottom — stacked on mobile, side-by-side on desktop */}
-                    <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 border-t border-[#31334c] px-4 pt-4 text-xs text-gray-500 md:flex-row md:gap-0 md:pt-6">
+                    <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 border-t border-[#31334c] px-4 pt-4 text-xs text-gray-300 md:flex-row md:gap-0 md:pt-6">
                         <p>&copy; 2026 Nuvelo. All rights reserved.</p>
                         <div className="mt-2 flex gap-4 md:mt-0">
                             <Link
                                 href="/kebijakan-privasi"
-                                className="transition hover:text-gray-300"
+                                className="transition hover:text-white"
                             >
                                 Kebijakan Privasi
                             </Link>
                             <Link
                                 href="/syarat-ketentuan"
-                                className="transition hover:text-gray-300"
+                                className="transition hover:text-white"
                             >
                                 Syarat & Ketentuan
                             </Link>
