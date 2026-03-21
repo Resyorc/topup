@@ -63,9 +63,22 @@
     <link rel="preload" href="https://fonts.bunny.net/instrument-sans/files/instrument-sans-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="https://fonts.bunny.net/instrument-sans/files/instrument-sans-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 
-    {{-- Font stylesheets — non-blocking via media="print" trick; onload swaps ke all --}}
-    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600&display=swap" media="print" onload="this.media='all'">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400&display=swap" media="print" onload="this.media='all'">
+    {{-- Font stylesheets — dimuat async via script ber-nonce agar tidak render-blocking
+         dan tidak melanggar CSP (inline onload diblokir oleh nonce-based policy) --}}
+    <script nonce="{{ Vite::cspNonce() }}">
+        (function () {
+            var urls = [
+                'https://fonts.bunny.net/css?family=instrument-sans:400,500,600&display=swap',
+                'https://fonts.googleapis.com/css2?family=Orbitron:wght@400&display=swap'
+            ];
+            urls.forEach(function (href) {
+                var l = document.createElement('link');
+                l.rel = 'stylesheet';
+                l.href = href;
+                document.head.appendChild(l);
+            });
+        })();
+    </script>
     <noscript>
         <link rel="stylesheet" href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600&display=swap">
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400&display=swap">
