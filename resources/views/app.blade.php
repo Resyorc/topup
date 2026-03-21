@@ -60,12 +60,14 @@
 
     {{-- Preconnect untuk mempercepat handshake ke font servers --}}
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 
+    {{-- Preload font utama agar browser tidak menunggu sebelum menampilkan teks --}}
+    <link rel="preload" href="https://fonts.bunny.net/files/instrument-sans-latin-400-normal.woff2" as="font" type="font/woff2" crossorigin>
+
     {{-- Font stylesheets — dimuat via <link> bukan @import agar tidak render-blocking --}}
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Orbitron:wght@400;500;700&family=Oxanium:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600&display=swap">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400&display=swap">
 
     @viteReactRefresh
     @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])

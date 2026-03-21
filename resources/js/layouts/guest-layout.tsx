@@ -120,13 +120,13 @@ export default function GuestLayout({
                             className="flex shrink-0 cursor-pointer items-center focus:outline-0"
                         >
                             <picture>
-                                <source srcSet="/logo.webp" type="image/webp" />
+                                <source srcSet="/logo-2x.webp" type="image/webp" />
                                 <img
                                     src="/logo.png"
                                     alt="Nuvelo"
                                     className="h-10 w-auto md:h-12"
-                                    width="942"
-                                    height="322"
+                                    width="280"
+                                    height="96"
                                 />
                             </picture>
                         </Link>
@@ -540,15 +540,15 @@ export default function GuestLayout({
                             >
                                 <picture>
                                     <source
-                                        srcSet="/logo.webp"
+                                        srcSet="/logo-2x.webp"
                                         type="image/webp"
                                     />
                                     <img
                                         src="/logo.png"
                                         alt="Nuvelo"
                                         className="h-7 w-auto md:h-9"
-                                        width="942"
-                                        height="322"
+                                        width="280"
+                                        height="96"
                                     />
                                 </picture>
                             </Link>

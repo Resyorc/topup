@@ -29,9 +29,15 @@ class ConvertImagesToWebp extends Command
         foreach ($games as $game) {
             $updates = [];
 
-            if ($game->image && ! Str::endsWith($game->image, '.webp')) {
-                if ($path = $this->convertScaleDown($disk, $game->image, 400)) {
-                    $updates['image'] = $path;
+            if ($game->image) {
+                if (! Str::endsWith($game->image, '.webp')) {
+                    if ($path = $this->convertScaleDown($disk, $game->image, 400)) {
+                        $updates['image'] = $path;
+                    }
+                }
+                $imageForSmall = $updates['image'] ?? $game->image;
+                if (Str::endsWith($imageForSmall, '.webp')) {
+                    $this->generateSmall($disk, $imageForSmall);
                 }
             }
 
@@ -113,6 +119,24 @@ class ConvertImagesToWebp extends Command
         }
 
         return $newPath;
+    }
+
+    private function generateSmall($disk, string $relativePath, int $smallWidth = 188): void
+    {
+        $smPath = Str::beforeLast($relativePath, '.webp') . '-sm.webp';
+
+        if ($disk->exists($smPath) || ! $disk->exists($relativePath)) {
+            return;
+        }
+
+        try {
+            Image::read($disk->path($relativePath))
+                ->scaleDown(width: $smallWidth)
+                ->toWebp(80)
+                ->save($disk->path($smPath));
+        } catch (\Throwable $e) {
+            $this->warn("  Gagal generate small: {$relativePath}: {$e->getMessage()}");
+        }
     }
 
     private function convertSquare($disk, string $relativePath, int $size): ?string

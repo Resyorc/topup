@@ -1,6 +1,19 @@
 import { Link } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
 
+function buildSrcSet(src: string): string | undefined {
+    if (!src.startsWith('/storage/') || !src.endsWith('.webp')) return undefined;
+    const smSrc = src.replace(/\.webp$/, '-sm.webp');
+    return `${smSrc} 188w, ${src} 374w`;
+}
+
+const srcSetSizes: Record<string, string> = {
+    xs: '(min-width: 1024px) 128px, 188px',
+    sm: '(min-width: 1024px) 176px, 188px',
+    md: '(min-width: 1024px) 232px, 188px',
+    lg: '(min-width: 1024px) 288px, 188px',
+};
+
 interface GameCardProps {
     cardSize?: 'xs' | 'sm' | 'md' | 'lg';
     active?: boolean;
@@ -173,6 +186,8 @@ export default function GameCard({
                                         <img
                                             ref={imgRef}
                                             src={currentImgSrc}
+                                            srcSet={buildSrcSet(currentImgSrc)}
+                                            sizes={buildSrcSet(currentImgSrc) ? srcSetSizes[cardSize] : undefined}
                                             alt={title}
                                             className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
                                                 loaded
