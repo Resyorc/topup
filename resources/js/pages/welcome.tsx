@@ -81,6 +81,9 @@ export default function Welcome({
         <GuestLayout>
             <Head title="Nuvelo: Top Up Game Murah - Top Up ML & Top Up FF Cepat dan Aman">
                 <meta name="description" content="Nuvelo — platform top up game terpercaya Indonesia. Top up Mobile Legends, Free Fire, PUBG Mobile, dan 100+ game dengan harga murah, proses instan, dan aman." />
+                {displayedGames[0]?.image && (
+                    <link rel="preload" as="image" href={`/storage/${displayedGames[0].image}`} fetchPriority="high" />
+                )}
             </Head>
 
             <HeroBanner banners={banners} />
