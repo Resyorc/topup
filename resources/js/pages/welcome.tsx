@@ -168,7 +168,7 @@ export default function Welcome({
                                 onClick={() => handleTabChange(category.id)}
                                 className={`min-w-[110px] flex-1 border-b-2 px-4 py-3 text-center text-xs font-bold transition-all duration-300 md:min-w-[140px] md:px-6 md:py-4 md:text-sm ${
                                     activeTab === category.id
-                                        ? 'border-primary bg-primary/5 text-white'
+                                        ? 'border-primary bg-primary/5 text-client-primary'
                                         : 'border-transparent text-gray-300 hover:bg-white/5 hover:text-white'
                                 } flex items-center justify-center gap-1.5 whitespace-nowrap md:gap-2`}
                             >
