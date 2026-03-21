@@ -339,7 +339,7 @@ export default function GuestLayout({
                             <div className="hidden w-full flex-nowrap items-center justify-center gap-x-6 pb-2 sm:flex-nowrap sm:justify-between sm:gap-12 sm:gap-x-8 md:flex md:w-auto md:pb-0">
                                 <Link
                                     href="/"
-                                    className={`group relative flex cursor-pointer items-center py-2 text-nowrap transition md:py-3 ${isActive('/') ? 'text-primary' : 'text-white hover:text-gray-200'}`}
+                                    className={`group relative flex cursor-pointer items-center py-2 text-nowrap transition md:py-3 ${isActive('/') ? 'text-white underline underline-offset-4 decoration-2 decoration-primary' : 'text-white hover:text-gray-200'}`}
                                 >
                                     <div className="flex items-center justify-between gap-2 md:gap-2.5">
                                         <svg
@@ -370,7 +370,7 @@ export default function GuestLayout({
 
                                 <Link
                                     href="/invoice"
-                                    className={`group relative flex cursor-pointer items-center py-2 text-nowrap transition md:py-3 ${isActive('/invoice') ? 'text-primary' : 'text-white hover:text-gray-200'}`}
+                                    className={`group relative flex cursor-pointer items-center py-2 text-nowrap transition md:py-3 ${isActive('/invoice') ? 'text-white underline underline-offset-4 decoration-2 decoration-primary' : 'text-white hover:text-gray-200'}`}
                                 >
                                     <div className="flex items-center justify-between gap-2 md:gap-2.5">
                                         <svg
