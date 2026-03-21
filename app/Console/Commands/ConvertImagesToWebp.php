@@ -21,10 +21,7 @@ class ConvertImagesToWebp extends Command
 
         // ── Games ───────────────────────────────────────────────────────────
         $this->info('Memproses gambar Game...');
-        $games = Game::whereNotNull('image')
-            ->orWhereNotNull('thumbnail')
-            ->orWhereNotNull('icon_rules')
-            ->get();
+        $games = Game::all();
 
         $bar = $this->output->createProgressBar($games->count());
         $bar->start();
