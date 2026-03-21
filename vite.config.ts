@@ -35,6 +35,8 @@ export default defineConfig({
                         id.includes('node_modules/laravel-echo') ||
                         id.includes('node_modules/@laravel/echo')
                     ) return 'vendor-echo';
+                    if (id.includes('node_modules/sweetalert2')) return 'vendor-swal';
+                    if (id.includes('node_modules/lucide-react')) return 'vendor-lucide';
                 },
             },
         },
