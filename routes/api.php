@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Api\CancelTransactionController;
+use App\Http\Controllers\Api\GameSearchController;
 use App\Http\Controllers\Api\ChatController;
 use App\Http\Controllers\Api\CheckoutController;
 use App\Http\Controllers\Api\DigiflazzCallbackController;
@@ -22,6 +23,9 @@ Route::middleware(['web', 'throttle:10,1'])->group(function () {
 });
 
 Route::middleware('throttle:30,1')->post('/check-username', [UsernameCheckController::class, 'check']);
+
+// Game Search Autocomplete
+Route::middleware('throttle:60,1')->get('/search', GameSearchController::class);
 
 // Review
 Route::middleware(['web', 'throttle:5,1'])->group(function () {
