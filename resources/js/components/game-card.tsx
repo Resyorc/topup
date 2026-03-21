@@ -98,7 +98,8 @@ export default function GameCard({
                     src={currentImgSrc}
                     alt={title}
                     className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-110"
-                    loading="lazy"
+                    loading={priority ? 'eager' : 'lazy'}
+                    fetchPriority={priority ? 'high' : 'auto'}
                     onError={handleImageError}
                 />
             </Link>

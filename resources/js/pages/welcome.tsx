@@ -111,7 +111,7 @@ export default function Welcome({
 
                             {/* Horizontal scrolling trending cards — works naturally on mobile */}
                             <div className="scrollbar-hide flex w-full gap-3 overflow-x-auto pb-2 md:w-2/3 md:gap-4 md:border-l md:border-border md:pb-4 md:pl-6">
-                                {trendingGames.map((game) => (
+                                {trendingGames.map((game, index) => (
                                     <GameCard
                                         key={game.id}
                                         id={game.id}
@@ -123,6 +123,7 @@ export default function Welcome({
                                         )}
                                         slug={game.slug}
                                         isSmall={true}
+                                        priority={index === 0}
                                     />
                                 ))}
                             </div>
