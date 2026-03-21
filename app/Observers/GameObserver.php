@@ -67,6 +67,7 @@ class GameObserver
 
     /**
      * Scale down proportionally to max width, convert to WebP.
+     * Also generates a small (-sm.webp) variant for srcset.
      */
     private function convertToWebp(?string $relativePath, int $maxWidth): ?string
     {
@@ -89,7 +90,23 @@ class GameObserver
 
         $disk->delete($relativePath);
 
+        $this->generateSmallVariant($disk, $newRelativePath);
+
         return $newRelativePath;
+    }
+
+    private function generateSmallVariant($disk, string $relativePath, int $smallWidth = 188): void
+    {
+        $smPath = Str::beforeLast($relativePath, '.webp') . '-sm.webp';
+
+        if ($disk->exists($smPath) || ! $disk->exists($relativePath)) {
+            return;
+        }
+
+        Image::read($disk->path($relativePath))
+            ->scaleDown(width: $smallWidth)
+            ->toWebp(80)
+            ->save($disk->path($smPath));
     }
 
     /**

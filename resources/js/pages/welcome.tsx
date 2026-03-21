@@ -198,7 +198,7 @@ export default function Welcome({
                     {/* Games Grid — 3 columns on mobile (matching Figma design), scales up on larger screens */}
                     {displayedGames.length > 0 ? (
                         <div className="grid grid-cols-3 gap-2 md:grid-cols-4 lg:grid-cols-6 lg:gap-4">
-                            {displayedGames.map((game) => (
+                            {displayedGames.map((game, index) => (
                                 <GameCard
                                     key={game.id}
                                     id={game.id}
@@ -207,6 +207,7 @@ export default function Welcome({
                                     imgSrc={getImageUrl(game.image, game.name)}
                                     slug={game.slug}
                                     cardSize="sm"
+                                    priority={index === 0}
                                 />
                             ))}
                         </div>
