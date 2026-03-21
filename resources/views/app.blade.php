@@ -31,14 +31,25 @@
         }
     </style>
 
-    <!-- Google tag (gtag.js) -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-VC29SDR832" nonce="{{ Vite::cspNonce() }}"></script>
+    {{-- Google Analytics — dimuat setelah browser idle agar tidak blokir render --}}
     <script nonce="{{ Vite::cspNonce() }}">
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-
         gtag('config', 'G-VC29SDR832');
+
+        function loadGtag() {
+            var s = document.createElement('script');
+            s.src = 'https://www.googletagmanager.com/gtag/js?id=G-VC29SDR832';
+            s.async = true;
+            document.head.appendChild(s);
+        }
+
+        if ('requestIdleCallback' in window) {
+            requestIdleCallback(loadGtag, { timeout: 4000 });
+        } else {
+            window.addEventListener('load', loadGtag);
+        }
     </script>
 
     <title inertia>{{ config('app.name', 'Nuvelo') }}</title>
@@ -47,8 +58,14 @@
     <link rel="icon" href="{{ secure_asset('favicon.svg') }}" type="image/svg+xml">
     <link rel="apple-touch-icon" href="{{ secure_asset('apple-touch-icon.png') }}">
 
+    {{-- Preconnect untuk mempercepat handshake ke font servers --}}
     <link rel="preconnect" href="https://fonts.bunny.net">
-    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600" rel="stylesheet" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+
+    {{-- Font stylesheets — dimuat via <link> bukan @import agar tidak render-blocking --}}
+    <link href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&family=Orbitron:wght@400;500;700&family=Oxanium:wght@300;400;600;700&display=swap" rel="stylesheet">
 
     @viteReactRefresh
     @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])

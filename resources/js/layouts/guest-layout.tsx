@@ -118,11 +118,16 @@ export default function GuestLayout({
                             href="/"
                             className="flex shrink-0 cursor-pointer items-center focus:outline-0"
                         >
-                            <img
-                                src="/logo.png"
-                                alt="Nuvelo"
-                                className="h-10 w-auto md:h-12"
-                            />
+                            <picture>
+                                <source srcSet="/logo.webp" type="image/webp" />
+                                <img
+                                    src="/logo.png"
+                                    alt="Nuvelo"
+                                    className="h-10 w-auto md:h-12"
+                                    width="942"
+                                    height="322"
+                                />
+                            </picture>
                         </Link>
 
                         {/* Desktop Search Bar — unchanged, hidden on mobile */}
@@ -584,11 +589,16 @@ export default function GuestLayout({
                                 href="/"
                                 className="mb-3 flex items-center md:mb-4"
                             >
-                                <img
-                                    src="/logo.png"
-                                    alt="Nuvelo"
-                                    className="h-7 w-auto md:h-9"
-                                />
+                                <picture>
+                                    <source srcSet="/logo.webp" type="image/webp" />
+                                    <img
+                                        src="/logo.png"
+                                        alt="Nuvelo"
+                                        className="h-7 w-auto md:h-9"
+                                        width="942"
+                                        height="322"
+                                    />
+                                </picture>
                             </Link>
                             <p className="text-xs leading-relaxed text-gray-400 md:text-sm">
                                 <strong className="text-primary">Nuvelo</strong>{' '}

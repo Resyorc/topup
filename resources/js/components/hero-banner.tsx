@@ -55,6 +55,8 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                                 src={`/storage/${banner.image}`}
                                 alt={`Banner ${index + 1}`}
                                 className="h-full w-full object-cover"
+                                loading={index === 0 ? 'eager' : 'lazy'}
+                                fetchPriority={index === 0 ? 'high' : 'low'}
                             />
                         </div>
                     ))}

@@ -2,9 +2,13 @@
 
 namespace App\Providers;
 
+use App\Models\Banner;
 use App\Models\CoinTopup;
+use App\Models\Game;
 use App\Models\Transaction;
+use App\Observers\BannerObserver;
 use App\Observers\CoinTopupObserver;
+use App\Observers\GameObserver;
 use App\Observers\TransactionObserver;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Facades\Date;
@@ -29,6 +33,8 @@ class AppServiceProvider extends ServiceProvider
     {
         Transaction::observe(TransactionObserver::class);
         CoinTopup::observe(CoinTopupObserver::class);
+        Game::observe(GameObserver::class);
+        Banner::observe(BannerObserver::class);
         $this->configureDefaults();
     }
 
