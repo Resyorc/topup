@@ -45,11 +45,7 @@
             document.head.appendChild(s);
         }
 
-        if ('requestIdleCallback' in window) {
-            requestIdleCallback(loadGtag, { timeout: 4000 });
-        } else {
-            window.addEventListener('load', loadGtag);
-        }
+        window.addEventListener('load', loadGtag);
     </script>
 
     <title inertia>{{ config('app.name', 'Nuvelo') }}</title>
@@ -67,9 +63,13 @@
     <link rel="preload" href="https://fonts.bunny.net/instrument-sans/files/instrument-sans-latin-500-normal.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="preload" href="https://fonts.bunny.net/instrument-sans/files/instrument-sans-latin-600-normal.woff2" as="font" type="font/woff2" crossorigin>
 
-    {{-- Font stylesheets — dimuat via <link> bukan @import agar tidak render-blocking --}}
-    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600&display=swap">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400&display=swap">
+    {{-- Font stylesheets — non-blocking via media="print" trick; onload swaps ke all --}}
+    <link rel="stylesheet" href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600&display=swap" media="print" onload="this.media='all'">
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400&display=swap" media="print" onload="this.media='all'">
+    <noscript>
+        <link rel="stylesheet" href="https://fonts.bunny.net/css?family=instrument-sans:400,500,600&display=swap">
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400&display=swap">
+    </noscript>
 
     @viteReactRefresh
     @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
