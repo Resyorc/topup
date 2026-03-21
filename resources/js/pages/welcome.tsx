@@ -104,7 +104,7 @@ export default function Welcome({
                                         Total Pesanan
                                     </span>
                                 </div>
-                                <p className="mt-1 text-[10px] text-gray-500 md:text-xs">
+                                <p className="mt-1 text-[10px] text-gray-300 md:text-xs">
                                     Paling banyak di pesan dari game disamping
                                 </p>
                             </div>
@@ -168,8 +168,8 @@ export default function Welcome({
                                 onClick={() => handleTabChange(category.id)}
                                 className={`min-w-[110px] flex-1 border-b-2 px-4 py-3 text-center text-xs font-bold transition-all duration-300 md:min-w-[140px] md:px-6 md:py-4 md:text-sm ${
                                     activeTab === category.id
-                                        ? 'border-primary bg-primary/5 text-primary'
-                                        : 'border-transparent text-gray-400 hover:bg-white/5 hover:text-gray-200'
+                                        ? 'border-primary bg-primary/5 text-client-primary'
+                                        : 'border-transparent text-gray-300 hover:bg-white/5 hover:text-white'
                                 } flex items-center justify-center gap-1.5 whitespace-nowrap md:gap-2`}
                             >
                                 {/* Category icon */}

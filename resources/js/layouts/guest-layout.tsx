@@ -112,7 +112,7 @@ export default function GuestLayout({
         <>
             <div className="flex min-h-screen flex-col pt-[116px] md:pt-[106px]">
                 {/* Header Navbar */}
-                <header className="fixed inset-x-0 top-0 z-50 bg-[#3E3D4980] text-white shadow-md backdrop-blur-sm">
+                <header className="fixed inset-x-0 top-0 z-50 bg-[#3E3D49CC] text-white shadow-md backdrop-blur-sm">
                     <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 md:gap-10 md:py-4 lg:px-8">
                         {/* Logo — cropped image with no padding, sits naturally at left */}
                         <Link
@@ -333,13 +333,13 @@ export default function GuestLayout({
                     )}
 
                     {/* Sub-Header Navigation with Ticker */}
-                    <div className="flex w-full items-center justify-center bg-[#6C3C8980] text-sm font-medium shadow-inner select-none">
+                    <div className="flex w-full items-center justify-center bg-[#6C3C89E6] text-sm font-medium shadow-inner select-none">
                         <div className="mx-auto flex w-full max-w-7xl flex-col-reverse flex-nowrap items-center gap-0 px-4 sm:px-4 md:flex-row md:gap-12 md:px-8">
                             {/* Static Links — hidden on mobile (bottom nav handles navigation), visible on desktop */}
                             <div className="hidden w-full flex-nowrap items-center justify-center gap-x-6 pb-2 sm:flex-nowrap sm:justify-between sm:gap-12 sm:gap-x-8 md:flex md:w-auto md:pb-0">
                                 <Link
                                     href="/"
-                                    className={`group relative flex cursor-pointer items-center py-2 text-nowrap transition md:py-3 ${isActive('/') ? 'text-primary' : 'text-white hover:text-gray-200'}`}
+                                    className={`group relative flex cursor-pointer items-center py-2 text-nowrap transition md:py-3 ${isActive('/') ? 'text-client-warning' : 'text-white hover:text-gray-200'}`}
                                 >
                                     <div className="flex items-center justify-between gap-2 md:gap-2.5">
                                         <svg
@@ -370,7 +370,7 @@ export default function GuestLayout({
 
                                 <Link
                                     href="/invoice"
-                                    className={`group relative flex cursor-pointer items-center py-2 text-nowrap transition md:py-3 ${isActive('/invoice') ? 'text-primary' : 'text-white hover:text-gray-200'}`}
+                                    className={`group relative flex cursor-pointer items-center py-2 text-nowrap transition md:py-3 ${isActive('/invoice') ? 'text-client-warning' : 'text-white hover:text-gray-200'}`}
                                 >
                                     <div className="flex items-center justify-between gap-2 md:gap-2.5">
                                         <svg
@@ -553,7 +553,7 @@ export default function GuestLayout({
                                 </picture>
                             </Link>
                             <p className="text-xs leading-relaxed text-gray-400 md:text-sm">
-                                <strong className="text-primary">Nuvelo</strong>{' '}
+                                <strong className="text-[#c084fc]">Nuvelo</strong>{' '}
                                 menyediakan layanan top up game termurah.
                                 Dapatkan voucher untuk berbagai game populer,
                                 termasuk top up ml dan top up ff, dengan proses
