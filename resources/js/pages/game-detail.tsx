@@ -53,6 +53,8 @@ interface GameDetailProps {
     paymentMethods: {
         [category: string]: PaymentMethod[];
     };
+    loyaltyMinAmount: number;
+    loyaltyRate: number;
 }
 
 function resolveProductIcon(
@@ -89,6 +91,8 @@ export default function GameDetail({
     game,
     productGroups,
     paymentMethods,
+    loyaltyMinAmount,
+    loyaltyRate,
 }: GameDetailProps) {
     const { addInvoice } = useGuestInvoice();
     const { auth } = usePage<{ auth: { user: any } }>().props;
@@ -1468,13 +1472,13 @@ export default function GameDetail({
                                     </span>
                                 </div>
                             )}
-                            {auth.user && !selectedPayment.is_coin && selectedProduct.price >= 5000 && Math.floor(selectedProduct.price / 100) > 0 && (
+                            {auth.user && !selectedPayment.is_coin && selectedProduct.price >= loyaltyMinAmount && Math.floor(selectedProduct.price * loyaltyRate / 100) > 0 && (
                                 <div className="flex items-center justify-between gap-2 text-xs">
                                     <span className="shrink-0 flex items-center gap-1 text-yellow-400/90">
                                         <img src="/coin.png" alt="Coin" className="h-3.5 w-3.5 object-contain" /> Reward
                                     </span>
                                     <span className="font-semibold text-yellow-400">
-                                        +{Math.floor(selectedProduct.price / 100).toLocaleString('id-ID')} Coins
+                                        +{Math.floor(selectedProduct.price * loyaltyRate / 100).toLocaleString('id-ID')} Coins
                                     </span>
                                 </div>
                             )}
