@@ -460,7 +460,9 @@ export default function GameDetail({
 
     return (
         <GuestLayout>
-            <Head title={`${game.name} - Nuvelo`} />
+            <Head title={`${game.name} - Nuvelo`}>
+                <meta name="description" content={`Top up ${game.name} murah dan cepat di Nuvelo. Proses instan, harga terbaik, aman dan terpercaya.`} />
+            </Head>
 
             {/* Background Texture & Hero Graphic */}
             <div className="relative min-h-screen pb-40 md:pb-32">
