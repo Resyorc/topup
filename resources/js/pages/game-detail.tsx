@@ -509,6 +509,7 @@ export default function GameDetail({
                                 active={true}
                                 customClass="!w-28 !h-[160px] md:!w-auto md:!h-auto"
                                 cardSize="sm"
+                                priority={true}
                             />
                         </div>
 
@@ -758,26 +759,6 @@ export default function GameDetail({
 
                             {/* SECTION 3: Pilih Nominal */}
                             <div className="relative mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg md:mt-6">
-                                {/* Overlay: locked until Section 1 & 2 filled */}
-                                {!canSelectProduct && (
-                                    <div
-                                        className="absolute inset-0 z-10 flex cursor-not-allowed flex-col items-center justify-start gap-1 rounded-xl bg-black/60 pt-4 backdrop-blur-[2px]"
-                                        onClick={() =>
-                                            swalWarning(
-                                                !section1Complete
-                                                    ? 'Isi User ID dan Server terlebih dahulu.'
-                                                    : 'Isi nomor WhatsApp terlebih dahulu.',
-                                            )
-                                        }
-                                    >
-                                        <span className="text-xl">🔒</span>
-                                        <p className="text-center text-xs font-semibold text-white/80">
-                                            {!section1Complete
-                                                ? 'Lengkapi informasi akun dulu'
-                                                : 'Lengkapi detail kontak dulu'}
-                                        </p>
-                                    </div>
-                                )}
                                 {/* Header */}
                                 <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
                                     <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">

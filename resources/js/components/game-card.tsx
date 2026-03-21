@@ -11,6 +11,7 @@ interface GameCardProps {
     imgSrc: string;
     slug: string;
     isSmall?: boolean;
+    priority?: boolean;
 }
 
 export default function GameCard({
@@ -22,6 +23,7 @@ export default function GameCard({
     imgSrc,
     slug,
     isSmall = false,
+    priority = false,
 }: GameCardProps) {
     /**
      * Card sizing strategy:
@@ -40,7 +42,7 @@ export default function GameCard({
 
     const cardSizeClass = sizeMap[cardSize] || sizeMap.md;
 
-    const [loaded, setLoaded] = useState(false);
+    const [loaded, setLoaded] = useState(priority);
     const [error, setError] = useState(false);
     const [currentImgSrc, setCurrentImgSrc] = useState(imgSrc);
     const [prevImgSrc, setPrevImgSrc] = useState(imgSrc);
@@ -83,6 +85,7 @@ export default function GameCard({
                     src={currentImgSrc}
                     alt={title}
                     className="absolute inset-0 h-full w-full object-cover transition duration-300 group-hover:scale-110"
+                    loading="lazy"
                     onError={handleImageError}
                 />
             </Link>
@@ -178,6 +181,8 @@ export default function GameCard({
                                             } group-hover:scale-110 group-hover:rotate-1`}
                                             onLoad={() => setLoaded(true)}
                                             onError={handleImageError}
+                                            loading={priority ? 'eager' : 'lazy'}
+                                            fetchPriority={priority ? 'high' : 'auto'}
                                         />
                                     )}
 

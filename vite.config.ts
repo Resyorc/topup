@@ -24,4 +24,19 @@ export default defineConfig({
     esbuild: {
         jsx: 'automatic',
     },
+    build: {
+        rollupOptions: {
+            output: {
+                manualChunks(id) {
+                    if (id.includes('node_modules/react-dom')) return 'vendor-react-dom';
+                    if (id.includes('node_modules/react/')) return 'vendor-react';
+                    if (id.includes('node_modules/@inertiajs')) return 'vendor-inertia';
+                    if (
+                        id.includes('node_modules/laravel-echo') ||
+                        id.includes('node_modules/@laravel/echo')
+                    ) return 'vendor-echo';
+                },
+            },
+        },
+    },
 });

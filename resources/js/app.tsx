@@ -1,5 +1,4 @@
 import { createInertiaApp } from '@inertiajs/react';
-import { configureEcho } from '@laravel/echo-react';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
@@ -7,8 +6,9 @@ import '../css/app.css';
 import { GuestInvoiceProvider } from '@/contexts/guest-invoice-context';
 import { initializeTheme } from '@/hooks/use-appearance';
 
-configureEcho({
-    broadcaster: 'reverb',
+// Echo/Reverb dimuat secara lazy — tidak memblokir initial render
+import('@laravel/echo-react').then(({ configureEcho }) => {
+    configureEcho({ broadcaster: 'reverb' });
 });
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
