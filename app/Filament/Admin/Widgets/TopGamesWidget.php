@@ -15,7 +15,10 @@ class TopGamesWidget extends TableWidget
 
     protected int|string|array $columnSpan = 'full';
 
-    protected ?string $heading = 'Top 10 Game Terlaris — 30 Hari Terakhir';
+    protected function getHeading(): ?string
+    {
+        return 'Top 10 Game Terlaris — 30 Hari Terakhir';
+    }
 
     public function table(Table $table): Table
     {
