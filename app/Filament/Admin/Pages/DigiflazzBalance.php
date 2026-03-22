@@ -3,9 +3,11 @@
 namespace App\Filament\Admin\Pages;
 
 use App\Filament\Admin\Clusters\MonitorCluster;
+use App\Models\Setting;
 use App\Services\DigiflazzService;
 use BackedEnum;
 use Filament\Actions\Action;
+use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
@@ -31,6 +33,8 @@ class DigiflazzBalance extends Page
 
     public ?string $errorMessage = null;
 
+    public float $threshold = 100000;
+
     public static function canAccess(): bool
     {
         return auth()->user()->hasRole('Super Admin');
@@ -38,6 +42,7 @@ class DigiflazzBalance extends Page
 
     public function mount(): void
     {
+        $this->threshold = (float) Setting::get('digiflazz_low_balance_threshold', 100000);
         $this->fetchBalance();
     }
 
@@ -57,6 +62,29 @@ class DigiflazzBalance extends Page
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('setThreshold')
+                ->label('Set Threshold Alert')
+                ->icon('heroicon-o-bell-alert')
+                ->color('warning')
+                ->form([
+                    TextInput::make('threshold')
+                        ->label('Batas minimum saldo (Rp)')
+                        ->numeric()
+                        ->minValue(0)
+                        ->default(fn () => $this->threshold)
+                        ->helperText('Alert akan dikirim ke email admin jika saldo di bawah angka ini.')
+                        ->required(),
+                ])
+                ->action(function (array $data) {
+                    Setting::set('digiflazz_low_balance_threshold', $data['threshold']);
+                    $this->threshold = (float) $data['threshold'];
+
+                    Notification::make()
+                        ->title('Threshold berhasil disimpan')
+                        ->success()
+                        ->send();
+                }),
+
             Action::make('refresh')
                 ->label('Refresh Saldo')
                 ->icon('heroicon-o-arrow-path')
