@@ -43,10 +43,6 @@ class SecurityHeaders
         // tidak bisa mengakses window.opener dan memanipulasi halaman asal.
         $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
 
-        // Wajibkan Trusted Types untuk mencegah DOM-based XSS.
-        // 'allow-duplicates' diperlukan agar Google Tag Manager bisa jalan.
-        $response->headers->set('Content-Security-Policy-Report-Only', "require-trusted-types-for 'script'; trusted-types 'allow-duplicates'");
-
         // Content Security Policy — hanya aktif di non-local.
         // Di local, Vite HMR pakai IPv6 [::1] yang tidak bisa di-whitelist via CSP wildcard.
         if ($nonce !== null) {
