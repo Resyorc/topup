@@ -2,11 +2,14 @@
 
 namespace App\Filament\Admin\Resources\Products\Tables;
 
+use App\Models\Game;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
 
 class ProductsTable
@@ -45,7 +48,16 @@ class ProductsTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
-                //
+                SelectFilter::make('game_id')
+                    ->label('Game')
+                    ->options(fn () => Game::orderBy('name')->pluck('name', 'id'))
+                    ->searchable()
+                    ->preload(),
+
+                TernaryFilter::make('is_available')
+                    ->label('Ketersediaan')
+                    ->trueLabel('Tersedia')
+                    ->falseLabel('Tidak Tersedia'),
             ])
             ->recordActions([
                 EditAction::make(),
