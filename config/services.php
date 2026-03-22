@@ -59,6 +59,10 @@ return [
         'token' => env('FONNTE_TOKEN'),
     ],
 
+    'admin' => [
+        'email' => env('ADMIN_EMAIL'),
+    ],
+
     'anthropic' => [
         'api_key' => env('ANTHROPIC_API_KEY'),
     ],
