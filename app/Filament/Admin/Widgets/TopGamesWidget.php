@@ -20,6 +20,11 @@ class TopGamesWidget extends TableWidget
         return 'Top 10 Game Terlaris — 30 Hari Terakhir';
     }
 
+    protected function getTableRecordKey(\Illuminate\Database\Eloquent\Model $record): string
+    {
+        return (string) $record->product_id;
+    }
+
     public function table(Table $table): Table
     {
         return $table
