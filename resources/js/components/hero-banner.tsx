@@ -57,6 +57,10 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                                 className="h-full w-full object-cover"
                                 loading={index === 0 ? 'eager' : 'lazy'}
                                 fetchPriority={index === 0 ? 'high' : 'low'}
+                                decoding={index === 0 ? 'sync' : 'async'}
+                                width={1200}
+                                height={400}
+                                sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1280px"
                             />
                         </div>
                     ))}
