@@ -59,6 +59,9 @@ export default defineConfig({
 
                     // OTP input — only 2FA pages
                     if (id.includes('node_modules/input-otp')) return 'vendor-otp';
+
+                    // Axios — only LiveChat (lazy loaded), not in critical path
+                    if (id.includes('node_modules/axios')) return 'vendor-axios';
                 },
             },
         },

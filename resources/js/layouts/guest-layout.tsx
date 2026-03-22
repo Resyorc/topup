@@ -1,10 +1,12 @@
 import SearchBar from '@/components/search-bar';
 import { Link, usePage } from '@inertiajs/react';
 import { useEcho } from '@laravel/echo-react';
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect, useMemo, lazy, Suspense } from 'react';
 import { Toaster, toast } from 'sonner';
-import LiveChat from '@/components/live-chat';
 import NewsTicker from '@/components/news-ticker';
+
+// LiveChat dimuat lazy — tidak memblokir initial render, axios tidak masuk critical path
+const LiveChat = lazy(() => import('@/components/live-chat'));
 
 const STATUS_LABEL: Record<
     string,
@@ -738,7 +740,9 @@ export default function GuestLayout({
                     onNotification={handleNotification}
                 />
             )}
-            <LiveChat context={chatContext} />
+            <Suspense fallback={null}>
+                <LiveChat context={chatContext} />
+            </Suspense>
         </>
     );
 }
