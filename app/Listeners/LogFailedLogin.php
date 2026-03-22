@@ -2,6 +2,7 @@
 
 namespace App\Listeners;
 
+use App\Models\BlockedIp;
 use App\Models\FailedLoginLog;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Support\Facades\Log;
@@ -9,9 +10,14 @@ use Illuminate\Support\Facades\Mail;
 
 class LogFailedLogin
 {
-    // Kirim alert setelah sekian kali gagal dari IP yang sama dalam window waktu tertentu
+    // Kirim alert ke admin setelah X gagal dalam window waktu tertentu
     private const ALERT_THRESHOLD = 5;
     private const ALERT_WINDOW_MINUTES = 15;
+
+    // Auto-block IP setelah X gagal dalam window yang lebih panjang
+    private const BLOCK_THRESHOLD = 10;
+    private const BLOCK_WINDOW_MINUTES = 30;
+    private const BLOCK_DURATION_HOURS = 24;
 
     public function handle(Failed $event): void
     {
@@ -26,6 +32,23 @@ class LogFailedLogin
         ]);
 
         $this->checkAndAlertBruteForce($ip, $email);
+        $this->checkAndBlockIp($ip);
+    }
+
+    private function checkAndBlockIp(string $ip): void
+    {
+        $failures = FailedLoginLog::where('ip', $ip)
+            ->where('attempted_at', '>=', now()->subMinutes(self::BLOCK_WINDOW_MINUTES))
+            ->count();
+
+        if ($failures >= self::BLOCK_THRESHOLD) {
+            BlockedIp::block(
+                ip: $ip,
+                reason: "Auto-block: {$failures}x login gagal dalam " . self::BLOCK_WINDOW_MINUTES . " menit",
+                until: now()->addHours(self::BLOCK_DURATION_HOURS),
+                auto: true,
+            );
+        }
     }
 
     private function checkAndAlertBruteForce(string $ip, string $email): void

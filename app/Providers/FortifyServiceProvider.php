@@ -100,5 +100,36 @@ class FortifyServiceProvider extends ServiceProvider
 
             return Limit::perMinute(5)->by($throttleKey);
         });
+
+        // Register — cegah bot daftar massal
+        RateLimiter::for('register', function (Request $request) {
+            return Limit::perMinute(3)->by($request->ip());
+        });
+
+        // Checkout — per user jika login, per IP jika guest
+        RateLimiter::for('checkout', function (Request $request) {
+            $key = $request->user()
+                ? 'user:'.$request->user()->id
+                : 'ip:'.$request->ip();
+
+            return [
+                Limit::perMinute(5)->by($key),           // max 5/menit
+                Limit::perHour(30)->by($key),             // max 30/jam
+            ];
+        });
+
+        // Voucher — cegah brute force kode
+        RateLimiter::for('voucher', function (Request $request) {
+            return Limit::perMinute(5)->by($request->ip());
+        });
+
+        // Chat AI — lindungi biaya Anthropic API
+        RateLimiter::for('chat', function (Request $request) {
+            $key = $request->user()
+                ? 'user:'.$request->user()->id
+                : 'ip:'.$request->ip();
+
+            return Limit::perMinute(10)->by($key);
+        });
     }
 }
