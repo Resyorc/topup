@@ -100,7 +100,7 @@ export default function Welcome({
                                     Trending Games
                                 </h2>
                                 <div className="mt-1 flex items-baseline gap-2">
-                                    <span className="text-lg font-bold text-primary md:text-xl">
+                                    <span className="text-lg font-bold text-client-primary md:text-xl">
                                         {trendingTotalSold.toLocaleString(
                                             'id-ID',
                                         )}
