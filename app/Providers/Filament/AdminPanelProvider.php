@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Admin\Widgets\DashboardStats;
+use App\Filament\Admin\Widgets\TopGamesWidget;
 use App\Filament\Admin\Widgets\TransactionChart;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
@@ -42,6 +43,7 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 DashboardStats::class,
                 TransactionChart::class,
+                TopGamesWidget::class,
                 AccountWidget::class,
                 FilamentInfoWidget::class,
             ])

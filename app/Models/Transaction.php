@@ -49,6 +49,11 @@ class Transaction extends Model
         'discount' => 'integer',
     ];
 
+    public function scopeSuccess(\Illuminate\Database\Eloquent\Builder $query): \Illuminate\Database\Eloquent\Builder
+    {
+        return $query->where('status', 'success');
+    }
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);
