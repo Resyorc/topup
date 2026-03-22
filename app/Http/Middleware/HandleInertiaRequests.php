@@ -49,6 +49,7 @@ class HandleInertiaRequests extends Middleware
             'broadcastMessages' => Cache::remember('broadcast_messages', 60, fn () => BroadcastMessage::where('is_active', true)->pluck('message')->toArray()
             ),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'appUrl' => rtrim(config('app.url'), '/'),
         ];
     }
 }

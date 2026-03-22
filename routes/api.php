@@ -17,7 +17,7 @@ Route::get('/user', function (Request $request) {
 })->middleware('auth:sanctum');
 
 // Checkout API
-Route::middleware(['web', 'throttle:10,1'])->group(function () {
+Route::middleware(['web', 'throttle:checkout'])->group(function () {
     Route::post('/checkout', [CheckoutController::class, 'store']);
     Route::post('/calculate-fee', [CheckoutController::class, 'calculateFee']);
 });
@@ -34,13 +34,13 @@ Route::middleware(['web', 'throttle:5,1'])->group(function () {
 });
 
 // Validate Voucher
-Route::middleware(['web', 'throttle:20,1'])->post('/validate-voucher', ValidateVoucherController::class);
+Route::middleware(['web', 'throttle:voucher'])->post('/validate-voucher', ValidateVoucherController::class);
 
 // Cancel Transaction
 Route::middleware(['web', 'throttle:10,1'])->post('/cancel', [CancelTransactionController::class, 'cancel']);
 
 // Live Chat (Nova AI Assistant)
-Route::middleware(['web', 'throttle:20,1'])->post('/chat', [ChatController::class, 'send']);
+Route::middleware(['web', 'throttle:chat'])->post('/chat', [ChatController::class, 'send']);
 
 // Webhook / Callbacks Integration
 Route::post('/callback/tripay', [TripayCallbackController::class, 'handle'])->middleware('throttle:60,1');

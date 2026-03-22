@@ -46,7 +46,7 @@ export default function Welcome({
     loyaltyMinAmount,
     loyaltyRate,
 }: WelcomeProps) {
-    const { auth } = usePage<{ auth: { user: unknown } }>().props;
+    const { auth, appUrl } = usePage<{ auth: { user: unknown }; appUrl: string }>().props;
 
     // Default active category tab to the first category if it exists
     const [activeTab, setActiveTab] = useState<number | null>(
@@ -81,6 +81,17 @@ export default function Welcome({
         <GuestLayout>
             <Head title="Nuvelo: Top Up Game Murah - Top Up ML & Top Up FF Cepat dan Aman">
                 <meta name="description" content="Nuvelo — platform top up game terpercaya Indonesia. Top up Mobile Legends, Free Fire, PUBG Mobile, dan 100+ game dengan harga murah, proses instan, dan aman." />
+                <link rel="canonical" href={appUrl} />
+                <meta property="og:type" content="website" />
+                <meta property="og:site_name" content="Nuvelo" />
+                <meta property="og:url" content={appUrl} />
+                <meta property="og:title" content="Nuvelo: Top Up Game Murah - Top Up ML & Top Up FF Cepat dan Aman" />
+                <meta property="og:description" content="Nuvelo — platform top up game terpercaya Indonesia. Top up Mobile Legends, Free Fire, PUBG Mobile, dan 100+ game dengan harga murah, proses instan, dan aman." />
+                <meta property="og:image" content={`${appUrl}/logo.png`} />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content="Nuvelo: Top Up Game Murah - Top Up ML & Top Up FF Cepat dan Aman" />
+                <meta name="twitter:description" content="Nuvelo — platform top up game terpercaya Indonesia. Top up Mobile Legends, Free Fire, PUBG Mobile, dan 100+ game dengan harga murah, proses instan, dan aman." />
+                <meta name="twitter:image" content={`${appUrl}/logo.png`} />
                 {displayedGames[0]?.image && (
                     <link rel="preload" as="image" href={`/storage/${displayedGames[0].image}`} fetchPriority="high" />
                 )}

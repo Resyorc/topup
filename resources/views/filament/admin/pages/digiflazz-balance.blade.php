@@ -22,6 +22,17 @@
                             @endif
                         </p>
                         <p class="mt-2 text-xs text-gray-400">Terakhir diperbarui: {{ now()->format('d M Y, H:i:s') }} WIB</p>
+                        <div class="mt-3">
+                            @if ($balance !== null && $balance < $threshold)
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-danger-50 px-3 py-1 text-xs font-semibold text-danger-700 dark:bg-danger-950 dark:text-danger-400">
+                                    ⚠️ Saldo di bawah threshold · Min: Rp {{ number_format($threshold, 0, ',', '.') }}
+                                </span>
+                            @elseif ($balance !== null)
+                                <span class="inline-flex items-center gap-1.5 rounded-full bg-success-50 px-3 py-1 text-xs font-semibold text-success-700 dark:bg-success-950 dark:text-success-400">
+                                    ✓ Saldo aman · Threshold: Rp {{ number_format($threshold, 0, ',', '.') }}
+                                </span>
+                            @endif
+                        </div>
                     </div>
                     <div class="rounded-full bg-primary-50 p-3 dark:bg-primary-950">
                         <x-filament::icon

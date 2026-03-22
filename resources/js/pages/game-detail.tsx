@@ -95,7 +95,7 @@ export default function GameDetail({
     loyaltyRate,
 }: GameDetailProps) {
     const { addInvoice } = useGuestInvoice();
-    const { auth } = usePage<{ auth: { user: any } }>().props;
+    const { auth, appUrl } = usePage<{ auth: { user: any }; appUrl: string }>().props;
     const userPhone: string = auth?.user?.phone ?? '';
 
     const COUNTRY_CODE = '+62';
@@ -464,8 +464,33 @@ export default function GameDetail({
 
     return (
         <GuestLayout>
-            <Head title={`${game.name} - Nuvelo`}>
+            <Head title={`Top Up ${game.name} Murah & Cepat - Nuvelo`}>
                 <meta name="description" content={`Top up ${game.name} murah dan cepat di Nuvelo. Proses instan, harga terbaik, aman dan terpercaya.`} />
+                <link rel="canonical" href={`${appUrl}/order/${game.slug}`} />
+                <meta property="og:type" content="website" />
+                <meta property="og:site_name" content="Nuvelo" />
+                <meta property="og:url" content={`${appUrl}/order/${game.slug}`} />
+                <meta property="og:title" content={`Top Up ${game.name} Murah & Cepat - Nuvelo`} />
+                <meta property="og:description" content={`Top up ${game.name} murah dan cepat di Nuvelo. Proses instan, harga terbaik, aman dan terpercaya.`} />
+                <meta property="og:image" content={game.thumbnail ? `${appUrl}${game.thumbnail}` : `${appUrl}/logo.png`} />
+                <meta name="twitter:card" content="summary_large_image" />
+                <meta name="twitter:title" content={`Top Up ${game.name} Murah & Cepat - Nuvelo`} />
+                <meta name="twitter:description" content={`Top up ${game.name} murah dan cepat di Nuvelo. Proses instan, harga terbaik, aman dan terpercaya.`} />
+                <meta name="twitter:image" content={game.thumbnail ? `${appUrl}${game.thumbnail}` : `${appUrl}/logo.png`} />
+                <script type="application/ld+json">{JSON.stringify({
+                    '@context': 'https://schema.org',
+                    '@type': 'VideoGame',
+                    name: game.name,
+                    publisher: { '@type': 'Organization', name: game.publisher },
+                    url: `${appUrl}/order/${game.slug}`,
+                    image: game.thumbnail ? `${appUrl}${game.thumbnail}` : undefined,
+                    offers: {
+                        '@type': 'AggregateOffer',
+                        priceCurrency: 'IDR',
+                        availability: 'https://schema.org/InStock',
+                        seller: { '@type': 'Organization', name: 'Nuvelo' },
+                    },
+                })}</script>
             </Head>
 
             {/* Background Texture & Hero Graphic */}
