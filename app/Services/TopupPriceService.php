@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Mail;
 
 class TopupPriceService
 {
@@ -70,22 +71,25 @@ class TopupPriceService
     }
 
     /**
-     * Kirim notifikasi WhatsApp ke admin jika sync gagal.
+     * Kirim notifikasi email ke admin jika sync gagal.
      */
     private function notifyAdminSyncFailed(string $errorMessage): void
     {
-        $adminPhone = config('services.fonnte.admin_whatsapp');
+        $adminEmail = config('services.admin.email');
 
-        if (empty($adminPhone)) {
+        if (empty($adminEmail)) {
             return;
         }
 
         $time = now()->format('d/m/Y H:i');
-        $message = "⚠️ *Digiflazz Sync Gagal*\n\n"
+        $body = "[Nuvelo] Digiflazz Sync Gagal\n\n"
             . "Waktu: {$time}\n"
             . "Error: {$errorMessage}\n\n"
             . "Harga produk mungkin tidak terupdate. Cek log server untuk detail.";
 
-        app(FonnteService::class)->send($adminPhone, $message);
+        Mail::raw($body, function ($message) use ($adminEmail, $time) {
+            $message->to($adminEmail)
+                ->subject("[Nuvelo] ⚠️ Digiflazz Sync Gagal — {$time}");
+        });
     }
 }

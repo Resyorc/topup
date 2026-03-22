@@ -57,7 +57,10 @@ return [
 
     'fonnte' => [
         'token' => env('FONNTE_TOKEN'),
-        'admin_whatsapp' => env('ADMIN_WHATSAPP'),
+    ],
+
+    'admin' => [
+        'email' => env('ADMIN_EMAIL'),
     ],
 
     'anthropic' => [
