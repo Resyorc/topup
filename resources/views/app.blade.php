@@ -84,6 +84,35 @@
         <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400&display=swap">
     </noscript>
 
+    {{-- Structured Data: WebSite — memunculkan search box langsung di hasil Google --}}
+    <script type="application/ld+json" nonce="{{ Vite::cspNonce() }}">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Nuvelo",
+      "url": "https://nuvelo.id",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://nuvelo.id/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    {{-- Structured Data: Organization — untuk Knowledge Panel Google --}}
+    <script type="application/ld+json" nonce="{{ Vite::cspNonce() }}">
+    {
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Nuvelo",
+      "url": "https://nuvelo.id",
+      "logo": "https://nuvelo.id/logo.webp",
+      "sameAs": [
+        "https://instagram.com/nuvelo.id"
+      ]
+    }
+    </script>
+
     @viteReactRefresh
     @vite(['resources/js/app.tsx', "resources/js/pages/{$page['component']}.tsx"])
     @inertiaHead
