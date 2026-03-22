@@ -1,2 +1,7 @@
 User-agent: *
-Disallow:
+Disallow: /nuvelo-control/
+Disallow: /dashboard/
+Disallow: /invoice
+Disallow: /api/
+
+Sitemap: https://nuvelo.id/sitemap.xml

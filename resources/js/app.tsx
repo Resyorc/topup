@@ -6,10 +6,12 @@ import '../css/app.css';
 import { GuestInvoiceProvider } from '@/contexts/guest-invoice-context';
 import { initializeTheme } from '@/hooks/use-appearance';
 
-// Echo/Reverb dimuat secara lazy — tidak memblokir initial render
-import('@laravel/echo-react').then(({ configureEcho }) => {
-    configureEcho({ broadcaster: 'reverb' });
-});
+// Echo/Reverb dimuat secara lazy — hanya jika app key tersedia
+if (import.meta.env.VITE_REVERB_APP_KEY) {
+    import('@laravel/echo-react').then(({ configureEcho }) => {
+        configureEcho({ broadcaster: 'reverb' });
+    });
+}
 
 const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 

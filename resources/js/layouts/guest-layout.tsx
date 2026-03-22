@@ -734,7 +734,7 @@ export default function GuestLayout({
                 }}
             />
 
-            {auth?.user && (
+            {auth?.user && import.meta.env.VITE_REVERB_APP_KEY && (
                 <TransactionNotifier
                     userId={auth.user.id}
                     onNotification={handleNotification}
