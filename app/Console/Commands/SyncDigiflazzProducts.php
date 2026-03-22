@@ -35,7 +35,8 @@ class SyncDigiflazzProducts extends Command
         $this->info("Synchronization completed in {$elapsed}s.");
         $this->table(['Metric', 'Count'], [
             ['Updated', $result['updated']],
-            ['Skipped (SKU not in Digiflazz)', $result['skipped']],
+            ['Created (new products)', $result['created']],
+            ['Skipped (brand not in DB)', $result['skipped']],
         ]);
     }
 }
