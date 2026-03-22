@@ -93,7 +93,7 @@
       "url": "https://nuvelo.id",
       "potentialAction": {
         "@type": "SearchAction",
-        "target": "https://nuvelo.id/search?q={search_term_string}",
+        "target": "https://nuvelo.id/search?q=@{{search_term_string}}",
         "query-input": "required name=search_term_string"
       }
     }
