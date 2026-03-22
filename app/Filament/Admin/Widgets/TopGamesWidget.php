@@ -67,6 +67,7 @@ class TopGamesWidget extends TableWidget
                     ->sortable()
                     ->color('success'),
             ])
+            ->defaultKeySort(false)
             ->paginated(false);
     }
 }
