@@ -27,14 +27,25 @@ class SecurityHeaders
         // Cegah halaman di-embed di iframe (clickjacking)
         $response->headers->set('X-Frame-Options', 'SAMEORIGIN');
 
-        // Paksa HTTPS selama 1 tahun, termasuk subdomain
-        $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+        // Paksa HTTPS selama 1 tahun, termasuk subdomain.
+        // preload: memungkinkan domain didaftarkan ke browser HSTS preload list (hstspreload.org)
+        // agar browser langsung pakai HTTPS tanpa perlu request pertama via HTTP.
+        // PERINGATAN: Setelah didaftarkan ke preload list, sulit untuk di-undo.
+        $response->headers->set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains; preload');
 
         // Batasi informasi referrer yang dikirim ke domain lain
         $response->headers->set('Referrer-Policy', 'strict-origin-when-cross-origin');
 
         // Batasi fitur browser yang boleh dipakai
         $response->headers->set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()');
+
+        // Cegah window opener attacks: tab baru yang dibuka dari halaman ini
+        // tidak bisa mengakses window.opener dan memanipulasi halaman asal.
+        $response->headers->set('Cross-Origin-Opener-Policy', 'same-origin');
+
+        // Wajibkan Trusted Types untuk mencegah DOM-based XSS.
+        // 'allow-duplicates' diperlukan agar Google Tag Manager bisa jalan.
+        $response->headers->set('Content-Security-Policy-Report-Only', "require-trusted-types-for 'script'; trusted-types 'allow-duplicates'");
 
         // Content Security Policy — hanya aktif di non-local.
         // Di local, Vite HMR pakai IPv6 [::1] yang tidak bisa di-whitelist via CSP wildcard.
@@ -44,8 +55,10 @@ class SecurityHeaders
 
                 // Nonce-based: hanya script dengan nonce yang boleh jalan.
                 // 'strict-dynamic' membolehkan script yang dimuat secara dinamis oleh script ber-nonce (Vite modules).
+                // 'unsafe-inline' diabaikan browser modern yang support nonce/strict-dynamic,
+                // tapi diperlukan sebagai fallback untuk browser lama (meningkatkan skor Lighthouse).
                 // Domain GA sebagai fallback untuk browser lama yang tidak support strict-dynamic.
-                "script-src 'nonce-{$nonce}' 'strict-dynamic' https://www.googletagmanager.com",
+                "script-src 'unsafe-inline' 'nonce-{$nonce}' 'strict-dynamic' https://www.googletagmanager.com",
 
                 "style-src 'self' 'unsafe-inline' https://fonts.bunny.net https://fonts.googleapis.com",
                 "img-src 'self' data: blob: https:",
