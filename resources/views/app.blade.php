@@ -86,7 +86,8 @@
 
     {{-- Structured Data: WebSite — memunculkan search box langsung di hasil Google --}}
     <script type="application/ld+json" nonce="{{ Vite::cspNonce() }}">
-    {!! json_encode([
+    @php
+    echo json_encode([
         '@context' => 'https://schema.org',
         '@type' => 'WebSite',
         'name' => 'Nuvelo',
@@ -96,12 +97,14 @@
             'target' => 'https://nuvelo.id/search?q={search_term_string}',
             'query-input' => 'required name=search_term_string',
         ],
-    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    @endphp
     </script>
 
     {{-- Structured Data: Organization — untuk Knowledge Panel Google --}}
     <script type="application/ld+json" nonce="{{ Vite::cspNonce() }}">
-    {!! json_encode([
+    @php
+    echo json_encode([
         '@context' => 'https://schema.org',
         '@type' => 'Organization',
         'name' => 'Nuvelo',
@@ -110,7 +113,8 @@
         'sameAs' => [
             'https://instagram.com/nuvelo.id',
         ],
-    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT) !!}
+    ], JSON_UNESCAPED_SLASHES | JSON_PRETTY_PRINT);
+    @endphp
     </script>
 
     @viteReactRefresh
