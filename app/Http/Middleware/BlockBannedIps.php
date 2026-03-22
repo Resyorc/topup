@@ -11,13 +11,19 @@ class BlockBannedIps
 {
     public function handle(Request $request, Closure $next): Response
     {
-        // Skip untuk admin panel
-        if (str_starts_with($request->path(), 'nuvelo-control')) {
+        // Skip untuk admin panel dan Livewire internal requests
+        if (str_starts_with($request->path(), 'nuvelo-control') ||
+            str_starts_with($request->path(), 'livewire')) {
             return $next($request);
         }
 
-        if (BlockedIp::isBlocked($request->ip())) {
-            abort(403, 'Akses ditolak. IP kamu telah diblokir karena aktivitas mencurigakan.');
+        try {
+            if (BlockedIp::isBlocked($request->ip())) {
+                abort(403, 'Akses ditolak. IP kamu telah diblokir karena aktivitas mencurigakan.');
+            }
+        } catch (\Illuminate\Database\QueryException $e) {
+            // Tabel belum ada (migration belum dijalankan), skip pengecekan
+            return $next($request);
         }
 
         return $next($request);
