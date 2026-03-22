@@ -33,6 +33,7 @@ class TopGamesWidget extends TableWidget
                     ->with('product.game')
                     ->where('created_at', '>=', Carbon::now()->subDays(30))
                     ->select('product_id')
+                    ->selectRaw('MIN(transactions.id) as id')
                     ->selectRaw('COUNT(*) as total_orders')
                     ->selectRaw('SUM(amount) as total_revenue')
                     ->selectRaw('SUM(profit) as total_profit')
