@@ -24,12 +24,18 @@ class SyncDigiflazzProducts extends Command
     /**
      * Execute the console command.
      */
-    public function handle(TopupPriceService $priceService)
+    public function handle(TopupPriceService $priceService): void
     {
         $this->info('Starting Digiflazz product synchronization...');
 
-        $priceService->syncPrices();
+        $start = microtime(true);
+        $result = $priceService->syncPrices();
+        $elapsed = round(microtime(true) - $start, 2);
 
-        $this->info('Synchronization completed successfully!');
+        $this->info("Synchronization completed in {$elapsed}s.");
+        $this->table(['Metric', 'Count'], [
+            ['Updated', $result['updated']],
+            ['Skipped (SKU not in Digiflazz)', $result['skipped']],
+        ]);
     }
 }

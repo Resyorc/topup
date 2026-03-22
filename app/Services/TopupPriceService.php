@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
+use Illuminate\Support\Facades\Log;
+
 class TopupPriceService
 {
     /**
@@ -16,10 +18,14 @@ class TopupPriceService
 
     /**
      * Sync prices from Provider.
+     *
+     * @return array{updated: int, skipped: int}
      */
-    public function syncPrices(): void
+    public function syncPrices(): array
     {
         $digiflazz = app(DigiflazzService::class);
+        $updated = 0;
+        $skipped = 0;
 
         try {
             $apiProducts = $digiflazz->getPrepaidProducts();
@@ -28,7 +34,7 @@ class TopupPriceService
             $apiProductMap = collect($apiProducts)->keyBy('buyer_sku_code');
 
             // Iterate through our database products chunk by chunk to prevent memory issues
-            \App\Models\Product::chunk(200, function ($products) use ($apiProductMap) {
+            \App\Models\Product::chunk(200, function ($products) use ($apiProductMap, &$updated, &$skipped) {
                 foreach ($products as $product) {
                     if ($apiProductMap->has($product->provider_sku)) {
                         $providerData = $apiProductMap->get($product->provider_sku);
@@ -45,11 +51,41 @@ class TopupPriceService
                             'price_sell' => $sell,
                             'is_available' => $isAvailable,
                         ]);
+
+                        $updated++;
+                    } else {
+                        $skipped++;
                     }
                 }
             });
+
+            return ['updated' => $updated, 'skipped' => $skipped];
         } catch (\Exception $e) {
-            \Illuminate\Support\Facades\Log::error('Digiflazz Sync Failed: '.$e->getMessage());
+            Log::error('Digiflazz Sync Failed: '.$e->getMessage());
+
+            $this->notifyAdminSyncFailed($e->getMessage());
+
+            return ['updated' => $updated, 'skipped' => $skipped];
         }
+    }
+
+    /**
+     * Kirim notifikasi WhatsApp ke admin jika sync gagal.
+     */
+    private function notifyAdminSyncFailed(string $errorMessage): void
+    {
+        $adminPhone = config('services.fonnte.admin_whatsapp');
+
+        if (empty($adminPhone)) {
+            return;
+        }
+
+        $time = now()->format('d/m/Y H:i');
+        $message = "⚠️ *Digiflazz Sync Gagal*\n\n"
+            . "Waktu: {$time}\n"
+            . "Error: {$errorMessage}\n\n"
+            . "Harga produk mungkin tidak terupdate. Cek log server untuk detail.";
+
+        app(FonnteService::class)->send($adminPhone, $message);
     }
 }
