@@ -87,13 +87,13 @@
     {{-- Structured Data: WebSite — memunculkan search box langsung di hasil Google --}}
     <script type="application/ld+json" nonce="{{ Vite::cspNonce() }}">
     {
-      "@context": "https://schema.org",
-      "@type": "WebSite",
+      "@@context": "https://schema.org",
+      "@@type": "WebSite",
       "name": "Nuvelo",
       "url": "https://nuvelo.id",
       "potentialAction": {
-        "@type": "SearchAction",
-        "target": "https://nuvelo.id/search?q=@{{search_term_string}}",
+        "@@type": "SearchAction",
+        "target": "https://nuvelo.id/search?q={search_term_string}",
         "query-input": "required name=search_term_string"
       }
     }
@@ -102,8 +102,8 @@
     {{-- Structured Data: Organization — untuk Knowledge Panel Google --}}
     <script type="application/ld+json" nonce="{{ Vite::cspNonce() }}">
     {
-      "@context": "https://schema.org",
-      "@type": "Organization",
+      "@@context": "https://schema.org",
+      "@@type": "Organization",
       "name": "Nuvelo",
       "url": "https://nuvelo.id",
       "logo": "https://nuvelo.id/logo.webp",
