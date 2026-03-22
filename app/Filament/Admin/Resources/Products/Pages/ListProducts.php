@@ -31,7 +31,7 @@ class ListProducts extends ListRecords
 
                         Notification::make()
                             ->title('Sync berhasil')
-                            ->body("{$result['updated']} produk diupdate, {$result['skipped']} dilewati.")
+                            ->body("{$result['updated']} diupdate, {$result['created']} dibuat baru, {$result['skipped']} dilewati.")
                             ->success()
                             ->send();
                     } catch (Throwable $e) {
