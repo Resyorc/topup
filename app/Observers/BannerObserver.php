@@ -29,13 +29,18 @@ class BannerObserver
 
         $newPath = Str::beforeLast($image, '.') . '.webp';
 
-        Image::read($disk->path($image))
-            ->scaleDown(width: 1200)
-            ->toWebp(82)
-            ->save($disk->path($newPath));
+        try {
+            Image::read($disk->path($image))
+                ->scaleDown(width: 1600)
+                ->toWebp(82)
+                ->save($disk->path($newPath));
 
-        $disk->delete($image);
+            $disk->delete($image);
 
-        $banner->updateQuietly(['image' => $newPath]);
+            $banner->updateQuietly(['image' => $newPath]);
+        } catch (\Throwable $e) {
+            // WebP not supported (e.g. local dev without --with-webp), skip conversion
+            logger()->warning('Banner WebP conversion failed: ' . $e->getMessage());
+        }
     }
 }
