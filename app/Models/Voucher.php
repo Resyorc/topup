@@ -18,6 +18,7 @@ class Voucher extends Model
         'valid_until',
         'is_active',
         'is_public',
+        'min_tier',
     ];
 
     protected $casts = [

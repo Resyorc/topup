@@ -4,9 +4,90 @@ import DOMPurify from 'dompurify';
 import React, { useRef, useState } from 'react';
 import UserLayout from '@/layouts/user-layout';
 
+const TIER_CONFIG: Record<string, { icon: string; label: string; ring: string }> = {
+    platinum: { icon: '💎', label: 'Platinum', ring: 'ring-purple-400' },
+    gold:     { icon: '🥇', label: 'Gold',     ring: 'ring-yellow-400' },
+    silver:   { icon: '🥈', label: 'Silver',   ring: 'ring-blue-400'   },
+    bronze:   { icon: '🥉', label: 'Bronze',   ring: 'ring-orange-400' },
+};
+
 export default function Settings() {
     const { auth } = usePage().props as any;
     const user = auth?.user;
+    const tier = user?.tier ?? 'bronze';
+    const tc = TIER_CONFIG[tier] ?? TIER_CONFIG.bronze;
+    const initials = user?.name
+        ? user.name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
+        : '?';
+
+    // Avatar upload state
+    const avatarInputRef = useRef<HTMLInputElement>(null);
+    const [avatarPreview, setAvatarPreview] = useState<string | null>(null);
+    const [avatarFile, setAvatarFile] = useState<File | null>(null);
+    const [avatarUploading, setAvatarUploading] = useState(false);
+    const [avatarError, setAvatarError] = useState('');
+    const [avatarSuccess, setAvatarSuccess] = useState(false);
+
+    const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const file = e.target.files?.[0];
+        if (!file) return;
+        if (file.size > 2 * 1024 * 1024) {
+            setAvatarError('Ukuran gambar maksimal 2MB.');
+            return;
+        }
+        if (!['image/jpeg', 'image/png', 'image/webp'].includes(file.type)) {
+            setAvatarError('Format yang didukung: JPEG, PNG, WebP.');
+            return;
+        }
+        setAvatarError('');
+        setAvatarFile(file);
+        // Revoke URL lama untuk mencegah memory leak
+        setAvatarPreview(prev => {
+            if (prev) URL.revokeObjectURL(prev);
+            return URL.createObjectURL(file);
+        });
+    };
+
+    const submitAvatar = async () => {
+        if (!avatarFile) return;
+        setAvatarUploading(true);
+        setAvatarError('');
+        const formData = new FormData();
+        formData.append('avatar', avatarFile);
+        formData.append('_method', 'POST');
+        try {
+            await axios.post('/dashboard/settings/avatar', formData, {
+                headers: { 'Content-Type': 'multipart/form-data', 'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content },
+            });
+            setAvatarSuccess(true);
+            setAvatarFile(null);
+            setAvatarPreview(null);
+            setTimeout(() => setAvatarSuccess(false), 3000);
+            router.reload({ only: ['auth'] });
+        } catch (e: any) {
+            setAvatarError(e.response?.data?.errors?.avatar?.[0] ?? 'Gagal mengunggah foto.');
+        } finally {
+            setAvatarUploading(false);
+        }
+    };
+
+    const removeAvatar = async () => {
+        setAvatarUploading(true);
+        try {
+            await axios.delete('/dashboard/settings/avatar', {
+                headers: { 'X-CSRF-TOKEN': (document.querySelector('meta[name="csrf-token"]') as HTMLMetaElement)?.content },
+            });
+            setAvatarPreview(null);
+            setAvatarFile(null);
+            setAvatarSuccess(true);
+            setTimeout(() => setAvatarSuccess(false), 3000);
+            router.reload({ only: ['auth'] });
+        } catch {
+            setAvatarError('Gagal menghapus foto.');
+        } finally {
+            setAvatarUploading(false);
+        }
+    };
 
     // Form for Profile Information (Assuming Fortify default route for profile updates is 'user-profile-information.update')
     // We will just scaffold the UI for now, logic can be wired later depending on how Fortify is truly set up for the user model.
@@ -58,7 +139,7 @@ export default function Settings() {
     const [twoFaLoading, setTwoFaLoading] = useState(false);
     const [twoFaError, setTwoFaError] = useState('');
     const twoFactorEnabled = !!user?.two_factor_confirmed_at;
-    const appName = (usePage().props as any).name ?? 'Krysta';
+    const appName = ((usePage().props as any).name ?? 'Krysta').replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c] ?? c));
 
     const enableTwoFactor = async () => {
         setTwoFaLoading(true);
@@ -190,6 +271,80 @@ export default function Settings() {
     return (
         <UserLayout title="Pengaturan">
             <h2 className="mb-6 text-2xl font-bold text-white">Profil</h2>
+
+            {/* Avatar Section */}
+            <div className="mb-6 rounded-xl border border-[#31334c] bg-[#1e1f29] p-6 md:p-8">
+                <p className="mb-4 text-sm font-semibold text-gray-400 uppercase tracking-wide">Foto Profil</p>
+                <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
+                    {/* Avatar preview */}
+                    <div className="relative shrink-0">
+                        <div className={`flex h-20 w-20 items-center justify-center overflow-hidden rounded-full ring-2 ${tc.ring} bg-white/10`}>
+                            {avatarPreview ? (
+                                <img src={avatarPreview} alt="Preview" className="h-full w-full object-cover" />
+                            ) : user?.avatar_url ? (
+                                <img src={user.avatar_url} alt="Avatar" className="h-full w-full object-cover" />
+                            ) : (
+                                <span className="text-xl font-bold text-white">{initials}</span>
+                            )}
+                        </div>
+                        {/* Tier badge */}
+                        <span className="absolute -bottom-1 -right-1 text-base leading-none">{tc.icon}</span>
+                    </div>
+
+                    {/* Controls */}
+                    <div className="flex flex-col gap-2">
+                        <div className="flex flex-wrap gap-2">
+                            <button
+                                type="button"
+                                onClick={() => avatarInputRef.current?.click()}
+                                className="rounded-lg border border-[#31334c] bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                            >
+                                {user?.avatar_url || avatarPreview ? 'Ganti Foto' : 'Unggah Foto'}
+                            </button>
+                            {(user?.avatar_url && !avatarPreview) && (
+                                <button
+                                    type="button"
+                                    onClick={removeAvatar}
+                                    disabled={avatarUploading}
+                                    className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-2 text-sm font-medium text-red-400 transition hover:bg-red-500/20 disabled:opacity-50"
+                                >
+                                    Hapus Foto
+                                </button>
+                            )}
+                            {avatarFile && (
+                                <button
+                                    type="button"
+                                    onClick={submitAvatar}
+                                    disabled={avatarUploading}
+                                    className="rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-4 py-2 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+                                >
+                                    {avatarUploading ? 'Mengunggah...' : 'Simpan Foto'}
+                                </button>
+                            )}
+                            {avatarPreview && !avatarFile && (
+                                <button
+                                    type="button"
+                                    onClick={() => { if (avatarPreview) URL.revokeObjectURL(avatarPreview); setAvatarPreview(null); setAvatarFile(null); }}
+                                    className="text-sm text-gray-500 hover:text-gray-300"
+                                >
+                                    Batal
+                                </button>
+                            )}
+                        </div>
+                        <p className="text-xs text-gray-500">Format: JPEG, PNG, WebP · Maks. 2MB</p>
+                        {avatarError && <p className="text-xs text-red-400">{avatarError}</p>}
+                        {avatarSuccess && <p className="text-xs text-green-400">Foto profil berhasil diperbarui.</p>}
+                    </div>
+
+                    <input
+                        ref={avatarInputRef}
+                        type="file"
+                        accept="image/jpeg,image/png,image/webp"
+                        className="hidden"
+                        onChange={handleAvatarChange}
+                    />
+                </div>
+            </div>
 
             {/* Profil Form Section */}
             <div className="mb-8 rounded-xl border border-[#31334c] bg-[#1e1f29] p-6 md:p-8">
