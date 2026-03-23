@@ -9,6 +9,7 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Services\CoinService;
 use App\Services\LoyaltyService;
+use App\Services\TierService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -81,6 +82,14 @@ class DigiflazzCallbackController extends Controller
 
             // Berikan reward loyalitas (hanya user login, bukan bayar via Coin)
             app(LoyaltyService::class)->awardFromTransaction($transaction->load('product.game'));
+
+            // Recalculate tier setelah transaksi sukses
+            if ($transaction->user_id) {
+                $txUser = User::find($transaction->user_id);
+                if ($txUser) {
+                    app(TierService::class)->recalculate($txUser);
+                }
+            }
 
             // Refresh agar loyalty_coins sudah terisi sebelum dikirim ke WA
             dispatch(SendWhatsAppNotification::topupSuccess($transaction->refresh()));

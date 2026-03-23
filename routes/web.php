@@ -5,6 +5,7 @@ use App\Http\Controllers\CoinHistoryController;
 use App\Http\Controllers\CoinTopupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\ProfileAvatarController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\UserTransactionController;
 use Illuminate\Support\Facades\Route;
@@ -25,6 +26,9 @@ Route::middleware('auth')->group(function () {
     Route::get('dashboard', [DashboardController::class, 'index'])->name('dashboard');
     Route::get('dashboard/transactions', [UserTransactionController::class, 'index'])->name('dashboard.transactions');
     Route::inertia('dashboard/settings', 'user/settings')->name('dashboard.settings');
+    Route::get('dashboard/member-club', [DashboardController::class, 'memberClub'])->name('dashboard.member-club');
+    Route::post('dashboard/settings/avatar', [ProfileAvatarController::class, 'update'])->name('dashboard.settings.avatar');
+    Route::delete('dashboard/settings/avatar', [ProfileAvatarController::class, 'destroy'])->name('dashboard.settings.avatar.destroy');
 
     // Fitur coin — butuh verifikasi email
     Route::middleware('verified')->group(function () {

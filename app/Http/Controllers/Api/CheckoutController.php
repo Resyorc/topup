@@ -180,7 +180,7 @@ class CheckoutController extends Controller
 
                 // Atomic: re-validasi + increment used_count dalam satu lock — cegah race condition voucher.
                 if ($voucherCode) {
-                    $voucherService->validateAndClaim($voucherCode, $amount);
+                    $voucherService->validateAndClaim($voucherCode, $amount, $request->user());
                 }
 
                 return [
@@ -330,7 +330,7 @@ class CheckoutController extends Controller
 
                 // Atomic: re-validasi + increment used_count dalam satu lock — cegah race condition voucher.
                 if ($voucherCode) {
-                    app(VoucherService::class)->validateAndClaim($voucherCode, $amount);
+                    app(VoucherService::class)->validateAndClaim($voucherCode, $amount, $request->user());
                 }
 
                 // 3. Kirim ke Digiflazz langsung

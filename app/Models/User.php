@@ -7,6 +7,7 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Facades\Mail;
@@ -70,7 +71,14 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'phone',
         'password',
         'google_id',
+        'tier',
+        'avatar',
     ];
+
+    public function getAvatarUrlAttribute(): ?string
+    {
+        return $this->avatar ? asset('storage/'.$this->avatar) : null;
+    }
 
     /**
      * The attributes that should be hidden for serialization.
@@ -82,6 +90,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'two_factor_secret',
         'two_factor_recovery_codes',
         'remember_token',
+        'phone',
+        'google_id',
     ];
 
     /**
@@ -96,5 +106,10 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
             'password' => 'hashed',
             'two_factor_confirmed_at' => 'datetime',
         ];
+    }
+
+    public function transactions(): HasMany
+    {
+        return $this->hasMany(Transaction::class);
     }
 }

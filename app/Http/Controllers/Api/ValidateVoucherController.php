@@ -15,7 +15,7 @@ class ValidateVoucherController extends Controller
             'amount' => 'required|integer|min:1',
         ]);
 
-        $result = $voucherService->validate($validated['code'], (int) $validated['amount']);
+        $result = $voucherService->validate($validated['code'], (int) $validated['amount'], $request->user());
 
         return response()->json([
             'valid' => $result['valid'],
