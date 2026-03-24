@@ -85,7 +85,7 @@
     </noscript>
 
     {{-- Structured Data: WebSite — memunculkan search box langsung di hasil Google --}}
-    <script type="application/ld+json" nonce="{{ Vite::cspNonce() }}">
+    <script type="application/ld+json">
     @php
     echo json_encode([
         '@context' => 'https://schema.org',
@@ -102,7 +102,7 @@
     </script>
 
     {{-- Structured Data: Organization — untuk Knowledge Panel Google --}}
-    <script type="application/ld+json" nonce="{{ Vite::cspNonce() }}">
+    <script type="application/ld+json">
     @php
     echo json_encode([
         '@context' => 'https://schema.org',
