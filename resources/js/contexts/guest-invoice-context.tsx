@@ -20,6 +20,7 @@ interface GuestInvoiceContextValue {
 const GuestInvoiceContext = createContext<GuestInvoiceContextValue | null>(null);
 
 function readInvoices(): string[] {
+    if (typeof window === 'undefined') return [];
     try {
         const raw = localStorage.getItem(STORAGE_KEY);
         if (!raw) return [];
@@ -31,6 +32,7 @@ function readInvoices(): string[] {
 }
 
 function persistInvoices(invoices: string[]) {
+    if (typeof window === 'undefined') return;
     localStorage.setItem(STORAGE_KEY, JSON.stringify(invoices));
 }
 
@@ -55,6 +57,7 @@ export function GuestInvoiceProvider({ children }: { children: ReactNode }) {
     );
 
     const hasReviewed = useCallback((invoiceId: string) => {
+        if (typeof window === 'undefined') return false;
         try {
             return localStorage.getItem(`${REVIEWED_PREFIX}${invoiceId}`) === '1';
         } catch {
@@ -63,6 +66,7 @@ export function GuestInvoiceProvider({ children }: { children: ReactNode }) {
     }, []);
 
     const markReviewed = useCallback((invoiceId: string) => {
+        if (typeof window === 'undefined') return;
         try {
             localStorage.setItem(`${REVIEWED_PREFIX}${invoiceId}`, '1');
         } catch {
