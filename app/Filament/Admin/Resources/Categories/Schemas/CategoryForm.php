@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\Categories\Schemas;
 
+use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -26,6 +27,11 @@ class CategoryForm
                 TextInput::make('slug')
                     ->required()
                     ->unique(ignoreRecord: true),
+                FileUpload::make('icon')
+                    ->image()
+                    ->directory('categories/icons')
+                    ->disk('public')
+                    ->nullable(),
             ]);
     }
 }
