@@ -2,18 +2,17 @@ import { Head, Link } from '@inertiajs/react';
 import GuestLayout from '@/layouts/guest-layout';
 
 const tocItems = [
-    { id: 's1', title: 'Pendahuluan & Definisi' },
-    { id: 's2', title: 'Pendaftaran Akun' },
-    { id: 's3', title: 'Layanan Topup Digital' },
-    { id: 's4', title: 'Harga & Pembayaran' },
+    { id: 's1', title: 'Tentang Nuvelo' },
+    { id: 's2', title: 'Ketentuan Pengguna' },
+    { id: 's3', title: 'Layanan & Produk' },
+    { id: 's4', title: 'Pembayaran' },
     { id: 's5', title: 'Kebijakan Refund' },
-    { id: 's6', title: 'Larangan & Penyalahgunaan' },
-    { id: 's7', title: 'Tanggung Jawab Pengguna' },
+    { id: 's6', title: 'Program Loyalitas (Krysta Coin)' },
+    { id: 's7', title: 'Kode Promo & Diskon' },
     { id: 's8', title: 'Batasan Tanggung Jawab' },
-    { id: 's9', title: 'Penghentian Layanan' },
+    { id: 's9', title: 'Perubahan Ketentuan' },
     { id: 's10', title: 'Hukum yang Berlaku' },
-    { id: 's11', title: 'Perubahan Ketentuan' },
-    { id: 's12', title: 'Hubungi Kami' },
+    { id: 's11', title: 'Hubungi Kami' },
 ];
 
 const sectionBase =
@@ -46,16 +45,18 @@ export default function SyaratKetentuanPage() {
                         Syarat & Ketentuan
                     </h1>
                     <p className="mt-3 text-sm text-gray-400">
-                        Berlaku sejak: 11 Maret 2026 · Versi 1.0
+                        Berlaku sejak: 24 Maret 2026 · Versi 2.0
                     </p>
                 </div>
             </section>
 
             <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
                 <div className="mb-8 rounded-2xl border border-primary/30 bg-[#211c34] p-5 sm:p-7">
-                    <h2 className="mb-4 text-base font-bold text-white">
-                        Daftar Isi
-                    </h2>
+                    <p className={sectionText}>
+                        Dengan menggunakan layanan Nuvelo, Anda dianggap telah membaca, memahami,
+                        dan menyetujui seluruh syarat & ketentuan yang berlaku di bawah ini.
+                    </p>
+                    <h2 className="mb-4 text-base font-bold text-white">Daftar Isi</h2>
                     <ol className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
                         {tocItems.map((item, idx) => (
                             <li key={item.id}>
@@ -77,338 +78,333 @@ export default function SyaratKetentuanPage() {
                     <section id="s1" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>01</div>
-                            <h2 className={sectionTitle}>
-                                Pendahuluan & Definisi
-                            </h2>
+                            <h2 className={sectionTitle}>Tentang Nuvelo</h2>
                         </div>
                         <p className={sectionText}>
-                            Selamat datang di{' '}
-                            <strong className="text-white">TopupStore</strong>.
-                            Syarat dan Ketentuan ini merupakan perjanjian yang
-                            mengikat secara hukum antara Anda (
-                            <strong className="text-white">Pengguna</strong>)
-                            dan TopupStore (
-                            <strong className="text-white">Perusahaan</strong>,{' '}
-                            <strong className="text-white">Kami</strong>) selaku
-                            penyedia layanan topup digital.
+                            <strong className="text-white">Nuvelo</strong> adalah platform layanan
+                            topup game dan voucher digital yang dioperasikan secara perorangan dan
+                            berdomisili di Indonesia. Nuvelo menyediakan layanan pembelian kredit
+                            game, voucher digital, dan produk digital lainnya melalui website{' '}
+                            <strong className="text-white">www.nuvelo.id</strong>.
                         </p>
                         <p className={sectionText}>
-                            Dengan mendaftar, mengakses, atau menggunakan
-                            layanan kami, Anda menyatakan telah berusia minimal{' '}
-                            <strong className="text-white">
-                                17 (tujuh belas) tahun
-                            </strong>
-                            atau memiliki izin dari orang tua atau wali yang
-                            sah, serta menyetujui seluruh ketentuan dalam
-                            dokumen ini.
+                            Nuvelo berperan sebagai reseller produk digital yang sumber produknya
+                            berasal dari penyedia layanan terpercaya. Seluruh transaksi bersifat
+                            final setelah produk berhasil dikirimkan ke akun tujuan pengguna.
                         </p>
-                        <div className={box}>
-                            <p>
-                                <strong className="text-white">
-                                    Definisi Utama:
-                                </strong>
-                            </p>
-                            <p>
-                                <em>Platform</em> merujuk pada website,
-                                aplikasi, dan seluruh saluran digital
-                                TopupStore.
-                            </p>
-                            <p>
-                                <em>Layanan</em> merujuk pada jasa topup item
-                                dan mata uang dalam game untuk berbagai judul
-                                game.
-                            </p>
-                            <p>
-                                <em>Transaksi</em> merujuk pada setiap pembelian
-                                atau pembayaran yang dilakukan melalui Platform.
-                            </p>
-                        </div>
                     </section>
 
                     <section id="s2" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>02</div>
-                            <h2 className={sectionTitle}>Pendaftaran Akun</h2>
+                            <h2 className={sectionTitle}>Ketentuan Pengguna</h2>
                         </div>
-                        <p className={sectionText}>
-                            Untuk mengakses fitur tertentu pada Platform, Anda
-                            diwajibkan membuat akun pengguna. Dalam proses
-                            pendaftaran, Anda wajib:
+                        <p className={sectionText + ' font-semibold text-white'}>
+                            2.1 Syarat Penggunaan
                         </p>
                         <ul>
                             <li className={listItem}>
-                                Memberikan informasi yang akurat, lengkap, dan
-                                terkini
+                                Pengguna wajib berusia minimal{' '}
+                                <strong className="text-white">13 tahun</strong>, atau mendapat
+                                persetujuan orang tua/wali
                             </li>
                             <li className={listItem}>
-                                Menjaga kerahasiaan kata sandi dan informasi
-                                akun Anda
+                                Pengguna bertanggung jawab atas keakuratan data yang dimasukkan
+                                (ID game, nomor server, dll)
                             </li>
                             <li className={listItem}>
-                                Segera memberitahukan kami apabila terjadi akses
-                                tidak sah ke akun Anda
+                                Pengguna dilarang menggunakan layanan Nuvelo untuk tujuan yang
+                                melanggar hukum
                             </li>
                             <li className={listItem}>
-                                Tidak membuat lebih dari satu akun per individu
-                            </li>
-                            <li className={listItem}>
-                                Tidak menggunakan identitas atau data milik
-                                orang lain
+                                Pengguna dilarang melakukan chargebacks atau pembatalan pembayaran
+                                secara sepihak setelah produk terkirim
                             </li>
                         </ul>
-                        <p className="mt-4 text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Anda bertanggung jawab penuh atas seluruh aktivitas
-                            yang terjadi di bawah akun Anda. TopupStore tidak
-                            bertanggung jawab atas kerugian yang timbul akibat
-                            kelalaian Anda dalam menjaga keamanan akun.
+                        <p className={'mt-5 ' + sectionText + ' font-semibold text-white'}>
+                            2.2 Akun Pengguna
                         </p>
+                        <ul>
+                            <li className={listItem}>
+                                Pengguna bertanggung jawab penuh atas keamanan akun dan kata sandi
+                                mereka
+                            </li>
+                            <li className={listItem}>
+                                Nuvelo tidak bertanggung jawab atas kerugian akibat akun yang
+                                diakses pihak lain
+                            </li>
+                            <li className={listItem}>
+                                Nuvelo berhak menonaktifkan akun yang terindikasi melakukan
+                                penyalahgunaan layanan
+                            </li>
+                        </ul>
                     </section>
 
                     <section id="s3" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>03</div>
-                            <h2 className={sectionTitle}>
-                                Layanan Topup Digital
-                            </h2>
+                            <h2 className={sectionTitle}>Layanan & Produk</h2>
                         </div>
-                        <p className={sectionText}>
-                            TopupStore menyediakan layanan pengisian saldo dan
-                            item digital untuk berbagai platform game, pulsa,
-                            data, dan e-wallet. Proses topup dilakukan secara
-                            otomatis setelah pembayaran berhasil diverifikasi.
+                        <p className={sectionText + ' font-semibold text-white'}>
+                            3.1 Cakupan Layanan
                         </p>
                         <ul>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Mobile Legends Bang Bang:
-                                </strong>{' '}
-                                Diamond, Weekly Diamond Pass, Starlight Member
+                                Topup game mobile: Mobile Legends, Free Fire, PUBG Mobile, dan game
+                                lainnya
                             </li>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Free Fire:
-                                </strong>{' '}
-                                Diamond, Diamond Royale, Membership
+                                Voucher game PC & console: Steam Wallet, Google Play, PlayStation
+                                Network, dan lainnya
                             </li>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    PUBG Mobile:
-                                </strong>{' '}
-                                UC, Royal Pass
+                                Produk digital lain yang tersedia di katalog Nuvelo
+                            </li>
+                        </ul>
+                        <p className={'mt-5 ' + sectionText + ' font-semibold text-white'}>
+                            3.2 Ketersediaan Layanan
+                        </p>
+                        <ul>
+                            <li className={listItem}>
+                                Nuvelo beroperasi 24 jam sehari, 7 hari seminggu untuk pemrosesan
+                                otomatis
                             </li>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Genshin Impact:
-                                </strong>{' '}
-                                Genesis Crystals, Welkin Moon
+                                Nuvelo berhak menghentikan sementara atau menghapus produk tertentu
+                                dari katalog tanpa pemberitahuan sebelumnya
                             </li>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Honkai: Star Rail:
-                                </strong>{' '}
-                                Oneiric Shard, Express Supply Pass
+                                Harga produk dapat berubah sewaktu-waktu mengikuti kebijakan
+                                penyedia
+                            </li>
+                        </ul>
+                        <p className={'mt-5 ' + sectionText + ' font-semibold text-white'}>
+                            3.3 Proses Topup
+                        </p>
+                        <ul>
+                            <li className={listItem}>
+                                Pengguna memilih produk dan memasukkan data akun game yang dituju
                             </li>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Dan berbagai game mobile & PC lainnya
-                                </strong>
+                                Pengguna memilih metode pembayaran dan menyelesaikan pembayaran
+                            </li>
+                            <li className={listItem}>
+                                Sistem memproses topup secara otomatis setelah pembayaran
+                                terverifikasi
+                            </li>
+                            <li className={listItem}>
+                                Konfirmasi transaksi dikirim melalui halaman sukses order
                             </li>
                         </ul>
                         <div className={box}>
-                            Pengguna wajib memastikan kebenaran{' '}
-                            <strong className="text-white">
-                                User ID dan Server atau Zone game
-                            </strong>{' '}
-                            yang diinput sebelum menyelesaikan pembayaran. Item
-                            game yang telah berhasil masuk ke akun tujuan{' '}
-                            <strong className="text-white">
-                                tidak dapat ditarik kembali
-                            </strong>
-                            , dan kesalahan input data oleh Pengguna bukan
-                            merupakan tanggung jawab TopupStore.
+                            Pengguna wajib memastikan keakuratan{' '}
+                            <strong className="text-white">ID game dan server</strong> sebelum
+                            melakukan pembayaran. Kesalahan data yang dimasukkan pengguna tidak
+                            dapat diklaim sebagai dasar refund.
                         </div>
                     </section>
 
                     <section id="s4" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>04</div>
-                            <h2 className={sectionTitle}>Harga & Pembayaran</h2>
+                            <h2 className={sectionTitle}>Pembayaran</h2>
                         </div>
-                        <p className={sectionText}>
-                            Seluruh harga yang tercantum di platform dinyatakan
-                            dalam
-                            <strong className="text-white">
-                                {' '}
-                                Rupiah Indonesia (IDR)
-                            </strong>{' '}
-                            dan sudah termasuk biaya layanan. Harga dapat
-                            berubah sewaktu-waktu tanpa pemberitahuan
-                            sebelumnya.
-                        </p>
-                        <p className={sectionText}>
-                            Kami menerima berbagai metode pembayaran yang
-                            diproses melalui
-                            <strong className="text-white"> Tripay</strong>{' '}
-                            selaku penyedia layanan pembayaran berlisensi,
-                            meliputi:
+                        <p className={sectionText + ' font-semibold text-white'}>
+                            4.1 Metode Pembayaran yang Tersedia
                         </p>
                         <ul>
                             <li className={listItem}>
-                                Transfer bank (BCA, BNI, BRI, Mandiri, BSI)
+                                <strong className="text-white">QRIS</strong> — semua aplikasi yang
+                                mendukung QRIS
                             </li>
                             <li className={listItem}>
-                                Virtual Account semua bank
+                                <strong className="text-white">E-wallet</strong> — GoPay, OVO,
+                                Dana, dan dompet digital lainnya
                             </li>
                             <li className={listItem}>
-                                QRIS (Quick Response Code Indonesian Standard)
-                            </li>
-                            <li className={listItem}>
-                                Dompet digital (GoPay, OVO, DANA, ShopeePay)
-                            </li>
-                            <li className={listItem}>
-                                Gerai retail (Alfamart, Indomaret)
+                                <strong className="text-white">Virtual Account</strong> — transfer
+                                bank via nomor VA
                             </li>
                         </ul>
-                        <p className="mt-4 text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Transaksi yang telah dibayarkan akan diproses dalam
-                            kurun waktu
-                            <strong className="text-white">
-                                {' '}
-                                1-5 menit
-                            </strong>{' '}
-                            setelah konfirmasi pembayaran. Pada kondisi
-                            tertentu, proses dapat memakan waktu hingga
-                            <strong className="text-white"> 1x24 jam</strong>.
+                        <p className={'mt-5 ' + sectionText + ' font-semibold text-white'}>
+                            4.2 Ketentuan Pembayaran
                         </p>
+                        <ul>
+                            <li className={listItem}>
+                                Pembayaran wajib diselesaikan sebelum batas waktu yang tertera pada
+                                halaman checkout
+                            </li>
+                            <li className={listItem}>
+                                Nuvelo tidak menyimpan data kartu kredit atau informasi rekening
+                                bank pengguna
+                            </li>
+                            <li className={listItem}>
+                                Seluruh transaksi pembayaran diproses oleh penyedia payment gateway
+                                terpercaya
+                            </li>
+                            <li className={listItem}>
+                                Bukti pembayaran tersimpan di halaman riwayat transaksi akun
+                                pengguna
+                            </li>
+                        </ul>
+                        <p className={'mt-5 ' + sectionText + ' font-semibold text-white'}>
+                            4.3 Harga & Pajak
+                        </p>
+                        <ul>
+                            <li className={listItem}>
+                                Harga yang tertera di website adalah harga final sudah termasuk
+                                seluruh biaya
+                            </li>
+                            <li className={listItem}>
+                                Nuvelo tidak memungut biaya tambahan di luar harga yang tertera
+                            </li>
+                            <li className={listItem}>
+                                Pengguna bertanggung jawab atas kewajiban pajak pribadi sesuai
+                                ketentuan yang berlaku
+                            </li>
+                        </ul>
                     </section>
 
                     <section id="s5" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>05</div>
-                            <h2 className={sectionTitle}>
-                                Kebijakan Refund & Pembatalan
-                            </h2>
+                            <h2 className={sectionTitle}>Kebijakan Refund & Pengembalian Dana</h2>
                         </div>
                         <p className={sectionText}>
-                            Mengingat sifat layanan topup yang bersifat
-                            <strong className="text-white">
-                                {' '}
-                                digital dan instan
-                            </strong>
-                            , pada umumnya transaksi yang telah berhasil
-                            diproses{' '}
-                            <strong className="text-white">
-                                tidak dapat dibatalkan atau dikembalikan
-                            </strong>
-                            .
+                            Kebijakan ini dirancang untuk melindungi hak pengguna sekaligus menjaga
+                            keberlangsungan layanan Nuvelo.
                         </p>
-                        <p className={sectionText}>
-                            Refund atau kompensasi hanya dapat diproses dalam
-                            kondisi berikut:
+                        <p className={sectionText + ' font-semibold text-white'}>
+                            5.1 Kondisi yang Berhak Mendapat Refund
                         </p>
                         <ul>
                             <li className={listItem}>
-                                Kegagalan sistem di pihak TopupStore yang
-                                mengakibatkan item atau saldo tidak terkirim
+                                Topup gagal diproses oleh sistem dan produk tidak terkirim ke akun
+                                tujuan
                             </li>
                             <li className={listItem}>
-                                Transaksi ganda (double charge) akibat kesalahan
-                                sistem
+                                Pembayaran berhasil namun pesanan tidak diproses lebih dari{' '}
+                                <strong className="text-white">30 menit</strong> tanpa keterangan
                             </li>
                             <li className={listItem}>
-                                Pembayaran berhasil namun pesanan tidak diproses
-                                dalam 1x24 jam
+                                Terjadi duplikasi transaksi (dibayar dua kali untuk pesanan yang
+                                sama)
                             </li>
                         </ul>
                         <div className={warning}>
-                            <strong className="text-red-100">Perhatian:</strong>{' '}
-                            Refund tidak dapat diproses apabila kesalahan data
-                            target topup dilakukan oleh Pengguna, akun game atau
-                            platform target diblokir oleh pihak pengembang, atau
-                            klaim diajukan lebih dari 24 jam sejak transaksi.
+                            <strong className="text-red-100">
+                                5.2 Kondisi yang TIDAK Berhak Mendapat Refund:
+                            </strong>
+                            <ul className="mt-2 space-y-1">
+                                <li>
+                                    ▸ Pengguna salah memasukkan ID game, nomor server, atau data
+                                    akun tujuan
+                                </li>
+                                <li>▸ Produk telah berhasil terkirim ke akun yang diinput pengguna</li>
+                                <li>▸ Pengguna berubah pikiran setelah transaksi selesai</li>
+                                <li>
+                                    ▸ Akun game pengguna di-ban oleh publisher setelah topup
+                                    berhasil
+                                </li>
+                                <li>
+                                    ▸ Permintaan refund diajukan lebih dari{' '}
+                                    <strong className="text-red-100">7 × 24 jam</strong> setelah
+                                    transaksi
+                                </li>
+                            </ul>
                         </div>
-                        <p className="text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Pengajuan refund dapat dilakukan melalui email atau
-                            WhatsApp customer support kami dengan menyertakan
-                            bukti pembayaran dan detail transaksi.
+                        <p className={sectionText + ' font-semibold text-white'}>
+                            5.3 Proses Pengajuan Refund
                         </p>
+                        <ul>
+                            <li className={listItem}>
+                                Hubungi Nuvelo melalui WhatsApp{' '}
+                                <strong className="text-white">085158330663</strong> dalam 7 × 24
+                                jam
+                            </li>
+                            <li className={listItem}>
+                                Sertakan: nomor order, bukti pembayaran, dan penjelasan singkat
+                                masalah
+                            </li>
+                            <li className={listItem}>
+                                Nuvelo akan memverifikasi laporan dalam 1 × 24 jam kerja
+                            </li>
+                            <li className={listItem}>
+                                Jika refund disetujui, dana dikembalikan ke metode pembayaran asal
+                                dalam 1–3 hari kerja
+                            </li>
+                        </ul>
+                        <div className={box}>
+                            Nuvelo berhak meminta bukti tambahan untuk memverifikasi klaim refund.
+                            Keputusan Nuvelo atas klaim refund bersifat final.
+                        </div>
                     </section>
 
                     <section id="s6" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>06</div>
                             <h2 className={sectionTitle}>
-                                Larangan & Penyalahgunaan
+                                Program Loyalitas (Krysta Coin)
                             </h2>
                         </div>
-                        <p className={sectionText}>
-                            Pengguna dilarang keras menggunakan Platform untuk
-                            aktivitas yang melanggar hukum atau merugikan pihak
-                            lain, termasuk namun tidak terbatas pada:
-                        </p>
                         <ul>
                             <li className={listItem}>
-                                Melakukan penipuan, pemalsuan identitas, atau
-                                penggunaan metode pembayaran tidak sah
+                                Krysta Coin adalah program reward internal Nuvelo yang diberikan
+                                kepada pengguna aktif
                             </li>
                             <li className={listItem}>
-                                Melakukan chargebacks yang tidak berdasar
-                                (friendly fraud)
+                                Pengguna mendapatkan Krysta Coin sebesar{' '}
+                                <strong className="text-white">1%</strong> dari nilai transaksi yang
+                                berhasil via QRIS, E-wallet, atau Virtual Account dengan minimum
+                                transaksi <strong className="text-white">Rp 10.000</strong>
                             </li>
                             <li className={listItem}>
-                                Mengeksploitasi bug, celah sistem, atau promosi
-                                secara tidak wajar
+                                Krysta Coin hanya dapat digunakan untuk mendapatkan diskon pada
+                                transaksi berikutnya di Nuvelo
                             </li>
                             <li className={listItem}>
-                                Menggunakan layanan untuk tujuan pencucian uang
+                                Krysta Coin{' '}
+                                <strong className="text-white">
+                                    tidak dapat diuangkan, dipindahtangankan
+                                </strong>
+                                , atau ditukar dengan produk fisik
                             </li>
                             <li className={listItem}>
-                                Menjual kembali produk digital yang diperoleh
-                                dari TopupStore secara tidak sah
+                                Krysta Coin yang tidak digunakan selama{' '}
+                                <strong className="text-white">12 bulan</strong> akan hangus secara
+                                otomatis
                             </li>
                             <li className={listItem}>
-                                Melakukan serangan siber, DDoS, atau upaya
-                                pembobolan sistem
+                                Nuvelo berhak mengubah, menangguhkan, atau menghentikan program
+                                Krysta Coin dengan pemberitahuan kepada pengguna
                             </li>
                         </ul>
-                        <p className="mt-4 text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Pelanggaran terhadap ketentuan ini dapat
-                            mengakibatkan pembekuan atau penghapusan akun,
-                            pembatalan transaksi, dan atau pelaporan kepada
-                            pihak berwajib.
-                        </p>
                     </section>
 
                     <section id="s7" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>07</div>
-                            <h2 className={sectionTitle}>
-                                Tanggung Jawab Pengguna
-                            </h2>
+                            <h2 className={sectionTitle}>Kode Promo & Diskon</h2>
                         </div>
-                        <p className={sectionText}>
-                            Pengguna bertanggung jawab penuh untuk:
-                        </p>
                         <ul>
                             <li className={listItem}>
-                                Memastikan akurasi data yang diinput sebelum
-                                menyelesaikan transaksi
+                                Kode promo hanya berlaku untuk periode waktu yang ditentukan dan
+                                tidak dapat diperpanjang
                             </li>
                             <li className={listItem}>
-                                Memastikan akun tujuan topup aktif dan tidak
-                                dalam status banned atau suspended
+                                Setiap kode promo hanya dapat digunakan{' '}
+                                <strong className="text-white">1 (satu) kali</strong> per akun
+                                pengguna
                             </li>
                             <li className={listItem}>
-                                Memiliki hak penggunaan yang sah atas metode
-                                pembayaran yang digunakan
+                                Kode promo tidak dapat digabungkan dengan promo atau diskon lain
+                                kecuali dinyatakan sebaliknya
                             </li>
                             <li className={listItem}>
-                                Mematuhi syarat dan ketentuan platform atau game
-                                tujuan topup
+                                Nuvelo berhak menonaktifkan kode promo yang terdeteksi disalahgunakan
                             </li>
                             <li className={listItem}>
-                                Melaporkan kendala transaksi dalam 24 jam sejak
-                                pembayaran dilakukan
+                                Penyalahgunaan kode promo dapat mengakibatkan penangguhan akun
                             </li>
                         </ul>
                     </section>
@@ -416,139 +412,75 @@ export default function SyaratKetentuanPage() {
                     <section id="s8" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>08</div>
-                            <h2 className={sectionTitle}>
-                                Batasan Tanggung Jawab
-                            </h2>
+                            <h2 className={sectionTitle}>Batasan Tanggung Jawab</h2>
                         </div>
-                        <p className={sectionText}>
-                            TopupStore tidak bertanggung jawab atas kerugian
-                            yang timbul akibat:
-                        </p>
                         <ul>
                             <li className={listItem}>
-                                Gangguan server pihak ketiga yang berada di luar
-                                kendali kami
+                                Nuvelo tidak bertanggung jawab atas gangguan layanan yang disebabkan
+                                oleh pihak ketiga (publisher game, penyedia payment, atau gangguan
+                                internet)
                             </li>
                             <li className={listItem}>
-                                Kesalahan data yang dimasukkan oleh Pengguna
+                                Nuvelo tidak bertanggung jawab atas kerugian tidak langsung yang
+                                timbul dari penggunaan layanan
                             </li>
                             <li className={listItem}>
-                                Pemblokiran atau pembatasan akun oleh pihak
-                                pengembang game atau platform
-                            </li>
-                            <li className={listItem}>
-                                Gangguan koneksi internet atau perangkat milik
-                                Pengguna
-                            </li>
-                            <li className={listItem}>
-                                Kejadian force majeure seperti bencana alam atau
-                                gangguan infrastruktur nasional
+                                Nuvelo tidak berafiliasi dengan publisher game manapun kecuali
+                                dinyatakan secara resmi
                             </li>
                         </ul>
                         <div className={box}>
-                            Tanggung jawab maksimal TopupStore dalam setiap
-                            klaim tidak akan melebihi nilai transaksi yang
-                            dipersengketakan.
+                            Tanggung jawab maksimal Nuvelo terbatas pada{' '}
+                            <strong className="text-white">nilai transaksi</strong> yang bermasalah.
                         </div>
                     </section>
 
                     <section id="s9" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>09</div>
-                            <h2 className={sectionTitle}>
-                                Penghentian Layanan
-                            </h2>
+                            <h2 className={sectionTitle}>Perubahan Ketentuan</h2>
                         </div>
                         <p className={sectionText}>
-                            TopupStore berhak untuk membekukan atau menghentikan
-                            akun Pengguna secara sepihak apabila ditemukan
-                            pelanggaran terhadap Syarat dan Ketentuan ini.
-                        </p>
-                        <p className="text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Pengguna juga dapat menghapus akunnya kapan saja
-                            dengan menghubungi tim customer support kami.
-                            Penghapusan akun tidak akan menghapus kewajiban yang
-                            telah timbul sebelum tanggal penghapusan.
+                            Nuvelo berhak mengubah syarat dan ketentuan ini sewaktu-waktu. Perubahan
+                            akan diumumkan melalui website{' '}
+                            <strong className="text-white">nuvelo.id</strong> dan/atau media sosial
+                            resmi Nuvelo. Penggunaan layanan setelah perubahan dianggap sebagai
+                            persetujuan terhadap syarat yang baru.
                         </p>
                     </section>
 
                     <section id="s10" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>10</div>
-                            <h2 className={sectionTitle}>
-                                Hukum yang Berlaku & Penyelesaian Sengketa
-                            </h2>
+                            <h2 className={sectionTitle}>Hukum yang Berlaku</h2>
                         </div>
                         <p className={sectionText}>
-                            Syarat dan Ketentuan ini diatur oleh dan ditafsirkan
-                            sesuai dengan
-                            <strong className="text-white">
-                                {' '}
-                                hukum Republik Indonesia
-                            </strong>
-                            . Setiap sengketa yang timbul akan diselesaikan
-                            secara musyawarah dalam jangka waktu 30 hari.
-                        </p>
-                        <p className="text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Apabila musyawarah tidak mencapai kesepakatan, para
-                            pihak setuju untuk menyelesaikan sengketa melalui{' '}
-                            <strong className="text-white">BANI</strong> atau
-                            Pengadilan Negeri yang berwenang di Jakarta,
-                            Indonesia.
+                            Syarat dan ketentuan ini diatur oleh{' '}
+                            <strong className="text-white">hukum Republik Indonesia</strong>. Setiap
+                            sengketa yang timbul akan diselesaikan secara musyawarah. Apabila tidak
+                            tercapai kesepakatan, sengketa diselesaikan melalui jalur hukum yang
+                            berlaku di Indonesia.
                         </p>
                     </section>
 
                     <section id="s11" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>11</div>
-                            <h2 className={sectionTitle}>
-                                Perubahan Ketentuan
-                            </h2>
-                        </div>
-                        <p className={sectionText}>
-                            TopupStore berhak mengubah, memperbarui, atau
-                            merevisi Syarat dan Ketentuan ini kapan saja.
-                            Perubahan material akan diinformasikan melalui email
-                            terdaftar atau pemberitahuan di Platform minimal
-                            <strong className="text-white">
-                                {' '}
-                                7 (tujuh) hari
-                            </strong>{' '}
-                            sebelum berlaku.
-                        </p>
-                        <p className="text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Kelanjutan penggunaan layanan TopupStore setelah
-                            tanggal efektif perubahan merupakan penerimaan Anda
-                            terhadap ketentuan yang telah diperbarui.
-                        </p>
-                    </section>
-
-                    <section id="s12" className={sectionBase}>
-                        <div className={sectionHeader}>
-                            <div className={sectionNum}>12</div>
                             <h2 className={sectionTitle}>Hubungi Kami</h2>
                         </div>
                         <p className={sectionText}>
-                            Apabila Anda memiliki pertanyaan atau memerlukan
-                            klarifikasi mengenai Syarat dan Ketentuan ini,
-                            silakan menghubungi tim kami:
+                            Apabila Anda memiliki pertanyaan atau memerlukan klarifikasi mengenai
+                            Syarat dan Ketentuan ini, silakan menghubungi tim kami:
                         </p>
                         <div className={box}>
                             <p>
-                                <strong className="text-white">
-                                    TopupStore
-                                </strong>
+                                <strong className="text-white">Nuvelo</strong>
                             </p>
-                            <p>Email: support@topupstore.id</p>
-                            <p>WhatsApp: +62 812-XXXX-XXXX</p>
-                            <p>Jam Operasional: Senin-Jumat, 09.00-17.00 WIB</p>
-                            <p>Respon dalam: 1x24 jam kerja</p>
+                            <p>WhatsApp: 085158330663</p>
+                            <p>Website: www.nuvelo.id</p>
+                            <p>Instagram: @nuvelo.id</p>
+                            <p>Jam Operasional: Senin–Minggu, 08.00–22.00 WIB</p>
                         </div>
-                        <p className="text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Dengan menggunakan layanan TopupStore, Anda
-                            menyatakan telah membaca, memahami, dan menyetujui
-                            seluruh Syarat dan Ketentuan yang berlaku.
-                        </p>
                         <div className="mt-6 flex items-center gap-3">
                             <Link
                                 href="/kebijakan-privasi"
