@@ -16,7 +16,7 @@ class HomeController extends Controller
     public function index()
     {
         // 1. Fetch Categories
-        $categories = Category::all(['id', 'name', 'slug']);
+        $categories = Category::all(['id', 'name', 'slug', 'icon']);
 
         // 2. Fetch Active Games
         $games = Game::where('is_active', true)
