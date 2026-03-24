@@ -2,14 +2,14 @@ import { Head, Link } from '@inertiajs/react';
 import GuestLayout from '@/layouts/guest-layout';
 
 const tocItems = [
-    { id: 's1', title: 'Pendahuluan' },
-    { id: 's2', title: 'Data yang Kami Kumpulkan' },
-    { id: 's3', title: 'Tujuan Penggunaan Data' },
+    { id: 's1', title: 'Data yang Kami Kumpulkan' },
+    { id: 's2', title: 'Penggunaan Data' },
+    { id: 's3', title: 'Berbagi Data dengan Pihak Ketiga' },
     { id: 's4', title: 'Keamanan Data' },
-    { id: 's5', title: 'Penyimpanan & Retensi' },
-    { id: 's6', title: 'Hak Pengguna' },
-    { id: 's7', title: 'Cookie & Teknologi Serupa' },
-    { id: 's8', title: 'Pihak Ketiga' },
+    { id: 's5', title: 'Cookies' },
+    { id: 's6', title: 'Retensi Data' },
+    { id: 's7', title: 'Hak-Hak Pengguna' },
+    { id: 's8', title: 'Data Anak di Bawah Umur' },
     { id: 's9', title: 'Perubahan Kebijakan' },
     { id: 's10', title: 'Hubungi Kami' },
 ];
@@ -42,16 +42,19 @@ export default function KebijakanPrivasiPage() {
                         Kebijakan Privasi
                     </h1>
                     <p className="mt-3 text-sm text-gray-400">
-                        Berlaku sejak: 11 Maret 2026 · Versi 1.0
+                        Berlaku sejak: 24 Maret 2026 · Versi 2.0
                     </p>
                 </div>
             </section>
 
             <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
                 <div className="mb-8 rounded-2xl border border-primary/30 bg-[#211c34] p-5 sm:p-7">
-                    <h2 className="mb-4 text-base font-bold text-white">
-                        Daftar Isi
-                    </h2>
+                    <p className={sectionText}>
+                        Nuvelo berkomitmen untuk melindungi privasi pengguna. Dokumen ini menjelaskan
+                        data apa yang kami kumpulkan, bagaimana kami menggunakannya, dan hak-hak
+                        pengguna atas data tersebut.
+                    </p>
+                    <h2 className="mb-4 text-base font-bold text-white">Daftar Isi</h2>
                     <ol className="grid grid-cols-1 gap-2 text-sm sm:grid-cols-2">
                         {tocItems.map((item, idx) => (
                             <li key={item.id}>
@@ -73,131 +76,118 @@ export default function KebijakanPrivasiPage() {
                     <section id="s1" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>01</div>
-                            <h2 className={sectionTitle}>Pendahuluan</h2>
+                            <h2 className={sectionTitle}>Data yang Kami Kumpulkan</h2>
                         </div>
-                        <p className={sectionText}>
-                            Nuvelo (
-                            <strong className="text-white">Perusahaan</strong>,
-                            <strong className="text-white"> Kami</strong>)
-                            berkomitmen untuk melindungi privasi dan keamanan
-                            data pribadi setiap pengguna yang mengakses dan
-                            menggunakan layanan kami. Kebijakan Privasi ini
-                            menjelaskan bagaimana kami mengumpulkan,
-                            menggunakan, menyimpan, dan melindungi informasi
-                            Anda.
+                        <p className={sectionText + ' font-semibold text-white'}>
+                            1.1 Data yang Diberikan Langsung oleh Pengguna
                         </p>
-                        <p className={sectionText}>
-                            Dengan mengakses atau menggunakan platform Nuvelo
-                            termasuk website, aplikasi, dan layanan terkait,
-                            Anda menyatakan telah membaca, memahami, dan
-                            menyetujui Kebijakan Privasi ini.
+                        <ul>
+                            <li className={listItem}>
+                                Nama dan alamat email (saat registrasi akun)
+                            </li>
+                            <li className={listItem}>
+                                Nomor WhatsApp (untuk keperluan CS dan notifikasi)
+                            </li>
+                            <li className={listItem}>
+                                ID game dan nomor server (untuk memproses topup)
+                            </li>
+                            <li className={listItem}>Riwayat transaksi dan pesanan</li>
+                        </ul>
+                        <p className={'mt-5 ' + sectionText + ' font-semibold text-white'}>
+                            1.2 Data yang Dikumpulkan Otomatis
                         </p>
+                        <ul>
+                            <li className={listItem}>
+                                Alamat IP dan informasi perangkat saat mengakses website
+                            </li>
+                            <li className={listItem}>
+                                Halaman yang dikunjungi dan durasi kunjungan (analytics)
+                            </li>
+                            <li className={listItem}>
+                                Cookies untuk meningkatkan pengalaman pengguna
+                            </li>
+                        </ul>
                         <div className={box}>
-                            <strong className="text-white">Yurisdiksi:</strong>{' '}
-                            Kebijakan ini disusun sesuai ketentuan Undang-Undang
-                            No. 27 Tahun 2022 tentang Pelindungan Data Pribadi
-                            Republik Indonesia dan regulasi yang berlaku.
+                            Nuvelo{' '}
+                            <strong className="text-white">
+                                tidak menyimpan data kartu kredit, nomor rekening, atau kata sandi
+                                pembayaran
+                            </strong>
+                            . Data sensitif pembayaran diproses langsung oleh payment gateway.
                         </div>
                     </section>
 
                     <section id="s2" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>02</div>
-                            <h2 className={sectionTitle}>
-                                Data yang Kami Kumpulkan
-                            </h2>
+                            <h2 className={sectionTitle}>Penggunaan Data</h2>
                         </div>
                         <p className={sectionText}>
-                            Dalam rangka menjalankan layanan topup digital, kami
-                            dapat mengumpulkan data sebagai berikut:
+                            Nuvelo menggunakan data pengguna semata-mata untuk:
                         </p>
                         <ul>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Data Identitas:
-                                </strong>{' '}
-                                Nama lengkap, alamat email, nomor telepon
+                                Memproses dan memverifikasi transaksi topup
                             </li>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Data Akun Game:
-                                </strong>{' '}
-                                User ID, Nickname, Server atau Zone, dan
-                                informasi lain yang diperlukan untuk proses
-                                topup
+                                Mengirimkan konfirmasi dan riwayat transaksi
                             </li>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Data Transaksi:
-                                </strong>{' '}
-                                Riwayat pembelian, nominal transaksi, metode
-                                pembayaran
+                                Memberikan layanan pelanggan (CS) yang responsif
                             </li>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Data Teknis:
-                                </strong>{' '}
-                                Alamat IP, jenis browser, sistem operasi, dan
-                                data log akses
+                                Mengirimkan informasi promo dan update layanan (dengan persetujuan
+                                pengguna)
                             </li>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Data Komunikasi:
-                                </strong>{' '}
-                                Pesan yang Anda kirimkan kepada tim customer
-                                support
+                                Mendeteksi dan mencegah penipuan serta penyalahgunaan layanan
+                            </li>
+                            <li className={listItem}>
+                                Meningkatkan kualitas layanan berdasarkan data penggunaan
                             </li>
                         </ul>
-                        <p className="mt-4 text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Kami <strong className="text-white">tidak</strong>{' '}
-                            mengumpulkan data sensitif seperti nomor KTP, data
-                            biometrik, atau informasi medis.
-                        </p>
+                        <div className={box}>
+                            Nuvelo{' '}
+                            <strong className="text-white">
+                                TIDAK menjual, menyewakan, atau membagikan
+                            </strong>{' '}
+                            data pribadi pengguna kepada pihak ketiga untuk kepentingan komersial
+                            mereka.
+                        </div>
                     </section>
 
                     <section id="s3" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>03</div>
-                            <h2 className={sectionTitle}>
-                                Tujuan Penggunaan Data
-                            </h2>
+                            <h2 className={sectionTitle}>Berbagi Data dengan Pihak Ketiga</h2>
                         </div>
                         <p className={sectionText}>
-                            Data pribadi Anda digunakan semata-mata untuk
-                            keperluan operasional layanan, antara lain:
+                            Nuvelo hanya membagikan data pengguna kepada pihak ketiga dalam kondisi
+                            berikut:
                         </p>
                         <ul>
                             <li className={listItem}>
-                                Memproses dan memverifikasi transaksi topup
-                                digital
+                                <strong className="text-white">Penyedia payment gateway</strong>{' '}
+                                untuk memproses pembayaran
                             </li>
                             <li className={listItem}>
-                                Mengirimkan konfirmasi pesanan dan notifikasi
-                                transaksi
+                                <strong className="text-white">
+                                    Penyedia layanan topup (Digiflazz)
+                                </strong>{' '}
+                                untuk memproses pengiriman produk
                             </li>
                             <li className={listItem}>
-                                Memberikan dukungan pelanggan
+                                <strong className="text-white">Penyedia layanan analitik</strong>{' '}
+                                website untuk meningkatkan performa
                             </li>
                             <li className={listItem}>
-                                Mendeteksi dan mencegah aktivitas penipuan
-                            </li>
-                            <li className={listItem}>
-                                Mematuhi kewajiban hukum dan regulasi yang
-                                berlaku
-                            </li>
-                            <li className={listItem}>
-                                Meningkatkan kualitas layanan berdasarkan
-                                analisis penggunaan
+                                Apabila diwajibkan oleh hukum atau perintah pengadilan yang sah
                             </li>
                         </ul>
-                        <div className={box}>
-                            Kami{' '}
-                            <strong className="text-white">
-                                tidak menjual, menyewakan, atau memperdagangkan
-                            </strong>{' '}
-                            data pribadi Anda kepada pihak ketiga untuk tujuan
-                            komersial tanpa persetujuan eksplisit Anda.
-                        </div>
+                        <p className="mt-4 text-sm leading-7 text-gray-300 sm:text-[15px]">
+                            Seluruh pihak ketiga yang bekerja sama dengan Nuvelo terikat oleh
+                            perjanjian kerahasiaan dan wajib menjaga keamanan data pengguna.
+                        </p>
                     </section>
 
                     <section id="s4" className={sectionBase}>
@@ -205,216 +195,146 @@ export default function KebijakanPrivasiPage() {
                             <div className={sectionNum}>04</div>
                             <h2 className={sectionTitle}>Keamanan Data</h2>
                         </div>
-                        <p className={sectionText}>
-                            Kami menerapkan langkah-langkah keamanan teknis dan
-                            organisasional yang memadai untuk melindungi data
-                            pribadi Anda dari akses tidak sah, pengungkapan,
-                            perubahan, atau penghancuran.
-                        </p>
                         <ul>
                             <li className={listItem}>
-                                Enkripsi data menggunakan protokol SSL atau TLS
-                                pada semua transmisi data
+                                Nuvelo menggunakan enkripsi{' '}
+                                <strong className="text-white">SSL/TLS</strong> untuk seluruh
+                                transmisi data di website
                             </li>
                             <li className={listItem}>
-                                Akses data dibatasi hanya kepada karyawan dengan
-                                kebutuhan operasional yang sah
+                                Akses ke data pengguna dibatasi hanya untuk keperluan operasional
+                                yang sah
                             </li>
                             <li className={listItem}>
-                                Sistem pemantauan keamanan yang aktif dan
-                                berkala
+                                Nuvelo melakukan pemantauan rutin untuk mendeteksi ancaman keamanan
                             </li>
                             <li className={listItem}>
-                                Prosedur penanggulangan insiden keamanan data
+                                Dalam hal terjadi kebocoran data, Nuvelo akan menginformasikan
+                                pengguna yang terdampak dalam waktu{' '}
+                                <strong className="text-white">72 jam</strong>
                             </li>
                         </ul>
-                        <p className="mt-4 text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Meskipun demikian, tidak ada sistem keamanan yang
-                            sempurna. Kami mendorong Anda untuk menjaga
-                            kerahasiaan kredensial akun Anda.
-                        </p>
                     </section>
 
                     <section id="s5" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>05</div>
-                            <h2 className={sectionTitle}>
-                                Penyimpanan & Retensi Data
-                            </h2>
+                            <h2 className={sectionTitle}>Cookies</h2>
                         </div>
                         <p className={sectionText}>
-                            Data pribadi Anda akan disimpan selama Anda memiliki
-                            akun aktif di platform kami, atau selama diperlukan
-                            untuk tujuan yang disebutkan dalam kebijakan ini.
+                            Nuvelo menggunakan cookies untuk menyimpan preferensi pengguna dan
+                            meningkatkan pengalaman berbelanja. Pengguna dapat mengatur atau
+                            menonaktifkan cookies melalui pengaturan browser, namun hal ini dapat
+                            mempengaruhi fungsi website.
                         </p>
-                        <p className="text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Data transaksi akan disimpan minimal selama
-                            <strong className="text-white">
-                                {' '}
-                                5 (lima) tahun
-                            </strong>{' '}
-                            sesuai kewajiban hukum perpajakan dan pencatatan
-                            keuangan yang berlaku di Indonesia. Setelah periode
-                            retensi berakhir, data akan dihapus atau dianonimkan
-                            secara aman.
-                        </p>
+                        <ul>
+                            <li className={listItem}>
+                                <strong className="text-white">Session cookies:</strong> dihapus
+                                otomatis saat browser ditutup
+                            </li>
+                            <li className={listItem}>
+                                <strong className="text-white">Persistent cookies:</strong> tersimpan
+                                untuk mempercepat login dan menyimpan preferensi
+                            </li>
+                            <li className={listItem}>
+                                <strong className="text-white">Analytics cookies:</strong> digunakan
+                                untuk memahami pola penggunaan website secara anonim
+                            </li>
+                        </ul>
                     </section>
 
                     <section id="s6" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>06</div>
-                            <h2 className={sectionTitle}>Hak Pengguna</h2>
+                            <h2 className={sectionTitle}>Retensi Data</h2>
                         </div>
-                        <p className={sectionText}>
-                            Sesuai dengan UU PDP, Anda memiliki hak-hak berikut
-                            terkait data pribadi Anda:
-                        </p>
                         <ul>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Hak Akses:
-                                </strong>{' '}
-                                Meminta salinan data pribadi yang kami simpan
-                                tentang Anda
+                                Data akun aktif disimpan selama akun masih aktif digunakan
                             </li>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Hak Koreksi:
-                                </strong>{' '}
-                                Meminta perbaikan data yang tidak akurat atau
-                                tidak lengkap
+                                Riwayat transaksi disimpan minimal{' '}
+                                <strong className="text-white">2 tahun</strong> untuk keperluan
+                                audit dan sengketa
                             </li>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Hak Penghapusan:
-                                </strong>{' '}
-                                Meminta penghapusan data dalam kondisi tertentu
+                                Data akun yang tidak aktif selama{' '}
+                                <strong className="text-white">2 tahun</strong> dapat dihapus
+                                setelah notifikasi
                             </li>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Hak Penarikan Persetujuan:
-                                </strong>{' '}
-                                Menarik kembali persetujuan pemrosesan data
-                                sewaktu-waktu
-                            </li>
-                            <li className={listItem}>
-                                <strong className="text-white">
-                                    Hak Pengaduan:
-                                </strong>{' '}
-                                Mengajukan pengaduan kepada otoritas pengawas
-                                yang berwenang
+                                Data yang digunakan untuk pelaporan pajak disimpan sesuai ketentuan
+                                perpajakan Indonesia
                             </li>
                         </ul>
-                        <p className="mt-4 text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Untuk menggunakan hak-hak di atas, silakan hubungi
-                            kami melalui informasi kontak yang tercantum di
-                            bagian terakhir dokumen ini.
-                        </p>
                     </section>
 
                     <section id="s7" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>07</div>
-                            <h2 className={sectionTitle}>
-                                Cookie & Teknologi Serupa
-                            </h2>
+                            <h2 className={sectionTitle}>Hak-Hak Pengguna</h2>
                         </div>
                         <p className={sectionText}>
-                            Platform kami menggunakan cookie dan teknologi
-                            pelacakan serupa untuk meningkatkan pengalaman
-                            pengguna, menganalisis trafik, dan menjaga keamanan
-                            sesi.
+                            Sesuai dengan prinsip perlindungan data, pengguna Nuvelo memiliki hak:
                         </p>
                         <ul>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Cookie Esensial:
-                                </strong>{' '}
-                                Diperlukan untuk fungsi dasar platform dan tidak
-                                dapat dinonaktifkan
+                                <strong className="text-white">Hak Akses —</strong> Meminta salinan
+                                data pribadi yang kami simpan
                             </li>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Cookie Analitik:
-                                </strong>{' '}
-                                Membantu kami memahami cara pengguna
-                                berinteraksi dengan platform
+                                <strong className="text-white">Hak Koreksi —</strong> Meminta
+                                perbaikan data yang tidak akurat atau tidak lengkap
                             </li>
                             <li className={listItem}>
-                                <strong className="text-white">
-                                    Cookie Keamanan:
-                                </strong>{' '}
-                                Membantu mendeteksi dan mencegah aktivitas fraud
+                                <strong className="text-white">Hak Penghapusan —</strong> Meminta
+                                penghapusan data pribadi (kecuali data yang wajib disimpan secara
+                                hukum)
+                            </li>
+                            <li className={listItem}>
+                                <strong className="text-white">Hak Pembatasan —</strong> Membatasi
+                                cara kami memproses data pribadi Anda
+                            </li>
+                            <li className={listItem}>
+                                <strong className="text-white">Hak Portabilitas —</strong> Menerima
+                                data pribadi dalam format yang dapat dibaca mesin
+                            </li>
+                            <li className={listItem}>
+                                <strong className="text-white">Hak Keberatan —</strong> Menolak
+                                pemrosesan data untuk keperluan pemasaran langsung
                             </li>
                         </ul>
                         <p className="mt-4 text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Anda dapat mengatur preferensi cookie melalui
-                            pengaturan browser Anda, namun menonaktifkan cookie
-                            tertentu dapat mempengaruhi fungsionalitas platform.
+                            Untuk menggunakan hak-hak di atas, hubungi kami melalui WhatsApp{' '}
+                            <strong className="text-white">085158330663</strong>.
                         </p>
                     </section>
 
                     <section id="s8" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>08</div>
-                            <h2 className={sectionTitle}>Pihak Ketiga</h2>
+                            <h2 className={sectionTitle}>Data Anak di Bawah Umur</h2>
                         </div>
                         <p className={sectionText}>
-                            Dalam menjalankan layanan, kami bekerja sama dengan
-                            pihak ketiga terpercaya, termasuk:
-                        </p>
-                        <ul>
-                            <li className={listItem}>
-                                <strong className="text-white">
-                                    Penyedia Pembayaran:
-                                </strong>{' '}
-                                Tripay dan gateway pembayaran lainnya yang
-                                berlisensi dari Bank Indonesia
-                            </li>
-                            <li className={listItem}>
-                                <strong className="text-white">
-                                    Penyedia Infrastruktur:
-                                </strong>{' '}
-                                Layanan hosting dan komputasi awan yang
-                                tersertifikasi
-                            </li>
-                            <li className={listItem}>
-                                <strong className="text-white">
-                                    Penyedia Analitik:
-                                </strong>{' '}
-                                Alat analisis yang membantu kami meningkatkan
-                                layanan
-                            </li>
-                        </ul>
-                        <p className="mt-4 text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Setiap mitra pihak ketiga terikat dengan perjanjian
-                            kerahasiaan data dan wajib mematuhi standar keamanan
-                            yang setara dengan standar kami.
+                            Layanan Nuvelo tidak ditujukan untuk anak di bawah usia{' '}
+                            <strong className="text-white">13 tahun</strong>. Nuvelo tidak secara
+                            sengaja mengumpulkan data pribadi dari anak di bawah 13 tahun. Jika kami
+                            mengetahui bahwa data tersebut telah terkumpul tanpa izin orang tua,
+                            kami akan segera menghapusnya.
                         </p>
                     </section>
 
                     <section id="s9" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>09</div>
-                            <h2 className={sectionTitle}>
-                                Perubahan Kebijakan
-                            </h2>
+                            <h2 className={sectionTitle}>Perubahan Kebijakan</h2>
                         </div>
                         <p className={sectionText}>
-                            Kami berhak untuk memperbarui Kebijakan Privasi ini
-                            dari waktu ke waktu. Setiap perubahan material akan
-                            diberitahukan kepada Anda melalui email terdaftar
-                            atau notifikasi di platform setidaknya
-                            <strong className="text-white">
-                                {' '}
-                                14 (empat belas) hari
-                            </strong>{' '}
-                            sebelum perubahan berlaku.
-                        </p>
-                        <p className="text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Penggunaan layanan kami setelah tanggal berlakunya
-                            perubahan dianggap sebagai penerimaan terhadap
-                            kebijakan yang diperbarui.
+                            Nuvelo dapat memperbarui kebijakan privasi ini dari waktu ke waktu.
+                            Perubahan signifikan akan diinformasikan melalui website{' '}
+                            <strong className="text-white">nuvelo.id</strong> dan/atau notifikasi
+                            kepada pengguna terdaftar. Tanggal pembaruan terakhir akan selalu
+                            tercantum di bagian bawah dokumen ini.
                         </p>
                     </section>
 
@@ -424,25 +344,22 @@ export default function KebijakanPrivasiPage() {
                             <h2 className={sectionTitle}>Hubungi Kami</h2>
                         </div>
                         <p className={sectionText}>
-                            Apabila Anda memiliki pertanyaan, permintaan, atau
-                            pengaduan terkait Kebijakan Privasi ini, silakan
-                            menghubungi kami:
+                            Untuk pertanyaan, keluhan, atau permintaan terkait privasi dan data
+                            pribadi Anda, hubungi:
                         </p>
                         <div className={box}>
                             <p>
                                 <strong className="text-white">Nuvelo</strong>
                             </p>
-                            <p>Email: privacy@Nuvelo.id</p>
-                            <p>WhatsApp: +62 812-XXXX-XXXX</p>
-                            <p>Jam Operasional: Senin-Jumat, 09.00-17.00 WIB</p>
+                            <p>WhatsApp: 085158330663</p>
+                            <p>Website: www.nuvelo.id</p>
+                            <p>Instagram: @nuvelo.id</p>
+                            <p>Jam Operasional: Senin–Minggu, 08.00–22.00 WIB</p>
                         </div>
-                        <p className="text-sm leading-7 text-gray-300 sm:text-[15px]">
-                            Kami berkomitmen untuk merespons setiap pertanyaan
-                            atau permintaan dalam waktu{' '}
-                            <strong className="text-white">
-                                3 (tiga) hari kerja
-                            </strong>
-                            .
+                        <p className="mt-4 text-sm leading-7 text-gray-300 sm:text-[15px]">
+                            Dokumen ini berlaku sejak{' '}
+                            <strong className="text-white">24 Maret 2026</strong> dan menggantikan
+                            seluruh versi sebelumnya.
                         </p>
                         <div className="mt-6 flex items-center gap-3">
                             <Link
