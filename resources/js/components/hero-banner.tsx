@@ -42,7 +42,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
         <div className="relative mb-10 w-full">
             <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
                 {/* Slider Track */}
-                <div className="relative aspect-4/1 overflow-hidden rounded-3xl shadow-2xl">
+                <div className="relative aspect-3/1 overflow-hidden rounded-3xl shadow-2xl">
                     {banners.map((banner, index) => (
                         <div
                             key={index}
@@ -58,7 +58,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                                 loading={index === 0 ? 'eager' : 'lazy'}
                                 fetchPriority={index === 0 ? 'high' : 'low'}
                                 decoding={index === 0 ? 'sync' : 'async'}
-                                width={1600}
+                                width={1200}
                                 height={400}
                                 sizes="(max-width: 640px) 100vw, (max-width: 1280px) 100vw, 1280px"
                             />

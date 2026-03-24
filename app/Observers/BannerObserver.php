@@ -31,7 +31,7 @@ class BannerObserver
 
         try {
             Image::read($disk->path($image))
-                ->scaleDown(width: 1600)
+                ->scaleDown(width: 1200)
                 ->toWebp(82)
                 ->save($disk->path($newPath));
 
