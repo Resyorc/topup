@@ -40,7 +40,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
 
     return (
         <div className="relative mb-10 w-full">
-            <div className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
                 {/* Slider Track */}
                 <div className="relative aspect-3/1 overflow-hidden rounded-3xl shadow-2xl">
                     {banners.map((banner, index) => (
@@ -71,7 +71,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                             <button
                                 onClick={() => setCurrent((prev) => (prev - 1 + count) % count)}
                                 aria-label="Previous banner"
-                                className="absolute top-1/2 left-3 z-10 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white backdrop-blur-sm transition hover:bg-black/60 md:left-4 md:p-2.5"
+                                className="absolute top-1/2 left-3 z-10 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white backdrop-blur-sm transition hover:bg-black/60 md:left-4 md:p-2.5 hidden md:flex"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="m15 18-6-6 6-6" />
@@ -80,7 +80,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                             <button
                                 onClick={goNext}
                                 aria-label="Next banner"
-                                className="absolute top-1/2 right-3 z-10 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white backdrop-blur-sm transition hover:bg-black/60 md:right-4 md:p-2.5"
+                                className="absolute top-1/2 right-3 z-10 -translate-y-1/2 rounded-full bg-black/40 p-2 text-white backdrop-blur-sm transition hover:bg-black/60 md:right-4 md:p-2.5 hidden md:flex"
                             >
                                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
                                     <path d="m9 18 6-6-6-6" />
