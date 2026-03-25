@@ -15,14 +15,10 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
     const [current, setCurrent] = useState(0);
 
     const count = banners.length;
+    const safeCurrent = count > 0 ? current % count : 0;
 
     const goNext = useCallback(() => {
         setCurrent((prev) => (prev + 1) % count);
-    }, [count]);
-
-    // Reset index if banner list changes
-    useEffect(() => {
-        setCurrent(0);
     }, [count]);
 
     // Autoplay
@@ -48,7 +44,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                             key={index}
                             onClick={() => handleClick(banner.link)}
                             className={`absolute inset-0 transition-opacity duration-700 ${
-                                index === current ? 'opacity-100' : 'opacity-0 pointer-events-none'
+                                index === safeCurrent ? 'opacity-100' : 'opacity-0 pointer-events-none'
                             } ${banner.link ? 'cursor-pointer' : ''}`}
                         >
                             <img
@@ -99,7 +95,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
                                 onClick={() => setCurrent(index)}
                                 aria-label={`Go to banner ${index + 1}`}
                                 className={`h-2 rounded-full transition-all duration-300 ${
-                                    index === current
+                                    index === safeCurrent
                                         ? 'w-8 bg-primary shadow-sm'
                                         : 'w-2 bg-gray-600 hover:bg-gray-400'
                                 }`}
