@@ -35,7 +35,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
     if (count === 0) return null;
 
     const handleClick = (link: string | null) => {
-        if (link) window.location.href = link;
+        if (link) window.location.assign(link);
     };
 
     return (

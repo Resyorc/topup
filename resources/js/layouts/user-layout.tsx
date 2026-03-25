@@ -49,24 +49,17 @@ const TIER_CONFIG: Record<string, {
     },
 };
 
-export default function UserLayout({
-    children,
-    title = '',
-}: {
-    children: React.ReactNode;
-    title?: string;
-}) {
-    const { url } = usePage();
-    const user = (usePage().props as any).auth?.user;
-    const tier = user?.tier ?? 'bronze';
-    const tc = TIER_CONFIG[tier] ?? TIER_CONFIG.bronze;
-    const initials = user?.name
-        ? user.name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
-        : '?';
-    const avatarUrl: string | null = user?.avatar_url ?? null;
-    const [menuOpen, setMenuOpen] = useState(false);
+interface NavLinksProps {
+    onNav?: () => void;
+    url: string;
+    tc: (typeof TIER_CONFIG)[string];
+    avatarUrl: string | null;
+    initials: string;
+    user: any;
+}
 
-    const NavLinks = ({ onNav }: { onNav?: () => void }) => (
+function NavLinks({ onNav, url, tc, avatarUrl, initials, user }: NavLinksProps) {
+    return (
         <>
             {/* User + Tier Card */}
             <div className={`mb-2 rounded-2xl border bg-gradient-to-br p-4 shadow-lg ${tc.cardBg} ${tc.glow}`}>
@@ -114,6 +107,24 @@ export default function UserLayout({
             </Link>
         </>
     );
+}
+
+export default function UserLayout({
+    children,
+    title = '',
+}: {
+    children: React.ReactNode;
+    title?: string;
+}) {
+    const { url } = usePage();
+    const user = (usePage().props as any).auth?.user;
+    const tier = user?.tier ?? 'bronze';
+    const tc = TIER_CONFIG[tier] ?? TIER_CONFIG.bronze;
+    const initials = user?.name
+        ? user.name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
+        : '?';
+    const avatarUrl: string | null = user?.avatar_url ?? null;
+    const [menuOpen, setMenuOpen] = useState(false);
 
     return (
         <GuestLayout>
@@ -153,7 +164,7 @@ export default function UserLayout({
                                 </svg>
                             </button>
                         </div>
-                        <NavLinks onNav={() => setMenuOpen(false)} />
+                        <NavLinks onNav={() => setMenuOpen(false)} url={url} tc={tc} avatarUrl={avatarUrl} initials={initials} user={user} />
                     </div>
                 </div>
             )}
@@ -162,7 +173,7 @@ export default function UserLayout({
                 <div className="grid grid-cols-1 gap-8 md:grid-cols-12">
                     {/* Left Sidebar — desktop only */}
                     <aside className="hidden flex-col gap-2 md:col-span-3 md:col-start-1 md:flex">
-                        <NavLinks />
+                        <NavLinks url={url} tc={tc} avatarUrl={avatarUrl} initials={initials} user={user} />
                     </aside>
 
                     {/* Main Content Area */}
