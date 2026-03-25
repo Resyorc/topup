@@ -453,7 +453,7 @@ export default function GuestLayout({
                 >
                     <Link
                         href="/"
-                        className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition ${isActive('/') ? 'text-primary' : 'text-gray-500 hover:text-gray-300'}`}
+                        className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition ${isActive('/') ? 'text-primary' : 'text-gray-400 hover:text-gray-200'}`}
                     >
                         {/* Active indicator bar */}
                         {isActive('/') && (
@@ -479,7 +479,7 @@ export default function GuestLayout({
 
                     <Link
                         href="/invoice"
-                        className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition ${isActive('/invoice') ? 'text-primary' : 'text-gray-500 hover:text-gray-300'}`}
+                        className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition ${isActive('/invoice') ? 'text-primary' : 'text-gray-400 hover:text-gray-200'}`}
                     >
                         {isActive('/invoice') && (
                             <span className="absolute -top-2 left-1/2 h-[3px] w-6 -translate-x-1/2 rounded-b bg-primary"></span>
@@ -506,7 +506,7 @@ export default function GuestLayout({
                     {auth?.user && (
                         <Link
                             href="/dashboard"
-                            className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition ${isActive('/dashboard') ? 'text-primary' : 'text-gray-500 hover:text-gray-300'}`}
+                            className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition ${isActive('/dashboard') ? 'text-primary' : 'text-gray-400 hover:text-gray-200'}`}
                         >
                             {isActive('/dashboard') && (
                                 <span className="absolute -top-2 left-1/2 h-[3px] w-6 -translate-x-1/2 rounded-b bg-primary"></span>
