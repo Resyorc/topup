@@ -87,6 +87,3 @@ jobs:
 
             # Restart SSR via PM2
             pm2 reload nuvelo-ssr || pm2 start ecosystem.config.cjs
-
-            # Reload Nginx (tanpa downtime)
-            sudo nginx -t && sudo systemctl reload nginx
