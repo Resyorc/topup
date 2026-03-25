@@ -472,7 +472,7 @@ export default function GuestLayout({
                             <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                             <polyline points="9 22 9 12 15 12 15 22"></polyline>
                         </svg>
-                        <span className="text-[10px] font-semibold">
+                        <span className="text-xs font-semibold">
                             Beranda
                         </span>
                     </Link>
@@ -497,7 +497,7 @@ export default function GuestLayout({
                             <circle cx="11" cy="11" r="8"></circle>
                             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                         </svg>
-                        <span className="text-[10px] font-medium">
+                        <span className="text-xs font-medium">
                             Cek Invoice
                         </span>
                     </Link>
@@ -524,7 +524,7 @@ export default function GuestLayout({
                                 <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
                                 <circle cx="12" cy="7" r="4"></circle>
                             </svg>
-                            <span className="text-[10px] font-medium">
+                            <span className="text-xs font-medium">
                                 Akun
                             </span>
                         </Link>

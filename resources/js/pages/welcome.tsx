@@ -121,7 +121,10 @@ export default function Welcome({
                                         Total Pesanan
                                     </span>
                                 </div>
-                                <p className="mt-1 text-[10px] text-gray-300 md:text-xs">
+                                <p className="mt-1 text-xs text-gray-300 md:hidden">
+                                    Paling banyak di pesan dari game dibawah
+                                </p>
+                                <p className="mt-1 hidden text-xs text-gray-300 md:block">
                                     Paling banyak di pesan dari game disamping
                                 </p>
                             </div>
