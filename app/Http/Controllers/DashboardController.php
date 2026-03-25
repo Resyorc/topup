@@ -87,7 +87,7 @@ class DashboardController extends Controller
             ->where(fn ($q) => $q->whereNull('valid_from')->orWhere('valid_from', '<=', now()))
             ->where(fn ($q) => $q->whereNull('usage_limit')->orWhereColumn('used_count', '<', 'usage_limit'))
             ->where(fn ($q) => $q->whereNull('min_tier')->orWhereIn('min_tier', $eligibleTiers))
-            ->orderByRaw("FIELD(min_tier, 'platinum','gold','silver','bronze') ASC")
+            ->orderByRaw("CASE min_tier WHEN 'platinum' THEN 1 WHEN 'gold' THEN 2 WHEN 'silver' THEN 3 WHEN 'bronze' THEN 4 ELSE 5 END ASC")
             ->get()
             ->map(fn (Voucher $v) => [
                 'code'         => $v->code,
