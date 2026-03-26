@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppNotification;
+use App\Models\ErrorLog;
 use App\Models\Game;
 use App\Models\Transaction;
 use App\Models\User;
@@ -29,6 +30,19 @@ class DigiflazzCallbackController extends Controller
         if (! hash_equals($computedSignature, (string) $signature)) {
             Log::warning('Digiflazz Callback Invalid Signature', ['received' => $signature, 'calculated' => $computedSignature]);
 
+            ErrorLog::create([
+                'level'       => 'warning',
+                'message'     => 'Digiflazz callback rejected: signature does not match.',
+                'exception'   => 'DigiflazzSignatureMismatch',
+                'file'        => __FILE__,
+                'line'        => __LINE__,
+                'trace'       => "Received: {$signature}\nCalculated: {$computedSignature}\nSecret configured: ".($secret ? 'YES' : 'NOT SET'),
+                'url'         => request()->fullUrl(),
+                'method'      => 'POST',
+                'ip'          => request()->ip(),
+                'occurred_at' => now(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid signature',
@@ -36,6 +50,11 @@ class DigiflazzCallbackController extends Controller
         }
 
         $data = json_decode($payload, true);
+
+        Log::info('Digiflazz callback diterima', [
+            'ref_id' => data_get($data, 'data.ref_id', 'unknown'),
+            'status' => data_get($data, 'data.status', 'unknown'),
+        ]);
 
         if (! isset($data['data']) || ! isset($data['data']['ref_id'])) {
             return response()->json([

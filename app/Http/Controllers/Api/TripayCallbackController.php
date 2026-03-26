@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppNotification;
 use App\Models\CoinTopup;
+use App\Models\ErrorLog;
 use App\Models\Transaction;
 use App\Services\CoinService;
 use App\Services\DigiflazzService;
@@ -27,6 +28,19 @@ class TripayCallbackController extends Controller
 
         if (! hash_equals($signature, (string) $callbackSignature)) {
             Log::warning('Tripay Callback Invalid Signature', ['received' => $callbackSignature, 'calculated' => $signature]);
+
+            ErrorLog::create([
+                'level'       => 'warning',
+                'message'     => 'Tripay callback ditolak: signature tidak cocok.',
+                'exception'   => 'TripaySignatureMismatch',
+                'file'        => __FILE__,
+                'line'        => __LINE__,
+                'trace'       => "Received: {$callbackSignature}\nCalculated: {$signature}\nPrivate key configured: ".($privateKey ? 'YES ('.strlen($privateKey).' chars)' : 'NOT SET'),
+                'url'         => request()->fullUrl(),
+                'method'      => 'POST',
+                'ip'          => request()->ip(),
+                'occurred_at' => now(),
+            ]);
 
             return response()->json([
                 'success' => false,

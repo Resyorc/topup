@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppNotification;
+use App\Models\ErrorLog;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Services\AuditLogger;
@@ -230,6 +231,20 @@ class CheckoutController extends Controller
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
             }
 
+            ErrorLog::create([
+                'level'       => 'error',
+                'message'     => 'Checkout Tripay gagal: '.$e->getMessage(),
+                'exception'   => get_class($e),
+                'file'        => $e->getFile(),
+                'line'        => $e->getLine(),
+                'trace'       => mb_substr($e->getTraceAsString(), 0, 65535),
+                'url'         => request()->fullUrl(),
+                'method'      => 'POST',
+                'ip'          => request()->ip(),
+                'user_id'     => auth()->id(),
+                'occurred_at' => now(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Checkout failed. Please try again.',
@@ -384,6 +399,20 @@ class CheckoutController extends Controller
                 || str_starts_with($e->getMessage(), 'Minimum pembelian')) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
             }
+
+            ErrorLog::create([
+                'level'       => 'critical',
+                'message'     => 'Checkout COIN gagal: '.$e->getMessage(),
+                'exception'   => get_class($e),
+                'file'        => $e->getFile(),
+                'line'        => $e->getLine(),
+                'trace'       => mb_substr($e->getTraceAsString(), 0, 65535),
+                'url'         => request()->fullUrl(),
+                'method'      => 'POST',
+                'ip'          => request()->ip(),
+                'user_id'     => $authenticatedUserId,
+                'occurred_at' => now(),
+            ]);
 
             return response()->json([
                 'success' => false,

@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ErrorLog;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
@@ -38,6 +39,19 @@ class FonnteService
                     'response' => $data,
                 ]);
 
+                ErrorLog::create([
+                    'level'       => 'warning',
+                    'message'     => 'WA notification gagal terkirim ke '.substr($target, 0, 6).'****',
+                    'exception'   => 'FonnteDeliveryFailed',
+                    'file'        => __FILE__,
+                    'line'        => __LINE__,
+                    'trace'       => 'Response: '.json_encode($data),
+                    'url'         => null,
+                    'method'      => null,
+                    'ip'          => null,
+                    'occurred_at' => now(),
+                ]);
+
                 return false;
             }
 
@@ -45,6 +59,19 @@ class FonnteService
 
         } catch (\Exception $e) {
             Log::error('FonnteService: exception saat kirim WA — '.$e->getMessage());
+
+            ErrorLog::create([
+                'level'       => 'error',
+                'message'     => 'FonnteService exception: '.$e->getMessage(),
+                'exception'   => get_class($e),
+                'file'        => $e->getFile(),
+                'line'        => $e->getLine(),
+                'trace'       => mb_substr($e->getTraceAsString(), 0, 65535),
+                'url'         => null,
+                'method'      => null,
+                'ip'          => null,
+                'occurred_at' => now(),
+            ]);
 
             return false;
         }
