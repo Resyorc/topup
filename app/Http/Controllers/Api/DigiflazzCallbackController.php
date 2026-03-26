@@ -71,6 +71,19 @@ class DigiflazzCallbackController extends Controller
         if (! $transaction) {
             Log::error('Digiflazz Callback Transaction Not Found: '.$refId);
 
+            ErrorLog::create([
+                'level'       => 'error',
+                'message'     => "Digiflazz callback: transaksi tidak ditemukan untuk ref_id '{$refId}'.",
+                'exception'   => 'DigiflazzTransactionNotFound',
+                'file'        => __FILE__,
+                'line'        => __LINE__,
+                'trace'       => 'ref_id dari Digiflazz: '.$refId."\nStatus dari Digiflazz: ".($trxData['status'] ?? 'unknown'),
+                'url'         => request()->fullUrl(),
+                'method'      => 'POST',
+                'ip'          => request()->ip(),
+                'occurred_at' => now(),
+            ]);
+
             return response()->json([
                 'success' => false,
                 'message' => 'Transaction not found',

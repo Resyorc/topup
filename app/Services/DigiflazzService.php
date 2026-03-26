@@ -113,6 +113,31 @@ class DigiflazzService
     }
 
     /**
+     * Check transaction status by ref_id.
+     * Digiflazz mengenali ref_id yang sama dan mengembalikan status existing
+     * tanpa membuat transaksi baru (idempotent).
+     */
+    public function checkTransactionStatus(string $sku, string $customerNo, string $refId): array
+    {
+        $payload = [
+            'commands'       => 'top-up',
+            'username'       => $this->username,
+            'buyer_sku_code' => $sku,
+            'customer_no'    => $customerNo,
+            'ref_id'         => $refId,
+            'sign'           => $this->generateSignature($refId),
+        ];
+
+        $response = $this->client()->post('/transaction', $payload);
+
+        if (! $response->successful()) {
+            throw new Exception('Digiflazz API Error: '.$response->body());
+        }
+
+        return $response->json('data') ?? [];
+    }
+
+    /**
      * Request a deposit ticket
      */
     public function deposit(int $amount, string $bank, string $ownerName): array
