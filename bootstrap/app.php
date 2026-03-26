@@ -5,6 +5,7 @@ use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\LogVisitor;
 use App\Http\Middleware\SecurityHeaders;
+use App\Models\ErrorLog;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -34,6 +35,45 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
+        $exceptions->report(function (\Throwable $e) {
+            // Abaikan exception yang tidak perlu dicatat
+            $ignored = [
+                \Illuminate\Auth\AuthenticationException::class,
+                \Illuminate\Auth\Access\AuthorizationException::class,
+                \Illuminate\Database\Eloquent\ModelNotFoundException::class,
+                \Illuminate\Http\Exceptions\HttpResponseException::class,
+                \Illuminate\Validation\ValidationException::class,
+                \Symfony\Component\HttpKernel\Exception\NotFoundHttpException::class,
+                \Symfony\Component\HttpKernel\Exception\MethodNotAllowedHttpException::class,
+                \Symfony\Component\HttpKernel\Exception\TooManyRequestsHttpException::class,
+            ];
+
+            foreach ($ignored as $class) {
+                if ($e instanceof $class) {
+                    return false; // lewati — tetap biarkan Laravel log default berjalan
+                }
+            }
+
+            try {
+                $request = request();
+                ErrorLog::create([
+                    'level'      => 'error',
+                    'message'    => mb_substr($e->getMessage(), 0, 65535),
+                    'exception'  => get_class($e),
+                    'file'       => $e->getFile(),
+                    'line'       => $e->getLine(),
+                    'trace'      => mb_substr($e->getTraceAsString(), 0, 65535),
+                    'url'        => $request?->fullUrl(),
+                    'method'     => $request?->method(),
+                    'ip'         => $request?->ip(),
+                    'user_id'    => $request ? optional(auth()->user())->id : null,
+                    'occurred_at'=> now(),
+                ]);
+            } catch (\Throwable) {
+                // Jangan sampai error logger malah melempar error baru
+            }
+        });
+
         $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $e, \Illuminate\Http\Request $request) {
             $status = $response->getStatusCode();
 

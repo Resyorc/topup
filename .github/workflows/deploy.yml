@@ -34,6 +34,11 @@ jobs:
 
       - name: Build assets & SSR
         run: npm run build
+        env:
+          VITE_REVERB_APP_KEY: ${{ secrets.VITE_REVERB_APP_KEY }}
+          VITE_REVERB_HOST: ${{ secrets.VITE_REVERB_HOST }}
+          VITE_REVERB_PORT: ${{ secrets.VITE_REVERB_PORT }}
+          VITE_REVERB_SCHEME: ${{ secrets.VITE_REVERB_SCHEME }}
 
       - name: Deploy to server via SSH
         uses: appleboy/ssh-action@v1.0.3
