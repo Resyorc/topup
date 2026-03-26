@@ -14,41 +14,44 @@ use App\Services\TierService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
+// Catatan: Digiflazz tidak menggunakan HMAC signature di webhook-nya.
+// Keamanan dijamin via IP whitelist (ALLOWED_IPS).
+
 class DigiflazzCallbackController extends Controller
 {
     /**
      * Handle the incoming Digiflazz Webhook request.
      */
+    // IP server Digiflazz yang diizinkan mengirim callback
+    private const ALLOWED_IPS = ['52.74.250.133'];
+
     public function handle(Request $request)
     {
-        $payload = $request->getContent();
-        $signature = $request->header('x-hub-signature');
-        $secret = config('services.digiflazz.webhook_secret'); // Secret used by Digiflazz as HMAC key
+        $ip = $request->ip();
 
-        $computedSignature = 'sha1='.hash_hmac('sha1', $payload, $secret);
-
-        if (! hash_equals($computedSignature, (string) $signature)) {
-            Log::warning('Digiflazz Callback Invalid Signature', ['received' => $signature, 'calculated' => $computedSignature]);
+        if (! in_array($ip, self::ALLOWED_IPS, true)) {
+            Log::warning('Digiflazz Callback dari IP tidak dikenal', ['ip' => $ip]);
 
             ErrorLog::create([
                 'level'       => 'warning',
-                'message'     => 'Digiflazz callback rejected: signature does not match.',
-                'exception'   => 'DigiflazzSignatureMismatch',
+                'message'     => "Digiflazz callback ditolak: IP '{$ip}' tidak diizinkan.",
+                'exception'   => 'DigiflazzUnauthorizedIp',
                 'file'        => __FILE__,
                 'line'        => __LINE__,
-                'trace'       => "Received: {$signature}\nCalculated: {$computedSignature}\nSecret configured: ".($secret ? 'YES' : 'NOT SET'),
+                'trace'       => 'IP: '.$ip."\nAllowed: ".implode(', ', self::ALLOWED_IPS),
                 'url'         => request()->fullUrl(),
                 'method'      => 'POST',
-                'ip'          => request()->ip(),
+                'ip'          => $ip,
                 'occurred_at' => now(),
             ]);
 
             return response()->json([
                 'success' => false,
-                'message' => 'Invalid signature',
+                'message' => 'Unauthorized',
             ], 403);
         }
 
+        $payload = $request->getContent();
         $data = json_decode($payload, true);
 
         Log::info('Digiflazz callback diterima', [
