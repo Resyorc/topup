@@ -12,7 +12,7 @@ if (import.meta.env.VITE_REVERB_APP_KEY) {
     configureEcho({ broadcaster: 'reverb' });
 }
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+const appName = import.meta.env.VITE_APP_NAME || 'Nuvelo';
 
 createInertiaApp({
     title: (title) => (title ? (title.includes(appName) ? title : `${title} - ${appName}`) : appName),
