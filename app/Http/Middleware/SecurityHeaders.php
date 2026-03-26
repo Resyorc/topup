@@ -61,7 +61,7 @@ class SecurityHeaders
                 "font-src 'self' data: https://fonts.bunny.net https://fonts.gstatic.com",
 
                 // Izinkan Google Analytics melakukan beacon/fetch dari JS
-                "connect-src 'self' https://www.google-analytics.com https://analytics.google.com",
+                "connect-src 'self' https://www.google-analytics.com https://analytics.google.com wss://nuvelo.id https://nuvelo.id",
 
                 // Blokir plugin lama (Flash, dll.)
                 "object-src 'none'",

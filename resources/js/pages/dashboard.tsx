@@ -29,27 +29,41 @@ export default function Dashboard() {
         failed: 0,
     };
     const coinsBalance: number = pageProps.coinsBalance ?? 0;
-    const recentTransactions: RecentTransaction[] = pageProps.recentTransactions ?? [];
+    const recentTransactions: RecentTransaction[] =
+        pageProps.recentTransactions ?? [];
     const promoVouchers: Array<{
-        code: string; type: string; value: number; max_discount: number | null;
-        min_amount: number; valid_until: string | null; min_tier: string | null; used: boolean;
+        code: string;
+        type: string;
+        value: number;
+        max_discount: number | null;
+        min_amount: number;
+        valid_until: string | null;
+        min_tier: string | null;
+        used: boolean;
     }> = pageProps.promoVouchers ?? [];
     const [copiedCode, setCopiedCode] = useState<string | null>(null);
-    const tierInfo = pageProps.tierInfo as {
-        current: string;
-        multiplier: number;
-        total_spending: number;
-        next_threshold: number | null;
-    } | undefined;
+    const tierInfo = pageProps.tierInfo as
+        | {
+              current: string;
+              multiplier: number;
+              total_spending: number;
+              next_threshold: number | null;
+          }
+        | undefined;
     const user = auth?.user;
 
     const tierBadgeClass: Record<string, string> = {
         platinum: 'bg-purple-500/20 text-purple-300',
-        gold:     'bg-yellow-500/20 text-yellow-300',
-        silver:   'bg-blue-500/20 text-blue-300',
-        bronze:   'bg-orange-500/20 text-orange-300',
+        gold: 'bg-yellow-500/20 text-yellow-300',
+        silver: 'bg-blue-500/20 text-blue-300',
+        bronze: 'bg-orange-500/20 text-orange-300',
     };
-    const tierIcon: Record<string, string> = { platinum: '💎', gold: '🥇', silver: '🥈', bronze: '🥉' };
+    const tierIcon: Record<string, string> = {
+        platinum: '💎',
+        gold: '🥇',
+        silver: '🥈',
+        bronze: '🥉',
+    };
 
     const handleCopy = (code: string) => {
         navigator.clipboard.writeText(code);
@@ -57,18 +71,58 @@ export default function Dashboard() {
         setTimeout(() => setCopiedCode(null), 2000);
     };
 
-    const tierColor = (tier: string) => ({
-        platinum: { border: 'border-purple-500/40', bg: 'from-purple-900/30 to-purple-800/10', badge: 'bg-purple-500/20 text-purple-300', bar: 'bg-purple-400' },
-        gold:     { border: 'border-yellow-500/40', bg: 'from-yellow-900/30 to-yellow-800/10', badge: 'bg-yellow-500/20 text-yellow-300', bar: 'bg-yellow-400' },
-        silver:   { border: 'border-blue-500/40',   bg: 'from-blue-900/30 to-blue-800/10',     badge: 'bg-blue-500/20 text-blue-300',     bar: 'bg-blue-400'   },
-        bronze:   { border: 'border-orange-500/40', bg: 'from-orange-900/20 to-orange-800/10', badge: 'bg-orange-500/20 text-orange-300', bar: 'bg-orange-400' },
-    }[tier] ?? { border: 'border-orange-500/40', bg: 'from-orange-900/20 to-orange-800/10', badge: 'bg-orange-500/20 text-orange-300', bar: 'bg-orange-400' });
+    const tierColor = (tier: string) =>
+        ({
+            platinum: {
+                border: 'border-purple-500/40',
+                bg: 'from-purple-900/30 to-purple-800/10',
+                badge: 'bg-purple-500/20 text-purple-300',
+                bar: 'bg-purple-400',
+            },
+            gold: {
+                border: 'border-yellow-500/40',
+                bg: 'from-yellow-900/30 to-yellow-800/10',
+                badge: 'bg-yellow-500/20 text-yellow-300',
+                bar: 'bg-yellow-400',
+            },
+            silver: {
+                border: 'border-blue-500/40',
+                bg: 'from-blue-900/30 to-blue-800/10',
+                badge: 'bg-blue-500/20 text-blue-300',
+                bar: 'bg-blue-400',
+            },
+            bronze: {
+                border: 'border-orange-500/40',
+                bg: 'from-orange-900/20 to-orange-800/10',
+                badge: 'bg-orange-500/20 text-orange-300',
+                bar: 'bg-orange-400',
+            },
+        })[tier] ?? {
+            border: 'border-orange-500/40',
+            bg: 'from-orange-900/20 to-orange-800/10',
+            badge: 'bg-orange-500/20 text-orange-300',
+            bar: 'bg-orange-400',
+        };
 
-    const tierThresholds: Record<string, number> = { bronze: 0, silver: 500_000, gold: 2_000_000, platinum: 10_000_000 };
+    const tierThresholds: Record<string, number> = {
+        bronze: 0,
+        silver: 500_000,
+        gold: 2_000_000,
+        platinum: 10_000_000,
+    };
     const currentTier = tierInfo?.current ?? 'bronze';
     const tc = tierColor(currentTier);
     const progressPercent = tierInfo?.next_threshold
-        ? Math.min(100, Math.round(((tierInfo.total_spending - (tierThresholds[currentTier] ?? 0)) / (tierInfo.next_threshold - (tierThresholds[currentTier] ?? 0))) * 100))
+        ? Math.min(
+              100,
+              Math.round(
+                  ((tierInfo.total_spending -
+                      (tierThresholds[currentTier] ?? 0)) /
+                      (tierInfo.next_threshold -
+                          (tierThresholds[currentTier] ?? 0))) *
+                      100,
+              ),
+          )
         : 100;
 
     return (
@@ -85,25 +139,41 @@ export default function Dashboard() {
                         {/* Inner dark container */}
                         <div className="relative flex h-full flex-col items-center justify-center bg-[#1A1A24] p-6 [clip-path:polygon(0_20px,20px_0,100%_0,100%_calc(100%-20px),calc(100%-20px)_100%,0_100%)] md:p-8">
                             <div className="mb-4 flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-4 border-gray-400 bg-white shadow-lg">
-                                {/* Avatar Placeholder */}
-                                <svg
-                                    className="mt-4 h-16 w-16 text-gray-300"
-                                    fill="currentColor"
-                                    viewBox="0 0 24 24"
-                                >
-                                    <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
-                                </svg>
+                                {user?.avatar_url ? (
+                                    <img
+                                        src={user.avatar_url}
+                                        alt={user.name}
+                                        className="h-full w-full object-cover"
+                                    />
+                                ) : (
+                                    <svg
+                                        className="mt-4 h-16 w-16 text-gray-300"
+                                        fill="currentColor"
+                                        viewBox="0 0 24 24"
+                                    >
+                                        <path d="M24 20.993V24H0v-2.996A14.977 14.977 0 0112.004 15c4.904 0 9.26 2.354 11.996 5.993zM16.002 8.999a4 4 0 11-8 0 4 4 0 018 0z" />
+                                    </svg>
+                                )}
                             </div>
                             <h3 className="text-lg font-bold text-white">
                                 {user?.name || 'Ferry Oktariansyah'}
                             </h3>
-                            <div className={`mt-1 mb-6 rounded-full border px-4 py-0.5 text-xs font-bold ${
-                                user?.tier === 'platinum' ? 'border-purple-400 text-purple-400' :
-                                user?.tier === 'gold'     ? 'border-yellow-400 text-yellow-400' :
-                                user?.tier === 'silver'   ? 'border-blue-400 text-blue-400' :
-                                                            'border-primary text-primary'
-                            }`}>
-                                {user?.tier ? user.tier.charAt(0).toUpperCase() + user.tier.slice(1) : 'Bronze'} Member
+                            <div
+                                className={`mt-1 mb-6 rounded-full border px-4 py-0.5 text-xs font-bold ${
+                                    user?.tier === 'platinum'
+                                        ? 'border-purple-400 text-purple-400'
+                                        : user?.tier === 'gold'
+                                          ? 'border-yellow-400 text-yellow-400'
+                                          : user?.tier === 'silver'
+                                            ? 'border-blue-400 text-blue-400'
+                                            : 'border-primary text-primary'
+                                }`}
+                            >
+                                {user?.tier
+                                    ? user.tier.charAt(0).toUpperCase() +
+                                      user.tier.slice(1)
+                                    : 'Bronze'}{' '}
+                                Member
                             </div>
 
                             <div className="mb-4 h-px w-full bg-white/10"></div>
@@ -216,25 +286,47 @@ export default function Dashboard() {
             {/* 2. Nuvelo Member Club */}
             <section>
                 <div className="mb-6 flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-white">Nuvelo Member Club</h2>
-                    <Link href="/dashboard/member-club" className="text-sm text-primary hover:underline">
+                    <h2 className="text-2xl font-bold text-white">
+                        Nuvelo Member Club
+                    </h2>
+                    <Link
+                        href="/dashboard/member-club"
+                        className="text-sm text-primary hover:underline"
+                    >
                         Info selengkapnya →
                     </Link>
                 </div>
 
-                <div className={`rounded-2xl border bg-gradient-to-br ${tc.border} ${tc.bg} p-6 md:p-8`}>
+                <div
+                    className={`rounded-2xl border bg-gradient-to-br ${tc.border} ${tc.bg} p-6 md:p-8`}
+                >
                     <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
                         {/* Tier & multiplier */}
                         <div className="flex items-center gap-4">
-                            <div className={`flex h-14 w-14 items-center justify-center rounded-full ${tc.badge} text-2xl font-black`}>
-                                {currentTier === 'platinum' ? '💎' : currentTier === 'gold' ? '🥇' : currentTier === 'silver' ? '🥈' : '🥉'}
+                            <div
+                                className={`flex h-14 w-14 items-center justify-center rounded-full ${tc.badge} text-2xl font-black`}
+                            >
+                                {currentTier === 'platinum'
+                                    ? '💎'
+                                    : currentTier === 'gold'
+                                      ? '🥇'
+                                      : currentTier === 'silver'
+                                        ? '🥈'
+                                        : '🥉'}
                             </div>
                             <div>
-                                <div className={`inline-flex items-center rounded-full px-3 py-0.5 text-xs font-bold ${tc.badge}`}>
-                                    {currentTier.charAt(0).toUpperCase() + currentTier.slice(1)} Member
+                                <div
+                                    className={`inline-flex items-center rounded-full px-3 py-0.5 text-xs font-bold ${tc.badge}`}
+                                >
+                                    {currentTier.charAt(0).toUpperCase() +
+                                        currentTier.slice(1)}{' '}
+                                    Member
                                 </div>
                                 <p className="mt-1 text-sm text-gray-400">
-                                    Multiplier coins: <span className="font-bold text-white">{tierInfo?.multiplier ?? 1}x</span>
+                                    Multiplier coins:{' '}
+                                    <span className="font-bold text-white">
+                                        {tierInfo?.multiplier ?? 1}x
+                                    </span>
                                 </p>
                             </div>
                         </div>
@@ -246,18 +338,38 @@ export default function Dashboard() {
                                     <div className="mb-2 flex justify-between text-xs text-gray-400">
                                         <span>Total belanja</span>
                                         <span>
-                                            {formatCurrency(tierInfo.total_spending)} / {formatCurrency(tierInfo.next_threshold)}
+                                            {formatCurrency(
+                                                tierInfo.total_spending,
+                                            )}{' '}
+                                            /{' '}
+                                            {formatCurrency(
+                                                tierInfo.next_threshold,
+                                            )}
                                         </span>
                                     </div>
                                     <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
-                                        <div className={`h-full rounded-full transition-all ${tc.bar}`} style={{ width: `${progressPercent}%` }} />
+                                        <div
+                                            className={`h-full rounded-full transition-all ${tc.bar}`}
+                                            style={{
+                                                width: `${progressPercent}%`,
+                                            }}
+                                        />
                                     </div>
                                     <p className="mt-2 text-xs text-gray-400">
-                                        {formatCurrency(Math.max(0, tierInfo.next_threshold - tierInfo.total_spending))} lagi ke tier berikutnya
+                                        {formatCurrency(
+                                            Math.max(
+                                                0,
+                                                tierInfo.next_threshold -
+                                                    tierInfo.total_spending,
+                                            ),
+                                        )}{' '}
+                                        lagi ke tier berikutnya
                                     </p>
                                 </>
                             ) : (
-                                <div className={`rounded-xl px-4 py-3 text-center text-sm font-semibold ${tc.badge}`}>
+                                <div
+                                    className={`rounded-xl px-4 py-3 text-center text-sm font-semibold ${tc.badge}`}
+                                >
                                     Tier tertinggi telah dicapai! 🎉
                                 </div>
                             )}
@@ -269,12 +381,15 @@ export default function Dashboard() {
             {/* 3. Promo & Voucher */}
             {promoVouchers.length > 0 && (
                 <section>
-                    <h2 className="mb-6 text-2xl font-bold text-white">Promo & Voucher</h2>
+                    <h2 className="mb-6 text-2xl font-bold text-white">
+                        Promo & Voucher
+                    </h2>
                     <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         {promoVouchers.map((v) => {
-                            const discountLabel = v.type === 'percent'
-                                ? `${v.value}%${v.max_discount ? ` (maks. ${formatCurrency(v.max_discount)})` : ''}`
-                                : formatCurrency(v.value);
+                            const discountLabel =
+                                v.type === 'percent'
+                                    ? `${v.value}%${v.max_discount ? ` (maks. ${formatCurrency(v.max_discount)})` : ''}`
+                                    : formatCurrency(v.value);
                             const isCopied = copiedCode === v.code;
                             return (
                                 <div
@@ -292,8 +407,15 @@ export default function Dashboard() {
                                                     {v.code}
                                                 </code>
                                                 {v.min_tier && (
-                                                    <span className={`rounded-full px-2 py-0.5 text-xs font-semibold ${tierBadgeClass[v.min_tier] ?? 'bg-gray-500/20 text-gray-300'}`}>
-                                                        {tierIcon[v.min_tier]} {v.min_tier.charAt(0).toUpperCase() + v.min_tier.slice(1)}+
+                                                    <span
+                                                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${tierBadgeClass[v.min_tier] ?? 'bg-gray-500/20 text-gray-300'}`}
+                                                    >
+                                                        {tierIcon[v.min_tier]}{' '}
+                                                        {v.min_tier
+                                                            .charAt(0)
+                                                            .toUpperCase() +
+                                                            v.min_tier.slice(1)}
+                                                        +
                                                     </span>
                                                 )}
                                             </div>
@@ -303,24 +425,38 @@ export default function Dashboard() {
                                                 </span>
                                             ) : (
                                                 <button
-                                                    onClick={() => handleCopy(v.code)}
+                                                    onClick={() =>
+                                                        handleCopy(v.code)
+                                                    }
                                                     className="shrink-0 rounded-lg bg-primary/20 px-3 py-1 text-xs font-bold text-primary transition hover:bg-primary/30"
                                                 >
-                                                    {isCopied ? '✓ Tersalin' : 'Salin'}
+                                                    {isCopied
+                                                        ? '✓ Tersalin'
+                                                        : 'Salin'}
                                                 </button>
                                             )}
                                         </div>
 
                                         {/* Discount info */}
-                                        <p className="text-base font-bold text-white">Diskon {discountLabel}</p>
+                                        <p className="text-base font-bold text-white">
+                                            Diskon {discountLabel}
+                                        </p>
 
                                         {/* Details */}
                                         <div className="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs text-gray-400">
                                             {v.min_amount > 0 && (
-                                                <span>Min. {formatCurrency(v.min_amount)}</span>
+                                                <span>
+                                                    Min.{' '}
+                                                    {formatCurrency(
+                                                        v.min_amount,
+                                                    )}
+                                                </span>
                                             )}
                                             {v.valid_until && (
-                                                <span>s/d {formatDate(v.valid_until)}</span>
+                                                <span>
+                                                    s/d{' '}
+                                                    {formatDate(v.valid_until)}
+                                                </span>
                                             )}
                                         </div>
                                     </div>

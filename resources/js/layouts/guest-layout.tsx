@@ -612,7 +612,8 @@ export default function GuestLayout({
                             <ul className="space-y-2 text-xs text-gray-400 md:space-y-3 md:text-sm">
                                 <li>
                                     <a
-                                        href="#"
+                                        href="https://wa.me/6285158330663"
+                                        target="_blank"
                                         className="transition hover:text-primary"
                                     >
                                         WhatsApp
@@ -620,15 +621,8 @@ export default function GuestLayout({
                                 </li>
                                 <li>
                                     <a
-                                        href="#"
-                                        className="transition hover:text-primary"
-                                    >
-                                        Email
-                                    </a>
-                                </li>
-                                <li>
-                                    <a
-                                        href="#"
+                                        href="https://www.instagram.com/nuvelo.id?igsh=YnA5eXhzNjA3eTdw"
+                                        target="_blank"
                                         className="transition hover:text-primary"
                                     >
                                         Instagram

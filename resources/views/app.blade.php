@@ -52,7 +52,7 @@
 
     <link rel="icon" href="{{ secure_asset('favicon.ico') }}" sizes="any">
     <link rel="icon" href="{{ secure_asset('favicon.svg') }}" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="{{ secure_asset('apple-touch-icon.png') }}">
+    <link rel="apple-touch-icon" href="{{ secure_asset('apple-touch-icon.svg') }}">
 
     {{-- Preconnect untuk mempercepat handshake ke font servers --}}
     <link rel="preconnect" href="https://fonts.bunny.net">
