@@ -37,7 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->respond(function (\Symfony\Component\HttpFoundation\Response $response, \Throwable $e, \Illuminate\Http\Request $request) {
             $status = $response->getStatusCode();
 
-            if (in_array($status, [403, 404, 500, 503]) && ! $request->expectsJson() && ! $request->hasHeader('X-Livewire')) {
+            if (in_array($status, [403, 404, 429, 500, 503]) && ! $request->expectsJson() && ! $request->hasHeader('X-Livewire')) {
                 return Inertia::render('error', ['status' => $status])
                     ->toResponse($request)
                     ->setStatusCode($status);

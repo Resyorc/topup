@@ -10,6 +10,10 @@ const errorMessages: Record<number, { title: string; description: string }> = {
         title: 'Akses Ditolak',
         description: 'Kamu tidak memiliki izin untuk mengakses halaman ini.',
     },
+    429: {
+        title: 'Terlalu Banyak Percobaan',
+        description: 'Kamu telah melakukan terlalu banyak percobaan. Silakan tunggu beberapa saat sebelum mencoba lagi.',
+    },
     404: {
         title: 'Halaman Tidak Ditemukan',
         description: 'Halaman yang kamu cari tidak ada atau sudah dipindahkan.',
