@@ -1584,7 +1584,7 @@ export default function InvoiceSearch({
                     </div>
                 </div>
             )}
-            {invoiceData?.invoice_no && !isTerminal && (
+            {typeof window !== 'undefined' && invoiceData?.invoice_no && !isTerminal && (
                 <InvoiceRealtimeListener
                     invoiceNo={invoiceData.invoice_no}
                     onUpdate={handleInvoiceUpdate}

@@ -56,7 +56,7 @@ class LogVisitor
             'url'        => '/'.$path,
             'method'     => $request->method(),
             'user_agent' => $request->userAgent(),
-            'referer'    => $request->headers->get('referer'),
+            'referer'    => mb_substr((string) $request->headers->get('referer'), 0, 500),
             'user_id'    => $request->user()?->id,
             'visited_at' => now(),
         ]);
