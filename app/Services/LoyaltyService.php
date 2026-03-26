@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\ErrorLog;
 use App\Models\Setting;
 use App\Models\Transaction;
 use App\Models\User;
@@ -89,6 +90,20 @@ class LoyaltyService
 
         } catch (\Exception $e) {
             Log::error("Loyalty reward gagal untuk {$transaction->invoice_id}: ".$e->getMessage());
+
+            ErrorLog::create([
+                'level'       => 'error',
+                'message'     => "Loyalty reward gagal — invoice {$transaction->invoice_id}: ".$e->getMessage(),
+                'exception'   => get_class($e),
+                'file'        => $e->getFile(),
+                'line'        => $e->getLine(),
+                'trace'       => mb_substr($e->getTraceAsString(), 0, 65535),
+                'url'         => null,
+                'method'      => null,
+                'ip'          => null,
+                'user_id'     => $transaction->user_id,
+                'occurred_at' => now(),
+            ]);
 
             return 0;
         }
