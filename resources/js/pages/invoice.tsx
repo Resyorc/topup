@@ -66,6 +66,8 @@ export default function InvoiceSearch({
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
     const [reviewDone, setReviewDone] = useState(false);
     const [showReviewModal, setShowReviewModal] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
+    useEffect(() => { setIsMounted(true); }, []);
 
     const REVIEW_TAGS = [
         'Proses Cepat',
@@ -1584,7 +1586,7 @@ export default function InvoiceSearch({
                     </div>
                 </div>
             )}
-            {typeof window !== 'undefined' && invoiceData?.invoice_no && !isTerminal && (
+            {isMounted && invoiceData?.invoice_no && !isTerminal && (
                 <InvoiceRealtimeListener
                     invoiceNo={invoiceData.invoice_no}
                     onUpdate={handleInvoiceUpdate}

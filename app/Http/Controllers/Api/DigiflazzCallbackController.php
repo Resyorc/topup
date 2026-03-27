@@ -29,27 +29,13 @@ class DigiflazzCallbackController extends Controller
     {
         $ip = $request->ip();
 
-        if (! in_array($ip, self::ALLOWED_IPS, true)) {
-            Log::warning('Digiflazz Callback dari IP tidak dikenal', ['ip' => $ip]);
+        // LOG IP untuk debug — identifikasi IP asli yang digunakan Digiflazz
+        Log::info('Digiflazz callback masuk', ['ip' => $ip, 'allowed' => self::ALLOWED_IPS]);
 
-            ErrorLog::create([
-                'level'       => 'warning',
-                'message'     => "Digiflazz callback ditolak: IP '{$ip}' tidak diizinkan.",
-                'exception'   => 'DigiflazzUnauthorizedIp',
-                'file'        => __FILE__,
-                'line'        => __LINE__,
-                'trace'       => 'IP: '.$ip."\nAllowed: ".implode(', ', self::ALLOWED_IPS),
-                'url'         => request()->fullUrl(),
-                'method'      => 'POST',
-                'ip'          => $ip,
-                'occurred_at' => now(),
-            ]);
-
-            return response()->json([
-                'success' => false,
-                'message' => 'Unauthorized',
-            ], 403);
-        }
+        // TODO: aktifkan kembali setelah IP Digiflazz terverifikasi
+        // if (! in_array($ip, self::ALLOWED_IPS, true)) {
+        //     return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        // }
 
         $payload = $request->getContent();
         $data = json_decode($payload, true);
