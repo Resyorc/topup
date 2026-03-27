@@ -1,40 +1,11 @@
 import SearchBar from '@/components/search-bar';
 import { Link, usePage } from '@inertiajs/react';
-import { useEcho } from '@laravel/echo-react';
-import { useState, useRef, useEffect, useMemo, lazy, Suspense } from 'react';
-import { Toaster, toast } from 'sonner';
+import { useState, useMemo, lazy, Suspense } from 'react';
+import { Toaster } from 'sonner';
 import NewsTicker from '@/components/news-ticker';
 
 // LiveChat dimuat lazy — tidak memblokir initial render, axios tidak masuk critical path
 const LiveChat = lazy(() => import('@/components/live-chat'));
-
-const STATUS_LABEL: Record<
-    string,
-    { label: string; type: 'success' | 'error' | 'info' }
-> = {
-    success: { label: 'berhasil diproses', type: 'success' },
-    failed: { label: 'gagal diproses', type: 'error' },
-    processing: { label: 'sedang diproses', type: 'info' },
-    paid: { label: 'pembayaran diterima', type: 'info' },
-};
-
-type Notif = {
-    invoice_id: string;
-    product_name: string;
-    status: string;
-    time: string;
-};
-
-function TransactionNotifier({
-    userId,
-    onNotification,
-}: {
-    userId: number;
-    onNotification: (data: any) => void;
-}) {
-    useEcho(`transactions.${userId}`, '.InvoiceStatusUpdated', onNotification);
-    return null;
-}
 
 export default function GuestLayout({
     children,
@@ -67,42 +38,6 @@ export default function GuestLayout({
     }, [currentUrl]);
 
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
-    const [notifOpen, setNotifOpen] = useState(false);
-    const [notifications, setNotifications] = useState<Notif[]>([]);
-    const notifRef = useRef<HTMLDivElement>(null);
-
-    useEffect(() => {
-        const handler = (e: MouseEvent) => {
-            if (
-                notifRef.current &&
-                !notifRef.current.contains(e.target as Node)
-            ) {
-                setNotifOpen(false);
-            }
-        };
-        document.addEventListener('mousedown', handler);
-        return () => document.removeEventListener('mousedown', handler);
-    }, []);
-
-    const handleNotification = (data: any) => {
-        const info = STATUS_LABEL[data.status];
-        if (!info) return;
-        setNotifications((prev) =>
-            [
-                {
-                    invoice_id: data.invoice_id,
-                    product_name: data.product_name,
-                    status: data.status,
-                    time: new Date().toLocaleTimeString('id-ID'),
-                },
-                ...prev,
-            ].slice(0, 20),
-        );
-        toast[info.type](`${data.product_name} ${info.label}`, {
-            description: `Invoice: ${data.invoice_id}`,
-            duration: 6000,
-        });
-    };
 
     // Helper: check if a nav link is currently active
     const isActive = (href: string) => {
@@ -174,113 +109,6 @@ export default function GuestLayout({
 
                             {auth?.user ? (
                                 <div className="flex items-center gap-2 md:gap-3">
-                                    {/* Notification Bell — desktop & mobile */}
-                                    <div ref={notifRef} className="relative">
-                                        <button
-                                            onClick={() =>
-                                                setNotifOpen(!notifOpen)
-                                            }
-                                            className="relative flex h-9 w-9 items-center justify-center rounded-full border border-gray-500/50 bg-white/10 transition hover:bg-white/20 md:h-10 md:w-10 md:border-2 md:border-primary/40"
-                                            aria-label="Notifikasi"
-                                        >
-                                            <svg
-                                                width="18"
-                                                height="18"
-                                                viewBox="0 0 24 24"
-                                                fill="none"
-                                                stroke="currentColor"
-                                                strokeWidth="2"
-                                                strokeLinecap="round"
-                                                strokeLinejoin="round"
-                                                className="text-gray-300"
-                                            >
-                                                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
-                                                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
-                                            </svg>
-                                            {notifications.length > 0 && (
-                                                <span className="absolute -top-0.5 -right-0.5 flex h-4 w-4 items-center justify-center rounded-full bg-red-500 text-[10px] font-bold text-white">
-                                                    {notifications.length > 9
-                                                        ? '9+'
-                                                        : notifications.length}
-                                                </span>
-                                            )}
-                                        </button>
-
-                                        {/* Dropdown panel */}
-                                        {notifOpen && (
-                                            <div className="absolute top-12 right-0 z-[200] w-80 rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-xl">
-                                                <div className="flex items-center justify-between border-b border-[#31334c] px-4 py-3">
-                                                    <span className="text-sm font-semibold text-white">
-                                                        Notifikasi
-                                                    </span>
-                                                    {notifications.length >
-                                                        0 && (
-                                                        <button
-                                                            onClick={() =>
-                                                                setNotifications(
-                                                                    [],
-                                                                )
-                                                            }
-                                                            className="text-xs text-gray-400 hover:text-white"
-                                                        >
-                                                            Hapus semua
-                                                        </button>
-                                                    )}
-                                                </div>
-                                                <div className="max-h-72 overflow-y-auto">
-                                                    {notifications.length ===
-                                                    0 ? (
-                                                        <p className="py-6 text-center text-xs text-gray-300">
-                                                            Tidak ada notifikasi
-                                                        </p>
-                                                    ) : (
-                                                        notifications.map(
-                                                            (n, i) => {
-                                                                const info =
-                                                                    STATUS_LABEL[
-                                                                        n.status
-                                                                    ];
-                                                                return (
-                                                                    <div
-                                                                        key={i}
-                                                                        className="border-b border-[#31334c]/50 px-4 py-3"
-                                                                    >
-                                                                        <div className="flex items-start gap-2">
-                                                                            <span
-                                                                                className={`mt-1.5 h-2 w-2 flex-shrink-0 rounded-full ${info?.type === 'success' ? 'bg-green-400' : info?.type === 'error' ? 'bg-red-400' : 'bg-blue-400'}`}
-                                                                            />
-                                                                            <div>
-                                                                                <p className="text-sm text-white">
-                                                                                    {
-                                                                                        n.product_name
-                                                                                    }{' '}
-                                                                                    <span className="text-gray-400">
-                                                                                        {
-                                                                                            info?.label
-                                                                                        }
-                                                                                    </span>
-                                                                                </p>
-                                                                                <p className="text-xs text-gray-400">
-                                                                                    {
-                                                                                        n.invoice_id
-                                                                                    }{' '}
-                                                                                    ·{' '}
-                                                                                    {
-                                                                                        n.time
-                                                                                    }
-                                                                                </p>
-                                                                            </div>
-                                                                        </div>
-                                                                    </div>
-                                                                );
-                                                            },
-                                                        )
-                                                    )}
-                                                </div>
-                                            </div>
-                                        )}
-                                    </div>
-
                                     <Link
                                         href="/dashboard"
                                         className={`hidden h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 transition md:flex ${isActive('/dashboard') ? 'border-primary bg-primary/20 text-white shadow-[0_0_12px_rgba(131,39,216,0.35)]' : 'border-primary/40 bg-white/10 text-gray-300 hover:bg-white/20'}`}
@@ -728,12 +556,6 @@ export default function GuestLayout({
                 }}
             />
 
-            {typeof window !== 'undefined' && auth?.user && import.meta.env.VITE_REVERB_APP_KEY && (
-                <TransactionNotifier
-                    userId={auth.user.id}
-                    onNotification={handleNotification}
-                />
-            )}
             <Suspense fallback={null}>
                 <LiveChat context={chatContext} />
             </Suspense>
