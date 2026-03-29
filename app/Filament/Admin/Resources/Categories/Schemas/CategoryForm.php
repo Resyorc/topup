@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\Categories\Schemas;
 
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -27,10 +26,10 @@ class CategoryForm
                 TextInput::make('slug')
                     ->required()
                     ->unique(ignoreRecord: true),
-                FileUpload::make('icon')
-                    ->image()
-                    ->directory('categories/icons')
-                    ->disk('public')
+                TextInput::make('icon')
+                    ->label('Icon')
+                    ->placeholder('contoh: smartphone, monitor, gamepad-2')
+                    ->helperText('Nama icon dari Lucide Icons (https://lucide.dev/icons)')
                     ->nullable(),
             ]);
     }

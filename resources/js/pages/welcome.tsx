@@ -1,4 +1,5 @@
 import { Head, usePage } from '@inertiajs/react';
+import { icons } from 'lucide-react';
 import { useState } from 'react';
 import GameCard from '@/components/game-card';
 import HeroBanner from '@/components/hero-banner';
@@ -194,31 +195,18 @@ export default function Welcome({
                                 } flex items-center justify-center gap-1.5 whitespace-nowrap md:gap-2`}
                             >
                                 {/* Category icon */}
-                                {category.icon ? (
-                                    <img
-                                        src={`/storage/${category.icon}`}
-                                        alt={category.name}
-                                        className="h-4 w-4 flex-shrink-0 object-contain md:h-[18px] md:w-[18px]"
-                                    />
-                                ) : (
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
-                                        className="flex-shrink-0 md:h-[18px] md:w-[18px]"
-                                    >
-                                        <path d="m7.5 4.27 9 5.15" />
-                                        <path d="M21 8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16Z" />
-                                        <path d="m3.3 7 8.7 5 8.7-5" />
-                                        <path d="M12 22V12" />
-                                    </svg>
-                                )}
+                                {(() => {
+                                    const iconName = category.icon
+                                        ? category.icon
+                                              .split('-')
+                                              .map((s: string) => s.charAt(0).toUpperCase() + s.slice(1))
+                                              .join('')
+                                        : 'Layers';
+                                    const LucideIcon = icons[iconName as keyof typeof icons];
+                                    return LucideIcon ? (
+                                        <LucideIcon className="h-4 w-4 shrink-0 md:h-4.5 md:w-4.5" />
+                                    ) : null;
+                                })()}
                                 {category.name}
                             </button>
                         ))}
