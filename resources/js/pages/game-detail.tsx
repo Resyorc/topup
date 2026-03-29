@@ -129,9 +129,17 @@ export default function GameDetail({
     const promoSectionRef = useRef<HTMLDivElement>(null);
 
     const REGION_NAMES: Record<string, string> = {
-        ID: 'Indonesia', MY: 'Malaysia', PH: 'Filipina', SG: 'Singapura',
-        TH: 'Thailand', VN: 'Vietnam', MM: 'Myanmar', KH: 'Kamboja',
-        LA: 'Laos', BN: 'Brunei', GLOBAL: 'Global',
+        ID: 'Indonesia',
+        MY: 'Malaysia',
+        PH: 'Filipina',
+        SG: 'Singapura',
+        TH: 'Thailand',
+        VN: 'Vietnam',
+        MM: 'Myanmar',
+        KH: 'Kamboja',
+        LA: 'Laos',
+        BN: 'Brunei',
+        GLOBAL: 'Global',
     };
     const getRegionLabel = (code: string) =>
         `Region ${REGION_NAMES[code] ?? code}`;
@@ -452,35 +460,35 @@ export default function GameDetail({
                 </div>
             )}
             <div className="relative z-10 flex flex-col justify-between p-3 md:p-4">
-                <div className="mb-2 flex items-start justify-between">
-                    <div>
-                        <div className="text-sm leading-tight font-bold text-[#FFC107]">
+                <div className="mb-2 flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                        <div className="line-clamp-2 text-xs leading-tight font-bold text-[#FFC107] md:text-sm">
                             {product.clean_name}
                         </div>
                         {product.extra && (
-                            <div className="mt-0.5 text-[10px] text-gray-400">
+                            <div className="mt-0.5 truncate text-[9px] text-gray-400 md:text-[10px]">
                                 {product.extra}
                             </div>
                         )}
                     </div>
-                    <div className="flex h-6 w-6 shrink-0 items-center justify-center">
-                        {(() => {
-                            const iconUrl = resolveProductIcon(
-                                product,
-                                category,
-                                game.icon_rules,
-                            );
-                            return iconUrl ? (
+                    {(() => {
+                        const iconUrl = resolveProductIcon(
+                            product,
+                            category,
+                            game.icon_rules,
+                        );
+                        return iconUrl ? (
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-white/5 md:h-12 md:w-12">
                                 <img
                                     src={iconUrl}
                                     alt="icon"
-                                    className="h-5 w-5 object-contain"
+                                    className="h-8 w-8 object-contain md:h-10 md:w-10"
                                 />
-                            ) : null;
-                        })()}
-                    </div>
+                            </div>
+                        ) : null;
+                    })()}
                 </div>
-                <div className="font-bold text-white">
+                <div className="text-sm font-bold text-white md:text-base">
                     Rp {product.price.toLocaleString('id-ID')}
                 </div>
             </div>
@@ -1020,7 +1028,9 @@ export default function GameDetail({
                                                               <div className="mb-4 flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 px-4 py-2.5">
                                                                   <span className="h-2 w-2 shrink-0 rounded-full bg-primary shadow-[0_0_6px_rgba(168,85,247,0.8)]" />
                                                                   <span className="text-sm font-semibold text-white">
-                                                                      {getRegionLabel(region)}
+                                                                      {getRegionLabel(
+                                                                          region,
+                                                                      )}
                                                                   </span>
                                                                   <span className="rounded-full border border-primary/40 bg-primary/20 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
                                                                       Akun kamu
@@ -1029,7 +1039,9 @@ export default function GameDetail({
                                                           ) : (
                                                               <div className="mb-3 flex items-center gap-2 border-b border-[#31334c] pb-2">
                                                                   <span className="text-xs font-semibold text-gray-500">
-                                                                      {getRegionLabel(region)}
+                                                                      {getRegionLabel(
+                                                                          region,
+                                                                      )}
                                                                   </span>
                                                                   {detectedRegion && (
                                                                       <span className="text-[10px] text-gray-600">
