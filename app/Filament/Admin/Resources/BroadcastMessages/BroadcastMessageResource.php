@@ -25,6 +25,11 @@ class BroadcastMessageResource extends Resource
 
     protected static ?string $recordTitleAttribute = 'message';
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()->isSuperAdmin();
+    }
+
     public static function form(Schema $schema): Schema
     {
         return BroadcastMessageForm::configure($schema);

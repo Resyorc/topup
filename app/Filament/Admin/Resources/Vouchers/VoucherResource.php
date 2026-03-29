@@ -33,7 +33,7 @@ class VoucherResource extends Resource
 
     public static function canAccess(): bool
     {
-        return auth()->user()->hasAnyRole(['Super Admin', 'Admin']);
+        return auth()->user()->isSuperAdmin();
     }
 
     public static function form(Schema $schema): Schema

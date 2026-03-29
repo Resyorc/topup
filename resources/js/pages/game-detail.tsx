@@ -46,10 +46,11 @@ interface GameDetailProps {
             icon: string;
         }>;
         need_zone: boolean;
+        region_map: Record<string, string>;
     };
-    productGroups: {
-        [category: string]: Product[];
-    };
+    productGroups:
+        | { [category: string]: Product[] }
+        | { [region: string]: { [category: string]: Product[] } };
     paymentMethods: {
         [category: string]: PaymentMethod[];
     };
@@ -95,7 +96,8 @@ export default function GameDetail({
     loyaltyRate,
 }: GameDetailProps) {
     const { addInvoice } = useGuestInvoice();
-    const { auth, appUrl } = usePage<{ auth: { user: any }; appUrl: string }>().props;
+    const { auth, appUrl } = usePage<{ auth: { user: any }; appUrl: string }>()
+        .props;
     const userPhone: string = auth?.user?.phone ?? '';
 
     const COUNTRY_CODE = '+62';
@@ -126,9 +128,21 @@ export default function GameDetail({
 
     const promoSectionRef = useRef<HTMLDivElement>(null);
 
-    const [activeTab, setActiveTab] = useState<string>(
-        Object.keys(productGroups)[0] || '',
-    );
+    const REGION_NAMES: Record<string, string> = {
+        ID: 'Indonesia', MY: 'Malaysia', PH: 'Filipina', SG: 'Singapura',
+        TH: 'Thailand', VN: 'Vietnam', MM: 'Myanmar', KH: 'Kamboja',
+        LA: 'Laos', BN: 'Brunei', GLOBAL: 'Global',
+    };
+    const getRegionLabel = (code: string) =>
+        `Region ${REGION_NAMES[code] ?? code}`;
+
+    const hasRegions = Object.keys(game.region_map).length > 0;
+    const regionedGroups = productGroups as {
+        [region: string]: { [category: string]: Product[] };
+    };
+    const flatGroups = productGroups as { [category: string]: Product[] };
+
+    const [detectedRegion, setDetectedRegion] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
 
     const paymentMethodEntries = React.useMemo(
@@ -158,16 +172,22 @@ export default function GameDetail({
     };
 
     // Derived States
-    const selectedProduct = productGroups[activeTab]?.find(
-        (p) => p.id === data.product_id,
-    );
+    const allProducts: Product[] = hasRegions
+        ? Object.values(regionedGroups).flatMap((cats) =>
+              Object.values(cats).flat(),
+          )
+        : Object.values(flatGroups).flat();
+    const selectedProduct = allProducts.find((p) => p.id === data.product_id);
     const selectedPayment = Object.values(paymentMethods)
         .flat()
         .find((pm) => pm.id === data.payment_method); // Assuming paymentMethods might be grouped
 
     // Voucher state
     const [voucherLoading, setVoucherLoading] = useState(false);
-    const [appliedVoucher, setAppliedVoucher] = useState<{ discount: number; message: string } | null>(null);
+    const [appliedVoucher, setAppliedVoucher] = useState<{
+        discount: number;
+        message: string;
+    } | null>(null);
     const [voucherError, setVoucherError] = useState<string | null>(null);
 
     const handleApplyVoucher = async () => {
@@ -181,16 +201,21 @@ export default function GameDetail({
         setVoucherError(null);
         try {
             const res = await axios.post('/api/validate-voucher', {
-                code:   data.promo_code.trim(),
+                code: data.promo_code.trim(),
                 amount: selectedProduct.price,
             });
             if (res.data.valid) {
-                setAppliedVoucher({ discount: res.data.discount, message: res.data.message });
+                setAppliedVoucher({
+                    discount: res.data.discount,
+                    message: res.data.message,
+                });
             } else {
                 setVoucherError(res.data.message);
             }
         } catch (err: any) {
-            setVoucherError(err.response?.data?.message ?? 'Gagal memvalidasi voucher.');
+            setVoucherError(
+                err.response?.data?.message ?? 'Gagal memvalidasi voucher.',
+            );
         } finally {
             setVoucherLoading(false);
         }
@@ -221,11 +246,16 @@ export default function GameDetail({
         if (!uid) return null;
         if (uid.startsWith('18')) return { name: 'Asia', zone: 'os_asia' };
         switch (uid[0]) {
-            case '6': return { name: 'America', zone: 'os_usa' };
-            case '7': return { name: 'Europe', zone: 'os_euro' };
-            case '8': return { name: 'Asia', zone: 'os_asia' };
-            case '9': return { name: 'SAR (TW/HK/MO)', zone: 'os_cht' };
-            default:  return null;
+            case '6':
+                return { name: 'America', zone: 'os_usa' };
+            case '7':
+                return { name: 'Europe', zone: 'os_euro' };
+            case '8':
+                return { name: 'Asia', zone: 'os_asia' };
+            case '9':
+                return { name: 'SAR (TW/HK/MO)', zone: 'os_cht' };
+            default:
+                return null;
         }
     };
 
@@ -281,17 +311,16 @@ export default function GameDetail({
         return () => clearTimeout(t);
     }, [data.user_id, data.server_id, game.slug]);
 
-    // Auto-switch tab berdasarkan country hasil validasi
+    // Set detected region berdasarkan country hasil validasi
     useEffect(() => {
-        if (!validatedCountry) return;
-        const countryLower = validatedCountry.toLowerCase();
-        const match = Object.keys(productGroups).find(
-            (tab) =>
-                tab.toLowerCase().includes(countryLower) ||
-                countryLower.includes(tab.toLowerCase()),
-        );
-        if (match) setActiveTab(match);
-    }, [validatedCountry]);
+        if (!hasRegions) return;
+        if (!validatedCountry) {
+            setDetectedRegion(null);
+            return;
+        }
+        const country = validatedCountry.toUpperCase();
+        setDetectedRegion(regionedGroups[country] ? country : null);
+    }, [validatedCountry, hasRegions]);
 
     const [calculatedFees, setCalculatedFees] = useState<Record<
         string,
@@ -385,6 +414,82 @@ export default function GameDetail({
     const section2Complete = data.whatsapp !== '';
     const canSelectProduct = section1Complete && section2Complete;
 
+    const renderProductCard = (product: Product, category: string) => (
+        <div
+            key={product.id}
+            onClick={() => {
+                if (!canSelectProduct) {
+                    swalWarning(
+                        !section1Complete
+                            ? 'Isi User ID dan Server terlebih dahulu.'
+                            : 'Isi nomor WhatsApp terlebih dahulu.',
+                    );
+                    return;
+                }
+                handleProductSelect(product.id);
+                if (window.innerWidth < 768) {
+                    setTimeout(() => {
+                        const el = promoSectionRef.current;
+                        if (!el) return;
+                        const top =
+                            el.getBoundingClientRect().top +
+                            window.scrollY -
+                            124;
+                        window.scrollTo({ top, behavior: 'smooth' });
+                    }, 50);
+                }
+            }}
+            className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[#1A1A24] transition-all hover:border-[#6a359c] ${data.product_id === product.id ? 'border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)] ring-1 ring-primary' : 'border-[#31334c]'}`}
+        >
+            {product.discount_percent > 0 && (
+                <div className="flex items-center justify-between bg-orange-500 px-2.5 py-1">
+                    <span className="text-[10px] font-bold text-white">
+                        Disc {product.discount_percent}%
+                    </span>
+                    <span className="text-[10px] text-white/70 line-through">
+                        Rp {product.original_price?.toLocaleString('id-ID')}
+                    </span>
+                </div>
+            )}
+            <div className="relative z-10 flex flex-col justify-between p-3 md:p-4">
+                <div className="mb-2 flex items-start justify-between">
+                    <div>
+                        <div className="text-sm leading-tight font-bold text-[#FFC107]">
+                            {product.clean_name}
+                        </div>
+                        {product.extra && (
+                            <div className="mt-0.5 text-[10px] text-gray-400">
+                                {product.extra}
+                            </div>
+                        )}
+                    </div>
+                    <div className="flex h-6 w-6 shrink-0 items-center justify-center">
+                        {(() => {
+                            const iconUrl = resolveProductIcon(
+                                product,
+                                category,
+                                game.icon_rules,
+                            );
+                            return iconUrl ? (
+                                <img
+                                    src={iconUrl}
+                                    alt="icon"
+                                    className="h-5 w-5 object-contain"
+                                />
+                            ) : null;
+                        })()}
+                    </div>
+                </div>
+                <div className="font-bold text-white">
+                    Rp {product.price.toLocaleString('id-ID')}
+                </div>
+            </div>
+            {data.product_id === product.id && (
+                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent" />
+            )}
+        </div>
+    );
+
     // Deselect payment method if the current product price changes to below the minimum amount
     useEffect(() => {
         if (selectedProduct && selectedPayment) {
@@ -435,7 +540,8 @@ export default function GameDetail({
             customer_whatsapp: data.whatsapp,
             customer_name: validatedUsername,
             payment_method: data.payment_method,
-            promo_code: appliedVoucher && data.promo_code ? data.promo_code : undefined,
+            promo_code:
+                appliedVoucher && data.promo_code ? data.promo_code : undefined,
         };
 
         try {
@@ -465,32 +571,71 @@ export default function GameDetail({
     return (
         <GuestLayout>
             <Head title={`Top Up ${game.name} Murah & Cepat - Nuvelo`}>
-                <meta name="description" content={`Top up ${game.name} murah dan cepat di Nuvelo. Proses instan, harga terbaik, aman dan terpercaya.`} />
+                <meta
+                    name="description"
+                    content={`Top up ${game.name} murah dan cepat di Nuvelo. Proses instan, harga terbaik, aman dan terpercaya.`}
+                />
                 <link rel="canonical" href={`${appUrl}/order/${game.slug}`} />
                 <meta property="og:type" content="website" />
                 <meta property="og:site_name" content="Nuvelo" />
-                <meta property="og:url" content={`${appUrl}/order/${game.slug}`} />
-                <meta property="og:title" content={`Top Up ${game.name} Murah & Cepat - Nuvelo`} />
-                <meta property="og:description" content={`Top up ${game.name} murah dan cepat di Nuvelo. Proses instan, harga terbaik, aman dan terpercaya.`} />
-                <meta property="og:image" content={game.thumbnail ? `${appUrl}${game.thumbnail}` : `${appUrl}/logo.png`} />
+                <meta
+                    property="og:url"
+                    content={`${appUrl}/order/${game.slug}`}
+                />
+                <meta
+                    property="og:title"
+                    content={`Top Up ${game.name} Murah & Cepat - Nuvelo`}
+                />
+                <meta
+                    property="og:description"
+                    content={`Top up ${game.name} murah dan cepat di Nuvelo. Proses instan, harga terbaik, aman dan terpercaya.`}
+                />
+                <meta
+                    property="og:image"
+                    content={
+                        game.thumbnail
+                            ? `${appUrl}${game.thumbnail}`
+                            : `${appUrl}/logo.png`
+                    }
+                />
                 <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content={`Top Up ${game.name} Murah & Cepat - Nuvelo`} />
-                <meta name="twitter:description" content={`Top up ${game.name} murah dan cepat di Nuvelo. Proses instan, harga terbaik, aman dan terpercaya.`} />
-                <meta name="twitter:image" content={game.thumbnail ? `${appUrl}${game.thumbnail}` : `${appUrl}/logo.png`} />
-                <script type="application/ld+json">{JSON.stringify({
-                    '@context': 'https://schema.org',
-                    '@type': 'VideoGame',
-                    name: game.name,
-                    publisher: { '@type': 'Organization', name: game.publisher },
-                    url: `${appUrl}/order/${game.slug}`,
-                    image: game.thumbnail ? `${appUrl}${game.thumbnail}` : undefined,
-                    offers: {
-                        '@type': 'AggregateOffer',
-                        priceCurrency: 'IDR',
-                        availability: 'https://schema.org/InStock',
-                        seller: { '@type': 'Organization', name: 'Nuvelo' },
-                    },
-                })}</script>
+                <meta
+                    name="twitter:title"
+                    content={`Top Up ${game.name} Murah & Cepat - Nuvelo`}
+                />
+                <meta
+                    name="twitter:description"
+                    content={`Top up ${game.name} murah dan cepat di Nuvelo. Proses instan, harga terbaik, aman dan terpercaya.`}
+                />
+                <meta
+                    name="twitter:image"
+                    content={
+                        game.thumbnail
+                            ? `${appUrl}${game.thumbnail}`
+                            : `${appUrl}/logo.png`
+                    }
+                />
+                <script type="application/ld+json">
+                    {JSON.stringify({
+                        '@context': 'https://schema.org',
+                        '@type': 'VideoGame',
+                        name: game.name,
+                        publisher: {
+                            '@type': 'Organization',
+                            name: game.publisher,
+                        },
+                        url: `${appUrl}/order/${game.slug}`,
+                        image: game.thumbnail
+                            ? `${appUrl}${game.thumbnail}`
+                            : undefined,
+                        offers: {
+                            '@type': 'AggregateOffer',
+                            priceCurrency: 'IDR',
+                            availability: 'https://schema.org/InStock',
+                            seller: { '@type': 'Organization', name: 'Nuvelo' },
+                        },
+                    })}
+                </script>
             </Head>
 
             {/* Background Texture & Hero Graphic */}
@@ -669,7 +814,9 @@ export default function GameDetail({
                                     </div>
                                 </div>
                                 <div className="space-y-4 p-5">
-                                    <div className={`grid grid-cols-1 gap-4 ${game.need_zone ? 'md:grid-cols-2' : ''}`}>
+                                    <div
+                                        className={`grid grid-cols-1 gap-4 ${game.need_zone ? 'md:grid-cols-2' : ''}`}
+                                    >
                                         <div>
                                             <label className="mb-1 block text-xs text-white/70">
                                                 User ID
@@ -678,7 +825,12 @@ export default function GameDetail({
                                                 type="text"
                                                 placeholder="Masukkan User ID"
                                                 value={data.user_id}
-                                                onChange={(e) => setData('user_id', e.target.value)}
+                                                onChange={(e) =>
+                                                    setData(
+                                                        'user_id',
+                                                        e.target.value,
+                                                    )
+                                                }
                                                 className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
                                             />
                                         </div>
@@ -690,9 +842,25 @@ export default function GameDetail({
                                                 <input
                                                     type="text"
                                                     disabled={isMihoyoGame}
-                                                    placeholder={isMihoyoGame ? 'Otomatis dari UID' : 'Masukkan Server'}
-                                                    value={isMihoyoGame ? detectMihoyoServer(data.user_id)?.name || '' : data.server_id}
-                                                    onChange={(e) => !isMihoyoGame && setData('server_id', e.target.value)}
+                                                    placeholder={
+                                                        isMihoyoGame
+                                                            ? 'Otomatis dari UID'
+                                                            : 'Masukkan Server'
+                                                    }
+                                                    value={
+                                                        isMihoyoGame
+                                                            ? detectMihoyoServer(
+                                                                  data.user_id,
+                                                              )?.name || ''
+                                                            : data.server_id
+                                                    }
+                                                    onChange={(e) =>
+                                                        !isMihoyoGame &&
+                                                        setData(
+                                                            'server_id',
+                                                            e.target.value,
+                                                        )
+                                                    }
                                                     className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary disabled:bg-[#1a1a24] disabled:text-white/60"
                                                 />
                                             </div>
@@ -721,17 +889,37 @@ export default function GameDetail({
                                             !validatedUsername.startsWith(
                                                 '❌',
                                             ) && (
-                                                <>
-                                                    ✅ Nickname:{' '}
-                                                    <b className="ml-1 text-white">
-                                                        {validatedUsername}
-                                                    </b>
+                                                <div className="space-y-0.5">
+                                                    <div>
+                                                        Nickname:{' '}
+                                                        <b className="text-white">
+                                                            {validatedUsername}
+                                                        </b>
+                                                    </div>
                                                     {validatedCountry && (
-                                                        <span className="ml-2 text-white/50">
-                                                            ({validatedCountry})
-                                                        </span>
+                                                        <>
+                                                            <div>
+                                                                Server:{' '}
+                                                                <b className="text-white">
+                                                                    {
+                                                                        validatedCountry
+                                                                    }
+                                                                </b>
+                                                            </div>
+                                                            {hasRegions &&
+                                                                !detectedRegion && (
+                                                                    <div className="text-yellow-400/80">
+                                                                        ⚠ Harga
+                                                                        mungkin
+                                                                        berbeda
+                                                                        dari
+                                                                        server
+                                                                        lainnya
+                                                                    </div>
+                                                                )}
+                                                        </>
                                                     )}
-                                                </>
+                                                </div>
                                             )}
                                         {!isValidating &&
                                             validatedUsername &&
@@ -801,145 +989,127 @@ export default function GameDetail({
                                         </h4>
                                     </div>
                                 </div>
-                                <div className="p-4">
-                                    {/* Tabs */}
-                                    <div className="mb-4 flex flex-wrap gap-2">
-                                        {Object.keys(productGroups).map(
-                                            (tab) => (
-                                                <button
-                                                    key={tab}
-                                                    onClick={() =>
-                                                        setActiveTab(tab)
-                                                    }
-                                                    className={`rounded-lg border px-4 py-1.5 text-sm transition ${activeTab === tab ? 'border-primary bg-primary text-white shadow-[0_0_10px_rgba(168,85,247,0.4)]' : 'border-[#31334c] text-white hover:bg-white/10'}`}
-                                                >
-                                                    {tab}
-                                                </button>
-                                            ),
-                                        )}
-                                    </div>
+                                <div className="space-y-6 p-4">
+                                    {hasRegions
+                                        ? // Mode region: urutkan detected region di atas
+                                          Object.keys(regionedGroups)
+                                              .sort((a, b) => {
+                                                  if (a === detectedRegion)
+                                                      return -1;
+                                                  if (b === detectedRegion)
+                                                      return 1;
+                                                  return a.localeCompare(b);
+                                              })
+                                              .map((region) => {
+                                                  const isDetected =
+                                                      region === detectedRegion;
+                                                  const categories =
+                                                      regionedGroups[region];
+                                                  return (
+                                                      <div
+                                                          key={region}
+                                                          className={
+                                                              isDetected ||
+                                                              !detectedRegion
+                                                                  ? ''
+                                                                  : 'opacity-40'
+                                                          }
+                                                      >
+                                                          {/* Region header */}
+                                                          {isDetected ? (
+                                                              <div className="mb-4 flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/10 px-4 py-2.5">
+                                                                  <span className="h-2 w-2 shrink-0 rounded-full bg-primary shadow-[0_0_6px_rgba(168,85,247,0.8)]" />
+                                                                  <span className="text-sm font-semibold text-white">
+                                                                      {getRegionLabel(region)}
+                                                                  </span>
+                                                                  <span className="rounded-full border border-primary/40 bg-primary/20 px-2.5 py-0.5 text-[10px] font-semibold text-primary">
+                                                                      Akun kamu
+                                                                  </span>
+                                                              </div>
+                                                          ) : (
+                                                              <div className="mb-3 flex items-center gap-2 border-b border-[#31334c] pb-2">
+                                                                  <span className="text-xs font-semibold text-gray-500">
+                                                                      {getRegionLabel(region)}
+                                                                  </span>
+                                                                  {detectedRegion && (
+                                                                      <span className="text-[10px] text-gray-600">
+                                                                          ·
+                                                                          region
+                                                                          lain
+                                                                      </span>
+                                                                  )}
+                                                              </div>
+                                                          )}
 
-                                    {/* Grid Products */}
-                                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-4">
-                                        {(productGroups[activeTab] || []).map(
-                                            (product) => (
-                                                <div
-                                                    key={product.id}
-                                                    onClick={() => {
-                                                        if (!canSelectProduct) {
-                                                            swalWarning(
-                                                                !section1Complete
-                                                                    ? 'Isi User ID dan Server terlebih dahulu.'
-                                                                    : 'Isi nomor WhatsApp terlebih dahulu.',
-                                                            );
-                                                            return;
-                                                        }
-                                                        handleProductSelect(product.id);
-                                                        if (
-                                                            window.innerWidth <
-                                                            768
-                                                        ) {
-                                                            setTimeout(() => {
-                                                                const el =
-                                                                    promoSectionRef.current;
-                                                                if (!el) return;
-                                                                const top =
-                                                                    el.getBoundingClientRect()
-                                                                        .top +
-                                                                    window.scrollY -
-                                                                    124;
-                                                                window.scrollTo(
-                                                                    {
-                                                                        top,
-                                                                        behavior:
-                                                                            'smooth',
-                                                                    },
-                                                                );
-                                                            }, 50);
-                                                        }
-                                                    }}
-                                                    className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[#1A1A24] transition-all hover:border-[#6a359c] ${data.product_id === product.id ? 'border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)] ring-1 ring-primary' : 'border-[#31334c]'}`}
-                                                >
-                                                    {/* Discount header strip */}
-                                                    {product.discount_percent >
-                                                        0 && (
-                                                        <div className="flex items-center justify-between bg-orange-500 px-2.5 py-1">
-                                                            <span className="text-[10px] font-bold text-white">
-                                                                Disc{' '}
-                                                                {
-                                                                    product.discount_percent
-                                                                }
-                                                                %
-                                                            </span>
-                                                            <span className="text-[10px] text-white/70 line-through">
-                                                                Rp{' '}
-                                                                {product.original_price?.toLocaleString(
-                                                                    'id-ID',
-                                                                )}
-                                                            </span>
-                                                        </div>
-                                                    )}
-
-                                                    {/* Card Content */}
-                                                    <div className="relative z-10 flex flex-col justify-between p-3 md:p-4">
-                                                        <div className="mb-2 flex items-start justify-between">
-                                                            <div>
-                                                                <div className="text-sm leading-tight font-bold text-[#FFC107]">
-                                                                    {
-                                                                        product.clean_name
-                                                                    }
-                                                                </div>
-                                                                {product.extra && (
-                                                                    <div className="mt-0.5 text-[10px] text-gray-400">
-                                                                        {
-                                                                            product.extra
-                                                                        }
-                                                                    </div>
-                                                                )}
-                                                            </div>
-                                                            <div className="flex h-6 w-6 shrink-0 items-center justify-center">
-                                                                {(() => {
-                                                                    const iconUrl =
-                                                                        resolveProductIcon(
-                                                                            product,
-                                                                            activeTab,
-                                                                            game.icon_rules,
-                                                                        );
-                                                                    return iconUrl ? (
-                                                                        <img
-                                                                            src={
-                                                                                iconUrl
-                                                                            }
-                                                                            alt="icon"
-                                                                            className="h-5 w-5 object-contain"
-                                                                        />
-                                                                    ) : null;
-                                                                })()}
-                                                            </div>
-                                                        </div>
-                                                        <div className="font-bold text-white">
-                                                            Rp{' '}
-                                                            {product.price.toLocaleString(
-                                                                'id-ID',
-                                                            )}
-                                                        </div>
-                                                    </div>
-
-                                                    {/* Active state gradient background */}
-                                                    {data.product_id ===
-                                                        product.id && (
-                                                        <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-primary/10 to-transparent"></div>
-                                                    )}
-                                                </div>
-                                            ),
-                                        )}
-                                    </div>
-                                    {(productGroups[activeTab] || []).length ===
-                                        0 && (
-                                        <div className="py-10 text-center text-gray-500">
-                                            Belum ada produk untuk kategori ini.
-                                        </div>
-                                    )}
+                                                          {/* Categories */}
+                                                          {Object.entries(
+                                                              categories,
+                                                          ).map(
+                                                              ([
+                                                                  category,
+                                                                  products,
+                                                              ]) => (
+                                                                  <div
+                                                                      key={
+                                                                          category
+                                                                      }
+                                                                      className="mb-4"
+                                                                  >
+                                                                      {Object.keys(
+                                                                          categories,
+                                                                      ).length >
+                                                                          1 && (
+                                                                          <div className="mb-2 flex items-center gap-2">
+                                                                              <div className="h-3.5 w-[3px] rounded-full bg-primary" />
+                                                                              <p className="text-[11px] font-semibold tracking-wider text-gray-300 uppercase">
+                                                                                  {
+                                                                                      category
+                                                                                  }
+                                                                              </p>
+                                                                          </div>
+                                                                      )}
+                                                                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-3">
+                                                                          {products.map(
+                                                                              (
+                                                                                  product,
+                                                                              ) =>
+                                                                                  renderProductCard(
+                                                                                      product,
+                                                                                      category,
+                                                                                  ),
+                                                                          )}
+                                                                      </div>
+                                                                  </div>
+                                                              ),
+                                                          )}
+                                                      </div>
+                                                  );
+                                              })
+                                        : // Mode flat: category headers langsung
+                                          Object.entries(flatGroups).map(
+                                              ([category, products]) => (
+                                                  <div key={category}>
+                                                      {Object.keys(flatGroups)
+                                                          .length > 1 && (
+                                                          <div className="mb-2 flex items-center gap-2">
+                                                              <div className="h-3.5 w-0.5 rounded-full bg-primary/50" />
+                                                              <p className="text-[11px] font-semibold tracking-wider text-gray-400 uppercase">
+                                                                  {category}
+                                                              </p>
+                                                          </div>
+                                                      )}
+                                                      <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 md:gap-3">
+                                                          {products.map(
+                                                              (product) =>
+                                                                  renderProductCard(
+                                                                      product,
+                                                                      category,
+                                                                  ),
+                                                          )}
+                                                      </div>
+                                                  </div>
+                                              ),
+                                          )}
                                 </div>
                             </div>
 
@@ -959,7 +1129,7 @@ export default function GameDetail({
                                         </h4>
                                     </div>
                                 </div>
-                                <div className="p-4 space-y-3">
+                                <div className="space-y-3 p-4">
                                     <div>
                                         <label className="mb-1 block text-xs text-white/70">
                                             Kode Promo
@@ -971,30 +1141,44 @@ export default function GameDetail({
                                                 value={data.promo_code}
                                                 disabled={!!appliedVoucher}
                                                 onChange={(e) => {
-                                                    setData('promo_code', e.target.value.toUpperCase());
+                                                    setData(
+                                                        'promo_code',
+                                                        e.target.value.toUpperCase(),
+                                                    );
                                                     setVoucherError(null);
                                                 }}
-                                                onKeyDown={(e) => e.key === 'Enter' && handleApplyVoucher()}
-                                                className="w-full min-w-0 flex-1 rounded-lg border-none bg-[#2f2a3a] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary disabled:opacity-60 disabled:cursor-not-allowed uppercase tracking-widest"
+                                                onKeyDown={(e) =>
+                                                    e.key === 'Enter' &&
+                                                    handleApplyVoucher()
+                                                }
+                                                className="w-full min-w-0 flex-1 rounded-lg border-none bg-[#2f2a3a] px-3 py-2 text-sm tracking-widest text-white uppercase placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
                                             />
                                             {appliedVoucher ? (
                                                 <button
                                                     onClick={() => {
                                                         setAppliedVoucher(null);
-                                                        setData('promo_code', '');
+                                                        setData(
+                                                            'promo_code',
+                                                            '',
+                                                        );
                                                         setVoucherError(null);
                                                     }}
-                                                    className="shrink-0 rounded-lg border border-red-500/40 bg-red-500/10 px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-red-400 transition hover:bg-red-500/20"
+                                                    className="shrink-0 rounded-lg border border-red-500/40 bg-red-500/10 px-3 py-2 text-xs font-semibold text-red-400 transition hover:bg-red-500/20 sm:px-4 sm:text-sm"
                                                 >
                                                     Hapus
                                                 </button>
                                             ) : (
                                                 <button
                                                     onClick={handleApplyVoucher}
-                                                    disabled={voucherLoading || !data.promo_code.trim()}
-                                                    className="shrink-0 rounded-lg bg-primary px-3 sm:px-4 py-2 text-xs sm:text-sm font-semibold text-white transition hover:bg-primary/80 disabled:opacity-50 disabled:cursor-not-allowed"
+                                                    disabled={
+                                                        voucherLoading ||
+                                                        !data.promo_code.trim()
+                                                    }
+                                                    className="shrink-0 rounded-lg bg-primary px-3 py-2 text-xs font-semibold text-white transition hover:bg-primary/80 disabled:cursor-not-allowed disabled:opacity-50 sm:px-4 sm:text-sm"
                                                 >
-                                                    {voucherLoading ? '...' : 'Pakai'}
+                                                    {voucherLoading
+                                                        ? '...'
+                                                        : 'Pakai'}
                                                 </button>
                                             )}
                                         </div>
@@ -1002,13 +1186,15 @@ export default function GameDetail({
 
                                     {/* Feedback */}
                                     {appliedVoucher && (
-                                        <div className="flex items-center gap-2 rounded-lg bg-green-500/10 px-3 py-2 text-xs text-green-400 border border-green-500/20">
+                                        <div className="flex items-center gap-2 rounded-lg border border-green-500/20 bg-green-500/10 px-3 py-2 text-xs text-green-400">
                                             <span>✅</span>
-                                            <span>{appliedVoucher.message}</span>
+                                            <span>
+                                                {appliedVoucher.message}
+                                            </span>
                                         </div>
                                     )}
                                     {voucherError && (
-                                        <div className="flex items-center gap-2 rounded-lg bg-red-500/10 px-3 py-2 text-xs text-red-400 border border-red-500/20">
+                                        <div className="flex items-center gap-2 rounded-lg border border-red-500/20 bg-red-500/10 px-3 py-2 text-xs text-red-400">
                                             <span>❌</span>
                                             <span>{voucherError}</span>
                                         </div>
@@ -1442,7 +1628,6 @@ export default function GameDetail({
                                 </div>
                             </div>
                         </div>
-
                     </div>
                 </div>
             </div>
@@ -1452,7 +1637,7 @@ export default function GameDetail({
                 <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-3 py-3 sm:flex-row sm:px-6 md:flex-row md:gap-4 md:px-4 md:py-4 lg:px-8">
                     {/* Payment Breakdown */}
                     {selectedProduct && selectedPayment && (
-                        <div className="w-full space-y-1 sm:space-y-1.5 border-b border-[#31334c] pb-2 sm:pb-3">
+                        <div className="w-full space-y-1 border-b border-[#31334c] pb-2 sm:space-y-1.5 sm:pb-3">
                             <div className="flex items-center justify-between gap-2 text-xs">
                                 <span className="shrink-0 text-gray-400">
                                     Harga Produk
@@ -1489,24 +1674,43 @@ export default function GameDetail({
                             </div>
                             {appliedVoucher && appliedVoucher.discount > 0 && (
                                 <div className="flex items-center justify-between gap-2 text-xs">
-                                    <span className="shrink-0 flex items-center gap-1 text-green-400">
+                                    <span className="flex shrink-0 items-center gap-1 text-green-400">
                                         🏷️ Diskon Voucher
                                     </span>
                                     <span className="font-semibold text-green-400">
-                                        − Rp {appliedVoucher.discount.toLocaleString('id-ID')}
+                                        − Rp{' '}
+                                        {appliedVoucher.discount.toLocaleString(
+                                            'id-ID',
+                                        )}
                                     </span>
                                 </div>
                             )}
-                            {auth.user && !selectedPayment.is_coin && selectedProduct.price >= loyaltyMinAmount && Math.floor(selectedProduct.price * loyaltyRate / 100) > 0 && (
-                                <div className="flex items-center justify-between gap-2 text-xs">
-                                    <span className="shrink-0 flex items-center gap-1 text-yellow-400/90">
-                                        <img src="/coin.png" alt="Coin" className="h-3.5 w-3.5 object-contain" /> Reward
-                                    </span>
-                                    <span className="font-semibold text-yellow-400">
-                                        +{Math.floor(selectedProduct.price * loyaltyRate / 100).toLocaleString('id-ID')} Coins
-                                    </span>
-                                </div>
-                            )}
+                            {auth.user &&
+                                !selectedPayment.is_coin &&
+                                selectedProduct.price >= loyaltyMinAmount &&
+                                Math.floor(
+                                    (selectedProduct.price * loyaltyRate) / 100,
+                                ) > 0 && (
+                                    <div className="flex items-center justify-between gap-2 text-xs">
+                                        <span className="flex shrink-0 items-center gap-1 text-yellow-400/90">
+                                            <img
+                                                src="/coin.png"
+                                                alt="Coin"
+                                                className="h-3.5 w-3.5 object-contain"
+                                            />{' '}
+                                            Reward
+                                        </span>
+                                        <span className="font-semibold text-yellow-400">
+                                            +
+                                            {Math.floor(
+                                                (selectedProduct.price *
+                                                    loyaltyRate) /
+                                                    100,
+                                            ).toLocaleString('id-ID')}{' '}
+                                            Coins
+                                        </span>
+                                    </div>
+                                )}
                         </div>
                     )}
                     <div className="w-full text-left text-white sm:w-auto">
@@ -1516,13 +1720,16 @@ export default function GameDetail({
                         <div className="text-base font-black text-[#FFC107] sm:text-lg md:text-xl">
                             {selectedProduct && selectedPayment
                                 ? `Rp ${(
-                                      selectedProduct.price
-                                      - (appliedVoucher?.discount ?? 0)
-                                      + (calculatedFees?.[selectedPayment.id] !== undefined
+                                      selectedProduct.price -
+                                      (appliedVoucher?.discount ?? 0) +
+                                      (calculatedFees?.[selectedPayment.id] !==
+                                      undefined
                                           ? calculatedFees[selectedPayment.id]
                                           : Math.ceil(
                                                 selectedPayment.fee_flat +
-                                                    ((selectedProduct.price - (appliedVoucher?.discount ?? 0)) *
+                                                    ((selectedProduct.price -
+                                                        (appliedVoucher?.discount ??
+                                                            0)) *
                                                         selectedPayment.fee_percent) /
                                                         100,
                                             ))

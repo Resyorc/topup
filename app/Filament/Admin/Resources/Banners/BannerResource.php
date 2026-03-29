@@ -27,7 +27,7 @@ class BannerResource extends Resource
 
     public static function canAccess(): bool
     {
-        return auth()->user()->hasAnyRole(['Super Admin', 'Admin']);
+        return auth()->user()->hasAnyRole(['Super Admin', 'Staff']);
     }
 
     public static function form(Schema $schema): Schema

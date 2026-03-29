@@ -51,7 +51,8 @@ class UserForm
                         ->label('Role')
                         ->relationship('roles', 'name')
                         ->multiple()
-                        ->preload(),
+                        ->preload()
+                        ->visible(fn () => auth()->user()->isSuperAdmin()),
                 ])
                 ->columns(2),
         ]);

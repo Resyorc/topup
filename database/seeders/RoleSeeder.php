@@ -11,10 +11,13 @@ class RoleSeeder extends Seeder
     {
         $roles = [
             'Super Admin',
-            'Admin',
             'Staff',
+            'CS',
             'Member',
         ];
+
+        // Rename Admin → CS jika masih ada
+        Role::where('name', 'Admin')->update(['name' => 'CS']);
 
         foreach ($roles as $role) {
             Role::firstOrCreate(['name' => $role, 'guard_name' => 'web']);

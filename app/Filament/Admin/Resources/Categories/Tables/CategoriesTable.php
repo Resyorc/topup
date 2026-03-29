@@ -36,7 +36,8 @@ class CategoriesTable
                 //
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn () => auth()->user()->hasAnyRole(['Super Admin', 'Staff'])),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

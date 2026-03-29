@@ -31,7 +31,7 @@ class FailedLoginLogResource extends Resource
 
     public static function canAccess(): bool
     {
-        return auth()->user()->hasRole('Super Admin');
+        return auth()->user()->hasAnyRole(['Super Admin', 'Staff']);
     }
 
     public static function table(\Filament\Tables\Table $table): \Filament\Tables\Table

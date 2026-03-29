@@ -27,7 +27,22 @@ class ProductResource extends Resource
 
     public static function canAccess(): bool
     {
-        return auth()->user()->hasAnyRole(['Super Admin', 'Admin', 'Staff']);
+        return auth()->user()->hasAnyRole(['Super Admin', 'Staff', 'CS']);
+    }
+
+    public static function canCreate(): bool
+    {
+        return auth()->user()->hasAnyRole(['Super Admin', 'Staff']);
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->hasAnyRole(['Super Admin', 'Staff']);
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->hasAnyRole(['Super Admin', 'Staff']);
     }
 
     public static function form(Schema $schema): Schema

@@ -73,6 +73,29 @@ class GameForm
                 ])
                 ->collapsible(),
 
+            Section::make('Region Produk')
+                ->description('Mapping country code ke SKU prefix. Contoh: country "ID" → SKU prefix "mli" (untuk Mobile Legends Indonesia). Kosongkan jika produk tidak dibedakan per region.')
+                ->schema([
+                    Repeater::make('region_map')
+                        ->label('')
+                        ->schema([
+                            TextInput::make('country')
+                                ->label('Country Code')
+                                ->required()
+                                ->placeholder('contoh: ID, MY, PH'),
+                            TextInput::make('sku_prefix')
+                                ->label('SKU Prefix')
+                                ->required()
+                                ->placeholder('contoh: mli, mlm, mlp'),
+                        ])
+                        ->columns(2)
+                        ->addActionLabel('Tambah Region')
+                        ->reorderable(false)
+                        ->collapsible()
+                        ->defaultItems(0),
+                ])
+                ->collapsible(),
+
             Section::make('Icon Produk')
                 ->description('Atur icon produk berdasarkan grup atau rentang jumlah. Rules diproses berurutan — rule pertama yang cocok yang dipakai. Kosongkan jika ingin pakai icon default game.')
                 ->schema([

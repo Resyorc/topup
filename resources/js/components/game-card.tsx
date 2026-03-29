@@ -47,10 +47,10 @@ export default function GameCard({
      *   desktop layout is completely unchanged.
      */
     const sizeMap = {
-        xs: 'w-full aspect-[3/4] lg:w-32 lg:h-[180px] lg:aspect-auto',
-        sm: 'w-full aspect-[3/4] lg:w-44 lg:h-[244px] lg:aspect-auto',
-        md: 'w-full aspect-[3/4] lg:w-[14.5rem] lg:h-[330px] lg:aspect-auto',
-        lg: 'w-full aspect-[3/4] lg:w-72 lg:h-[372px] lg:aspect-auto',
+        xs: 'w-full aspect-[3/4] lg:w-36 lg:h-[210px] lg:aspect-auto',
+        sm: 'w-full aspect-[3/4] lg:w-52 lg:h-[280px] lg:aspect-auto',
+        md: 'w-full aspect-[3/4] lg:w-[17rem] lg:h-[380px] lg:aspect-auto',
+        lg: 'w-full aspect-[3/4] lg:w-80 lg:h-[420px] lg:aspect-auto',
     };
 
     const cardSizeClass = sizeMap[cardSize] || sizeMap.md;
