@@ -34,8 +34,13 @@ class ProductsTable
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('price_sell')
-                    ->numeric()
+                    ->money('IDR', locale: 'id')
                     ->sortable(),
+                TextColumn::make('profit')
+                    ->label('Profit')
+                    ->getStateUsing(fn ($record) => $record->price_sell - $record->price_cost)
+                    ->money('IDR', locale: 'id')
+                    ->sortable(query: fn ($query, $direction) => $query->orderByRaw("(price_sell - price_cost) $direction")),
                 IconColumn::make('is_available')
                     ->boolean(),
                 TextColumn::make('created_at')
@@ -60,7 +65,8 @@ class ProductsTable
                     ->falseLabel('Tidak Tersedia'),
             ])
             ->recordActions([
-                EditAction::make(),
+                EditAction::make()
+                    ->visible(fn () => auth()->user()->hasAnyRole(['Super Admin', 'Staff'])),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

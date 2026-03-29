@@ -29,12 +29,22 @@ class UserResource extends Resource
 
     public static function canAccess(): bool
     {
-        return auth()->user()->hasRole('Super Admin');
+        return auth()->user()->hasAnyRole(['Super Admin', 'CS']);
     }
 
     public static function canCreate(): bool
     {
         return false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()->isSuperAdmin();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()->isSuperAdmin();
     }
 
     public static function form(Schema $schema): Schema

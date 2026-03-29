@@ -39,6 +39,9 @@ class GameController extends Controller
                 : (string) $game->reviews_count,
             'icon_rules' => $game->icon_rules ?? [],
             'need_zone' => (bool) (config("services.user_id_check.games.{$game->slug}.need_zone", false)),
+            'region_map' => collect($game->region_map ?? [])->mapWithKeys(
+                fn ($entry) => [strtoupper($entry['country'] ?? '') => strtolower($entry['sku_prefix'] ?? '')]
+            )->filter()->toArray(),
         ];
 
         // 3. Group products via dedicated service (per-game dynamic rules)

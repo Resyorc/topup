@@ -123,12 +123,14 @@ class UserIdCheckService
 
         $nickname = $this->extractNickname($json, $config['nickname_field'] ?? 'username');
 
+        $rawCountry = $json['confirmationFields']['country'] ?? null;
+
         return [
             'success' => true,
             'nickname' => $nickname ? urldecode($nickname) : null,
             'user_id' => $json['confirmationFields']['userId'] ?? $userId,
             'server_id' => $json['confirmationFields']['zoneId'] ?? null,
-            'country' => $json['confirmationFields']['country'] ?? null,
+            'country' => $rawCountry ? $this->normalizeCountry($rawCountry) : null,
         ];
     }
 
@@ -177,6 +179,26 @@ class UserIdCheckService
             'result' => $json['result'] ?? null,
             default => $json['confirmationFields']['username'] ?? null,
         };
+    }
+
+    private function normalizeCountry(string $country): string
+    {
+        $map = [
+            'indonesia'   => 'ID',
+            'malaysia'    => 'MY',
+            'philippines' => 'PH',
+            'singapore'   => 'SG',
+            'thailand'    => 'TH',
+            'vietnam'     => 'VN',
+            'myanmar'     => 'MM',
+            'cambodia'    => 'KH',
+            'laos'        => 'LA',
+            'brunei'      => 'BN',
+        ];
+
+        $lower = strtolower(trim($country));
+
+        return $map[$lower] ?? strtoupper($country);
     }
 
     private function resolveConfig(string $gameSlug): array
