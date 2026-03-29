@@ -105,13 +105,17 @@ class GameForm
                             Select::make('type')
                                 ->label('Tipe Rule')
                                 ->options([
-                                    'group' => 'Nama Grup/Kategori',
-                                    'range' => 'Rentang Jumlah',
+                                    'group'   => 'Nama Grup/Kategori',
+                                    'range'   => 'Rentang Jumlah',
+                                    'keyword' => 'Keyword Nama Produk',
                                 ])
                                 ->live(),
                             TextInput::make('match_group')
                                 ->label('Nama Grup (misal: Diamond, Weekly Diamond Pass)')
                                 ->hidden(fn (Get $get) => $get('type') !== 'group'),
+                            TextInput::make('match_keyword')
+                                ->label('Keyword (pisahkan koma, misal: first top up, first topup)')
+                                ->hidden(fn (Get $get) => $get('type') !== 'keyword'),
                             TextInput::make('amount_min')
                                 ->label('Jumlah Min')
                                 ->numeric()

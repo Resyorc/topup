@@ -39,8 +39,9 @@ interface GameDetailProps {
         rating: number;
         reviews_count: string;
         icon_rules: Array<{
-            type: 'group' | 'range';
+            type: 'group' | 'range' | 'keyword';
             match_group?: string;
+            match_keyword?: string;
             amount_min?: number | null;
             amount_max?: number | null;
             icon: string;
@@ -70,6 +71,14 @@ function resolveProductIcon(
                 group.toLowerCase().includes(rule.match_group.toLowerCase())
             ) {
                 return rule.icon ? '/storage/' + rule.icon : null;
+            }
+        } else if (rule.type === 'keyword') {
+            if (rule.match_keyword) {
+                const keywords = rule.match_keyword.split(',').map((k) => k.trim().toLowerCase());
+                const productName = product.clean_name.toLowerCase();
+                if (keywords.some((kw) => productName.includes(kw))) {
+                    return rule.icon ? '/storage/' + rule.icon : null;
+                }
             }
         } else if (rule.type === 'range') {
             // Extract first number from clean_name, e.g. "86 Diamond" → 86
