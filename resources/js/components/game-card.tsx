@@ -2,7 +2,8 @@ import { Link } from '@inertiajs/react';
 import { useState, useRef, useEffect } from 'react';
 
 function buildSrcSet(src: string): string | undefined {
-    if (!src.startsWith('/storage/') || !src.endsWith('.webp')) return undefined;
+    if (!src.startsWith('/storage/') || !src.endsWith('.webp'))
+        return undefined;
     const smSrc = src.replace(/\.webp$/, '-sm.webp');
     return `${smSrc} 188w, ${src} 374w`;
 }
@@ -47,10 +48,10 @@ export default function GameCard({
      *   desktop layout is completely unchanged.
      */
     const sizeMap = {
-        xs: 'w-full aspect-[3/4] lg:w-36 lg:h-[210px] lg:aspect-auto',
-        sm: 'w-full aspect-[3/4] lg:w-52 lg:h-[280px] lg:aspect-auto',
-        md: 'w-full aspect-[3/4] lg:w-[17rem] lg:h-[380px] lg:aspect-auto',
-        lg: 'w-full aspect-[3/4] lg:w-80 lg:h-[420px] lg:aspect-auto',
+        xs: 'w-full aspect-[3/4] lg:w-32 lg:h-[180px] lg:aspect-auto',
+        sm: 'w-full aspect-[3/4] lg:w-44 lg:h-[244px] lg:aspect-auto',
+        md: 'w-full aspect-[3/4] lg:w-[14.5rem] lg:h-[330px] lg:aspect-auto',
+        lg: 'w-full aspect-[3/4] lg:w-72 lg:h-[372px] lg:aspect-auto',
     };
 
     const cardSizeClass = sizeMap[cardSize] || sizeMap.md;
@@ -188,7 +189,11 @@ export default function GameCard({
                                             ref={imgRef}
                                             src={currentImgSrc}
                                             srcSet={buildSrcSet(currentImgSrc)}
-                                            sizes={buildSrcSet(currentImgSrc) ? srcSetSizes[cardSize] : undefined}
+                                            sizes={
+                                                buildSrcSet(currentImgSrc)
+                                                    ? srcSetSizes[cardSize]
+                                                    : undefined
+                                            }
                                             alt={title}
                                             className={`absolute inset-0 h-full w-full object-cover transition-opacity duration-700 ${
                                                 loaded
@@ -197,8 +202,12 @@ export default function GameCard({
                                             } group-hover:scale-110 group-hover:rotate-1`}
                                             onLoad={() => setLoaded(true)}
                                             onError={handleImageError}
-                                            loading={priority ? 'eager' : 'lazy'}
-                                            fetchPriority={priority ? 'high' : 'auto'}
+                                            loading={
+                                                priority ? 'eager' : 'lazy'
+                                            }
+                                            fetchPriority={
+                                                priority ? 'high' : 'auto'
+                                            }
                                         />
                                     )}
 

@@ -48,7 +48,10 @@ export default function Welcome({
     loyaltyMinAmount,
     loyaltyRate,
 }: WelcomeProps) {
-    const { auth, appUrl } = usePage<{ auth: { user: unknown }; appUrl: string }>().props;
+    const { auth, appUrl } = usePage<{
+        auth: { user: unknown };
+        appUrl: string;
+    }>().props;
 
     // Default active category tab to the first category if it exists
     const [activeTab, setActiveTab] = useState<number | null>(
@@ -82,26 +85,48 @@ export default function Welcome({
     return (
         <GuestLayout>
             <Head title="Nuvelo: Top Up Game Murah - Top Up ML & Top Up FF Cepat dan Aman">
-                <meta name="description" content="Nuvelo — platform top up game terpercaya Indonesia. Top up Mobile Legends, Free Fire, PUBG Mobile, dan 100+ game dengan harga murah, proses instan, dan aman." />
+                <meta
+                    name="description"
+                    content="Nuvelo — platform top up game terpercaya Indonesia. Top up Mobile Legends, Free Fire, PUBG Mobile, dan 100+ game dengan harga murah, proses instan, dan aman."
+                />
                 <link rel="canonical" href={appUrl} />
                 <meta property="og:type" content="website" />
                 <meta property="og:site_name" content="Nuvelo" />
                 <meta property="og:url" content={appUrl} />
-                <meta property="og:title" content="Nuvelo: Top Up Game Murah - Top Up ML & Top Up FF Cepat dan Aman" />
-                <meta property="og:description" content="Nuvelo — platform top up game terpercaya Indonesia. Top up Mobile Legends, Free Fire, PUBG Mobile, dan 100+ game dengan harga murah, proses instan, dan aman." />
+                <meta
+                    property="og:title"
+                    content="Nuvelo: Top Up Game Murah - Top Up ML & Top Up FF Cepat dan Aman"
+                />
+                <meta
+                    property="og:description"
+                    content="Nuvelo — platform top up game terpercaya Indonesia. Top up Mobile Legends, Free Fire, PUBG Mobile, dan 100+ game dengan harga murah, proses instan, dan aman."
+                />
                 <meta property="og:image" content={`${appUrl}/logo.png`} />
                 <meta name="twitter:card" content="summary_large_image" />
-                <meta name="twitter:title" content="Nuvelo: Top Up Game Murah - Top Up ML & Top Up FF Cepat dan Aman" />
-                <meta name="twitter:description" content="Nuvelo — platform top up game terpercaya Indonesia. Top up Mobile Legends, Free Fire, PUBG Mobile, dan 100+ game dengan harga murah, proses instan, dan aman." />
+                <meta
+                    name="twitter:title"
+                    content="Nuvelo: Top Up Game Murah - Top Up ML & Top Up FF Cepat dan Aman"
+                />
+                <meta
+                    name="twitter:description"
+                    content="Nuvelo — platform top up game terpercaya Indonesia. Top up Mobile Legends, Free Fire, PUBG Mobile, dan 100+ game dengan harga murah, proses instan, dan aman."
+                />
                 <meta name="twitter:image" content={`${appUrl}/logo.png`} />
                 {displayedGames[0]?.image && (
-                    <link rel="preload" as="image" href={`/storage/${displayedGames[0].image}`} fetchPriority="high" />
+                    <link
+                        rel="preload"
+                        as="image"
+                        href={`/storage/${displayedGames[0].image}`}
+                        fetchPriority="high"
+                    />
                 )}
             </Head>
 
             <HeroBanner banners={banners} />
 
-            <div className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ${banners.length === 0 ? 'pt-6 md:pt-8' : ''}`}>
+            <div
+                className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ${banners.length === 0 ? 'pt-6 md:pt-8' : ''}`}
+            >
                 {/* ===== Trending Section ===== */}
                 {/* On mobile: stacked layout (column). On desktop: side-by-side (row) — unchanged. */}
                 {trendingGames.length > 0 && (
@@ -153,32 +178,53 @@ export default function Welcome({
                 )}
 
                 {/* ===== Loyalty Program Banner ===== */}
-                {auth.user && <section className="mb-6 md:mb-10">
-                    <div className="rounded-2xl border border-yellow-500/20 bg-gradient-to-r from-yellow-500/5 via-amber-500/5 to-yellow-500/5 px-4 py-3.5 md:px-6 md:py-4">
-                        <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-yellow-500/15 md:h-11 md:w-11">
-                                <img src="/coin.png" alt="Coin" className="h-5 w-5 md:h-6 md:w-6 object-contain" />
-                            </div>
-                            <div className="flex-1">
-                                <h3 className="text-sm font-bold text-yellow-400 md:text-[0.9rem]">
-                                    Dapatkan Krysta Coin Setiap Top Up!
-                                </h3>
-                                <p className="mt-0.5 text-xs text-gray-400 leading-relaxed">
-                                    Setiap top up berhasil via{' '}
-                                    <span className="font-semibold text-gray-300">QRIS, E-Wallet, atau Virtual Account</span>
-                                    {' '}min. <span className="font-semibold text-gray-300">Rp {loyaltyMinAmount.toLocaleString('id-ID')}</span>
-                                    , kamu otomatis mendapat{' '}
-                                    <span className="font-semibold text-yellow-400">cashback {loyaltyRate}%</span>{' '}
-                                    dalam bentuk Krysta Coin — bisa dipakai untuk top up berikutnya.
-                                </p>
-                            </div>
-                            <div className="flex shrink-0 flex-row items-center gap-4 rounded-xl border border-yellow-500/20 bg-yellow-500/8 px-4 py-2.5 sm:flex-col sm:gap-0">
-                                <p className="text-xl font-black text-yellow-400 leading-none">{loyaltyRate}%</p>
-                                <p className="text-[10px] text-gray-400 sm:mt-0.5">Cashback Coin</p>
+                {auth.user && (
+                    <section className="mb-6 md:mb-10">
+                        <div className="rounded-2xl border border-yellow-500/20 bg-gradient-to-r from-yellow-500/5 via-amber-500/5 to-yellow-500/5 px-4 py-3.5 md:px-6 md:py-4">
+                            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
+                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-yellow-500/15 md:h-11 md:w-11">
+                                    <img
+                                        src="/coin.png"
+                                        alt="Coin"
+                                        className="h-5 w-5 object-contain md:h-6 md:w-6"
+                                    />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="text-sm font-bold text-yellow-400 md:text-[0.9rem]">
+                                        Dapatkan Krysta Coin Setiap Top Up!
+                                    </h3>
+                                    <p className="mt-0.5 text-xs leading-relaxed text-gray-400">
+                                        Setiap top up berhasil via{' '}
+                                        <span className="font-semibold text-gray-300">
+                                            QRIS, E-Wallet, atau Virtual Account
+                                        </span>{' '}
+                                        min.{' '}
+                                        <span className="font-semibold text-gray-300">
+                                            Rp{' '}
+                                            {loyaltyMinAmount.toLocaleString(
+                                                'id-ID',
+                                            )}
+                                        </span>
+                                        , kamu otomatis mendapat{' '}
+                                        <span className="font-semibold text-yellow-400">
+                                            cashback {loyaltyRate}%
+                                        </span>{' '}
+                                        dalam bentuk Krysta Coin — bisa dipakai
+                                        untuk top up berikutnya.
+                                    </p>
+                                </div>
+                                <div className="flex shrink-0 flex-row items-center gap-4 rounded-xl border border-yellow-500/20 bg-yellow-500/8 px-4 py-2.5 sm:flex-col sm:gap-0">
+                                    <p className="text-xl leading-none font-black text-yellow-400">
+                                        {loyaltyRate}%
+                                    </p>
+                                    <p className="text-[10px] text-gray-400 sm:mt-0.5">
+                                        Cashback Coin
+                                    </p>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                </section>}
+                    </section>
+                )}
 
                 {/* ===== Main Catalog Section ===== */}
                 <section className="mb-10 md:mb-16">
@@ -199,10 +245,17 @@ export default function Welcome({
                                     const iconName = category.icon
                                         ? category.icon
                                               .split('-')
-                                              .map((s: string) => s.charAt(0).toUpperCase() + s.slice(1))
+                                              .map(
+                                                  (s: string) =>
+                                                      s
+                                                          .charAt(0)
+                                                          .toUpperCase() +
+                                                      s.slice(1),
+                                              )
                                               .join('')
                                         : 'Layers';
-                                    const LucideIcon = icons[iconName as keyof typeof icons];
+                                    const LucideIcon =
+                                        icons[iconName as keyof typeof icons];
                                     return LucideIcon ? (
                                         <LucideIcon className="h-4 w-4 shrink-0 md:h-4.5 md:w-4.5" />
                                     ) : null;
@@ -214,7 +267,7 @@ export default function Welcome({
 
                     {/* Games Grid — 3 columns on mobile (matching Figma design), scales up on larger screens */}
                     {displayedGames.length > 0 ? (
-                        <div className="grid grid-cols-3 gap-2 md:grid-cols-4 lg:grid-cols-5 lg:gap-4">
+                        <div className="grid grid-cols-3 gap-2 md:grid-cols-4 lg:grid-cols-6 lg:gap-4">
                             {displayedGames.map((game, index) => (
                                 <GameCard
                                     key={game.id}
