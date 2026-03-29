@@ -11,7 +11,7 @@ class GameObserver
 {
     public function saved(Game $game): void
     {
-        if ($game->image && Str::endsWith($game->image, '.webp') && ($game->wasRecentlyCreated || $game->wasChanged('image'))) {
+        if ($game->image && Str::endsWith($game->image, '.webp')) {
             $this->generateSmallVariant(Storage::disk('public'), $game->image);
         }
     }
@@ -20,9 +20,12 @@ class GameObserver
     {
         $smPath = Str::beforeLast($relativePath, '.webp') . '-sm.webp';
 
-        if ($disk->exists($smPath) || ! $disk->exists($relativePath)) {
+        if (! $disk->exists($relativePath)) {
             return;
         }
+
+        // Hapus -sm lama agar selalu di-generate ulang dari file terbaru
+        $disk->delete($smPath);
 
         Image::read($disk->path($relativePath))
             ->scaleDown(width: $smallWidth)
