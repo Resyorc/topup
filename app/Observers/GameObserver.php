@@ -17,6 +17,8 @@ class GameObserver
             if ($path = $this->convertToWebp($game->image, 400)) {
                 $updates['image'] = $path;
             }
+        } elseif ($game->image && Str::endsWith($game->image, '.webp') && ($game->wasRecentlyCreated || $game->wasChanged('image'))) {
+            $this->generateSmallVariant(Storage::disk('public'), $game->image);
         }
 
         if ($this->fieldChanged($game, 'thumbnail')) {
