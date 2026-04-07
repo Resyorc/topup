@@ -1,6 +1,6 @@
-import { Head, usePage } from '@inertiajs/react';
+import { Head, Link, usePage } from '@inertiajs/react';
 import { icons } from 'lucide-react';
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import GameCard from '@/components/game-card';
 import HeroBanner from '@/components/hero-banner';
 import PromoBanner from '@/components/promo-banner';
@@ -29,6 +29,21 @@ interface Banner {
     link: string | null;
 }
 
+interface FlashSaleInfo {
+    id: string;
+    name: string;
+    clean_name: string;
+    game_name: string;
+    game_slug: string;
+    logo_url: string | null;
+    flash_sale_price: number;
+    regular_price: number;
+    discount_percent: number;
+    flash_sale_ends_at: number;
+    flash_sale_stock: number | null;
+    flash_sale_purchased: number;
+}
+
 interface WelcomeProps {
     banners: Banner[];
     categories: Category[];
@@ -37,6 +52,166 @@ interface WelcomeProps {
     trendingTotalSold: number;
     loyaltyMinAmount: number;
     loyaltyRate: number;
+    flashSaleItems?: FlashSaleInfo[];
+}
+
+function FlashSaleCard({ item }: { item: FlashSaleInfo }) {
+    const pct = item.flash_sale_stock && item.flash_sale_stock > 0
+        ? Math.min(100, Math.round((item.flash_sale_purchased / item.flash_sale_stock) * 100))
+        : null;
+    const outOfStock = item.flash_sale_stock !== null && item.flash_sale_purchased >= item.flash_sale_stock;
+
+    return (
+        <Link
+            href={`/order/${item.game_slug}`}
+            className={`group relative flex w-36 shrink-0 flex-col overflow-hidden rounded-xl border border-[#31334c] bg-[#1a1b26] transition hover:border-orange-500/50 sm:w-44 md:w-48 ${outOfStock ? 'pointer-events-none opacity-50' : ''}`}
+        >
+            {item.discount_percent > 0 && (
+                <div className="absolute top-2 left-2 z-10 rounded-md bg-orange-500 px-1.5 py-0.5 text-[10px] font-black text-white">
+                    -{item.discount_percent}%
+                </div>
+            )}
+            <div className="flex h-20 items-center justify-center bg-[#12121a] sm:h-24">
+                {item.logo_url ? (
+                    <img src={item.logo_url} alt={item.clean_name} className="h-12 w-12 object-contain sm:h-14 sm:w-14" />
+                ) : (
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-orange-400/50">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                        </svg>
+                    </div>
+                )}
+            </div>
+            <div className="flex flex-1 flex-col gap-1.5 p-2.5">
+                <p className="line-clamp-2 text-[11px] font-semibold leading-tight text-white sm:text-xs">{item.name}</p>
+                <p className="text-[10px] text-gray-500">{item.game_name}</p>
+                <div className="mt-auto">
+                    <p className="text-xs font-black text-white sm:text-sm">
+                        Rp {item.flash_sale_price.toLocaleString('id-ID')}
+                    </p>
+                    {item.regular_price > 0 && (
+                        <p className="text-[10px] text-gray-400 line-through">
+                            Rp {item.regular_price.toLocaleString('id-ID')}
+                        </p>
+                    )}
+                </div>
+                {pct !== null && (
+                    <div>
+                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                            <div className="h-full rounded-full bg-orange-500 transition-all" style={{ width: `${pct}%` }} />
+                        </div>
+                        <p className="mt-1 text-[10px] text-gray-500">
+                            {outOfStock ? 'Out of Stock' : `${item.flash_sale_purchased} / ${item.flash_sale_stock} purchased`}
+                        </p>
+                    </div>
+                )}
+            </div>
+        </Link>
+    );
+}
+
+function FlashSaleSection({ items }: { items: FlashSaleInfo[] }) {
+    const [countdown, setCountdown] = useState<{ h: string; m: string; s: string } | null>(null);
+    const trackRef = useRef<HTMLDivElement>(null);
+    const pausedRef = useRef(false);
+    const rafRef = useRef<number>(0);
+
+    const endMs = items[0]?.flash_sale_ends_at ? items[0].flash_sale_ends_at * 1000 : null;
+
+    // Countdown
+    useEffect(() => {
+        if (!endMs) return;
+        const update = () => {
+            const diff = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
+            setCountdown({
+                h: String(Math.floor(diff / 3600)).padStart(2, '0'),
+                m: String(Math.floor((diff % 3600) / 60)).padStart(2, '0'),
+                s: String(diff % 60).padStart(2, '0'),
+            });
+        };
+        update();
+        const id = setInterval(update, 1000);
+        return () => clearInterval(id);
+    }, [endMs]);
+
+    // Auto-scroll marquee — hanya aktif jika item lebih dari 3
+    useEffect(() => {
+        const track = trackRef.current;
+        if (!track || items.length <= 3) return;
+
+        let pos = 0;
+        const speed = 0.5; // px per frame
+
+        const animate = () => {
+            if (!pausedRef.current && track) {
+                pos += speed;
+                // Lebar setengah track (clone) → reset seamless
+                const half = track.scrollWidth / 2;
+                if (pos >= half) pos = 0;
+                track.style.transform = `translateX(-${pos}px)`;
+            }
+            rafRef.current = requestAnimationFrame(animate);
+        };
+
+        rafRef.current = requestAnimationFrame(animate);
+        return () => cancelAnimationFrame(rafRef.current);
+    }, [items.length]);
+
+    // Clone items untuk loop seamless (hanya kalau > 3)
+    const displayItems = items.length > 3 ? [...items, ...items] : items;
+    const isMarquee = items.length > 3;
+
+    return (
+        <section className="mb-8 md:mb-12">
+            {/* Header */}
+            <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
+                <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-1.5 rounded-lg bg-orange-500/15 px-3 py-1.5">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className="text-orange-400">
+                            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                        </svg>
+                        <span className="text-sm font-black tracking-wide text-orange-400 uppercase">Flash Sale</span>
+                    </div>
+                    {countdown && (
+                        <div className="flex items-center gap-1">
+                            {[countdown.h, countdown.m, countdown.s].map((val, i) => (
+                                <span key={i} className="flex items-center gap-1">
+                                    <span className="min-w-7 rounded bg-[#1e1f29] px-1.5 py-0.5 text-center font-mono text-xs font-bold text-orange-400">{val}</span>
+                                    {i < 2 && <span className="text-orange-400 font-bold">:</span>}
+                                </span>
+                            ))}
+                        </div>
+                    )}
+                </div>
+                <p className="text-[11px] font-semibold text-orange-400/60 uppercase tracking-wider">Persediaan terbatas!</p>
+            </div>
+
+            {/* Cards */}
+            {isMarquee ? (
+                // Marquee mode: overflow hidden, auto-scroll, pause on hover/touch
+                <div
+                    className="overflow-hidden"
+                    onMouseEnter={() => { pausedRef.current = true; }}
+                    onMouseLeave={() => { pausedRef.current = false; }}
+                    onTouchStart={() => { pausedRef.current = true; }}
+                    onTouchEnd={() => { pausedRef.current = false; }}
+                >
+                    <div ref={trackRef} className="flex gap-3 will-change-transform">
+                        {displayItems.map((item, i) => (
+                            <FlashSaleCard key={`${item.id}-${i}`} item={item} />
+                        ))}
+                    </div>
+                </div>
+            ) : (
+                // Few items: normal responsive grid
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                    {items.map((item) => (
+                        <FlashSaleCard key={item.id} item={item} />
+                    ))}
+                </div>
+            )}
+        </section>
+    );
 }
 
 export default function Welcome({
@@ -47,6 +222,7 @@ export default function Welcome({
     trendingTotalSold,
     loyaltyMinAmount,
     loyaltyRate,
+    flashSaleItems = [],
 }: WelcomeProps) {
     const { auth, appUrl } = usePage<{
         auth: { user: unknown };
@@ -127,6 +303,11 @@ export default function Welcome({
             <div
                 className={`mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 ${banners.length === 0 ? 'pt-6 md:pt-8' : ''}`}
             >
+                {/* ===== Flash Sale Section ===== */}
+                {flashSaleItems.length > 0 && (
+                    <FlashSaleSection items={flashSaleItems} />
+                )}
+
                 {/* ===== Trending Section ===== */}
                 {/* On mobile: stacked layout (column). On desktop: side-by-side (row) — unchanged. */}
                 {trendingGames.length > 0 && (

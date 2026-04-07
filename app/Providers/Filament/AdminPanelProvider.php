@@ -3,6 +3,7 @@
 namespace App\Providers\Filament;
 
 use App\Filament\Admin\Widgets\DashboardStats;
+use BezhanSalleh\FilamentShield\FilamentShieldPlugin;
 use App\Filament\Admin\Widgets\TopGamesWidget;
 use App\Filament\Admin\Widgets\TransactionChart;
 use Filament\Http\Middleware\Authenticate;
@@ -21,14 +22,21 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use App\Models\Setting;
+use App\Filament\Admin\Widgets\OrderStatusChart;
 
 class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
+        $logoPath = cache()->rememberForever('site_logo', function () {
+            return Setting::where('key', 'web_logo')->value('value');
+        });
+
         return $panel
             ->id('admin')
             ->path('nuvelo-control')
+            ->brandLogo(asset('storage/' . $logoPath))
             ->colors([
                 'primary' => Color::Purple,
             ])
@@ -42,11 +50,12 @@ class AdminPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Admin/Widgets'), for: 'App\Filament\Admin\Widgets')
             ->widgets([
-                DashboardStats::class,
-                TransactionChart::class,
-                TopGamesWidget::class,
-                AccountWidget::class,
-                FilamentInfoWidget::class,
+                // DashboardStats::class,
+                // TransactionChart::class,
+                // OrderStatusChart::class,
+                // TopGamesWidget::class,
+                // AccountWidget::class,
+                // FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -58,6 +67,9 @@ class AdminPanelProvider extends PanelProvider
                 SubstituteBindings::class,
                 DisableBladeIconComponents::class,
                 DispatchServingFilamentEvent::class,
+            ])
+            ->plugins([
+                FilamentShieldPlugin::make(),
             ])
             ->authMiddleware([
                 Authenticate::class,

@@ -47,6 +47,36 @@ export default function InvoiceSearch({
         invoice_id: searchedInvoiceId,
     });
 
+    const [searchMode, setSearchMode] = useState<'invoice' | 'phone'>('invoice');
+    const [phoneInput, setPhoneInput] = useState('');
+    const [phoneResults, setPhoneResults] = useState<Array<{
+        invoice_id: string;
+        type: string;
+        status: string;
+        amount: number;
+        created_at: string;
+    }> | null>(null);
+    const [phoneSearching, setPhoneSearching] = useState(false);
+    const [phoneError, setPhoneError] = useState<string | null>(null);
+
+    const searchByPhone = async (e: React.FormEvent) => {
+        e.preventDefault();
+        if (!phoneInput.trim()) return;
+        setPhoneSearching(true);
+        setPhoneError(null);
+        setPhoneResults(null);
+        try {
+            const res = await axios.get('/invoice/by-phone', {
+                params: { phone: phoneInput.trim() },
+            });
+            setPhoneResults(res.data.data);
+        } catch (err: any) {
+            setPhoneError(err.response?.data?.message ?? 'Terjadi kesalahan.');
+        } finally {
+            setPhoneSearching(false);
+        }
+    };
+
     const [invoiceData, setInvoiceData] = useState<any>(
         accessDenied ? null : initialInvoiceData,
     );
@@ -448,47 +478,109 @@ export default function InvoiceSearch({
 
                             {/* Search Box */}
                             <div className="w-full max-w-5xl overflow-hidden rounded-2xl border border-[#31334c] bg-[#1e1f29] shadow-2xl">
-                                <div className="border-b border-[#31334c] bg-white/10 px-6 py-4">
-                                    <h2 className="text-lg font-bold text-white">
+                                {/* Tabs */}
+                                <div className="flex border-b border-[#31334c]">
+                                    <button
+                                        onClick={() => setSearchMode('invoice')}
+                                        className={`flex-1 px-6 py-4 text-sm font-bold transition ${searchMode === 'invoice' ? 'border-b-2 border-primary bg-white/5 text-white' : 'text-gray-400 hover:text-white'}`}
+                                    >
                                         Nomor Invoice
-                                    </h2>
+                                    </button>
+                                    <button
+                                        onClick={() => { setSearchMode('phone'); setPhoneResults(null); setPhoneError(null); }}
+                                        className={`flex-1 px-6 py-4 text-sm font-bold transition ${searchMode === 'phone' ? 'border-b-2 border-primary bg-white/5 text-white' : 'text-gray-400 hover:text-white'}`}
+                                    >
+                                        Nomor WhatsApp
+                                    </button>
                                 </div>
 
                                 {/* Box Body */}
                                 <div className="p-4 md:p-8">
-                                    <form
-                                        onSubmit={submit}
-                                        className="flex flex-col gap-6"
-                                    >
-                                        <div>
-                                            <input
-                                                type="text"
-                                                value={data.invoice_id}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        'invoice_id',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                placeholder="Masukkan Nomor Invoice"
-                                                className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-4 text-white placeholder-gray-500 transition outline-none focus:border-primary focus:ring-primary"
-                                                required
-                                            />
-                                            {errors.invoice_id && (
-                                                <p className="mt-2 text-sm text-red-500">
-                                                    {errors.invoice_id}
+                                    {searchMode === 'invoice' ? (
+                                        <form onSubmit={submit} className="flex flex-col gap-6">
+                                            <div>
+                                                <input
+                                                    type="text"
+                                                    value={data.invoice_id}
+                                                    onChange={(e) => setData('invoice_id', e.target.value)}
+                                                    placeholder="Masukkan Nomor Invoice"
+                                                    className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-4 text-white placeholder-gray-500 transition outline-none focus:border-primary focus:ring-primary"
+                                                    required
+                                                />
+                                                {errors.invoice_id && (
+                                                    <p className="mt-2 text-sm text-red-500">{errors.invoice_id}</p>
+                                                )}
+                                            </div>
+                                            <button
+                                                type="submit"
+                                                disabled={processing}
+                                                className="w-full rounded-lg bg-linear-to-r from-primary to-[#9b4dec] px-6 py-4 text-lg font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:opacity-90 disabled:opacity-50"
+                                            >
+                                                Cari Pesanan
+                                            </button>
+                                        </form>
+                                    ) : (
+                                        <form onSubmit={searchByPhone} className="flex flex-col gap-6">
+                                            <div>
+                                                <input
+                                                    type="text"
+                                                    value={phoneInput}
+                                                    onChange={(e) => { setPhoneInput(e.target.value); setPhoneResults(null); setPhoneError(null); }}
+                                                    placeholder="Contoh: 08123456789"
+                                                    className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-4 text-white placeholder-gray-500 transition outline-none focus:border-primary"
+                                                    required
+                                                />
+                                                <p className="mt-2 text-xs text-gray-500">
+                                                    Masukkan nomor WhatsApp yang digunakan saat transaksi.
                                                 </p>
-                                            )}
-                                        </div>
+                                                {phoneError && (
+                                                    <p className="mt-2 text-sm text-red-400">{phoneError}</p>
+                                                )}
+                                            </div>
 
-                                        <button
-                                            type="submit"
-                                            disabled={processing}
-                                            className="w-full rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-6 py-4 text-lg font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:opacity-90 disabled:opacity-50"
-                                        >
-                                            Cari Pesanan
-                                        </button>
-                                    </form>
+                                            <button
+                                                type="submit"
+                                                disabled={phoneSearching}
+                                                className="w-full rounded-lg bg-linear-to-r from-primary to-[#9b4dec] px-6 py-4 text-lg font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:opacity-90 disabled:opacity-50"
+                                            >
+                                                {phoneSearching ? 'Mencari...' : 'Cari Transaksi'}
+                                            </button>
+
+                                            {/* Phone search results */}
+                                            {phoneResults && phoneResults.length > 0 && (
+                                                <div className="flex flex-col gap-2">
+                                                    <p className="text-xs font-semibold text-gray-400 uppercase">
+                                                        {phoneResults.length} transaksi ditemukan
+                                                    </p>
+                                                    {phoneResults.map((r) => (
+                                                        <Link
+                                                            key={r.invoice_id}
+                                                            href={`/invoice?invoice_id=${r.invoice_id}`}
+                                                            className="flex items-center justify-between rounded-xl border border-[#31334c] bg-[#1A1A24] px-4 py-3 transition hover:border-primary"
+                                                        >
+                                                            <div>
+                                                                <div className="text-xs font-bold text-white">{r.invoice_id}</div>
+                                                                <div className="mt-0.5 text-[11px] text-gray-400">{r.created_at}</div>
+                                                            </div>
+                                                            <div className="text-right">
+                                                                <div className="text-sm font-bold text-white">
+                                                                    Rp {r.amount.toLocaleString('id-ID')}
+                                                                </div>
+                                                                <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${
+                                                                    r.status === 'success' ? 'bg-green-500/20 text-green-400' :
+                                                                    r.status === 'failed' || r.status === 'expired' ? 'bg-red-500/20 text-red-400' :
+                                                                    r.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
+                                                                    'bg-blue-500/20 text-blue-400'
+                                                                }`}>
+                                                                    {r.status}
+                                                                </span>
+                                                            </div>
+                                                        </Link>
+                                                    ))}
+                                                </div>
+                                            )}
+                                        </form>
+                                    )}
                                 </div>
                             </div>
                         </>

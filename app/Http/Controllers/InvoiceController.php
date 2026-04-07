@@ -11,6 +11,50 @@ use Inertia\Inertia;
 
 class InvoiceController extends Controller
 {
+    public function searchByPhone(Request $request)
+    {
+        $validated = $request->validate([
+            'phone' => 'required|string|max:20',
+        ]);
+
+        // Ambil 9 digit terakhir untuk matching +62/0/tanpa prefix
+        $digits = preg_replace('/[^0-9]/', '', $validated['phone']);
+        if (strlen($digits) < 8) {
+            return response()->json(['success' => false, 'message' => 'Nomor telepon tidak valid.'], 422);
+        }
+        $tail = substr($digits, -9);
+
+        $transactions = Transaction::where('customer_whatsapp', 'LIKE', "%{$tail}%")
+            ->orderByDesc('created_at')
+            ->limit(10)
+            ->get(['invoice_id', 'status', 'created_at', 'amount']);
+
+        $coinTopups = CoinTopup::where('customer_whatsapp', 'LIKE', "%{$tail}%")
+            ->orderByDesc('created_at')
+            ->limit(5)
+            ->get(['invoice_id', 'status', 'created_at', 'amount']);
+
+        $results = $transactions->map(fn ($t) => [
+            'invoice_id' => $t->invoice_id,
+            'type'       => 'transaction',
+            'status'     => $t->status,
+            'amount'     => (int) $t->amount,
+            'created_at' => $t->created_at->format('d M Y H:i'),
+        ])->concat($coinTopups->map(fn ($c) => [
+            'invoice_id' => $c->invoice_id,
+            'type'       => 'coin_topup',
+            'status'     => $c->status,
+            'amount'     => (int) $c->amount,
+            'created_at' => $c->created_at->format('d M Y H:i'),
+        ]))->sortByDesc('created_at')->values();
+
+        if ($results->isEmpty()) {
+            return response()->json(['success' => false, 'message' => 'Tidak ada transaksi ditemukan untuk nomor ini.'], 404);
+        }
+
+        return response()->json(['success' => true, 'data' => $results]);
+    }
+
     public function show(Request $request, TransactionExpiryService $transactionExpiryService)
     {
         $invoiceId = $request->query('invoice_id');

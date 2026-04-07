@@ -16,6 +16,7 @@ class Game extends Model
         'grouping_rules' => 'array',
         'icon_rules' => 'array',
         'region_map' => 'array',
+        'input_fields' => 'array',
     ];
 
     public function category(): BelongsTo

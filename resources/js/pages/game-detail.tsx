@@ -14,6 +14,9 @@ interface Product {
     original_price: number | null;
     discount_percent: number;
     extra: string | null;
+    flash_sale_ends_at: number | null;
+    flash_sale_stock: number | null;
+    flash_sale_purchased: number;
 }
 
 interface PaymentMethod {
@@ -48,8 +51,20 @@ interface GameDetailProps {
         }>;
         need_zone: boolean;
         region_map: Record<string, string>;
+        input_fields: Array<{
+            name: string;
+            label: string;
+            type: string;
+            placeholder: string;
+            is_required?: boolean;
+        }> | null;
+        guide_image: string | null;
+        guide_content: string | null;
     };
     productGroups:
+        | { [category: string]: Product[] }
+        | { [region: string]: { [category: string]: Product[] } };
+    flashSaleGroups:
         | { [category: string]: Product[] }
         | { [region: string]: { [category: string]: Product[] } };
     paymentMethods: {
@@ -74,7 +89,9 @@ function resolveProductIcon(
             }
         } else if (rule.type === 'keyword') {
             if (rule.match_keyword) {
-                const keywords = rule.match_keyword.split(',').map((k) => k.trim().toLowerCase());
+                const keywords = rule.match_keyword
+                    .split(',')
+                    .map((k) => k.trim().toLowerCase());
                 const productName = product.clean_name.toLowerCase();
                 if (keywords.some((kw) => productName.includes(kw))) {
                     return rule.icon ? '/storage/' + rule.icon : null;
@@ -100,6 +117,7 @@ function resolveProductIcon(
 export default function GameDetail({
     game,
     productGroups,
+    flashSaleGroups,
     paymentMethods,
     loyaltyMinAmount,
     loyaltyRate,
@@ -118,15 +136,23 @@ export default function GameDetail({
     const initialWaDigits = userPhone ? parsePhoneToDigits(userPhone) : '';
     const phoneFromProfile = initialWaDigits.length >= 9;
 
-    // Form State
-    const { data, setData } = useForm({
+    const initialFormState: Record<string, any> = {
         user_id: '',
         server_id: '',
         whatsapp: phoneFromProfile ? COUNTRY_CODE + initialWaDigits : '',
         product_id: '',
         payment_method: '',
         promo_code: '',
-    });
+    };
+    if (game.input_fields) {
+        game.input_fields.forEach(f => {
+            if (!(f.name in initialFormState)) {
+                initialFormState[f.name] = '';
+            }
+        });
+    }
+
+    const { data, setData } = useForm(initialFormState);
 
     const getImageUrl = (image: string | null) => {
         if (image && image.length > 0) {
@@ -161,6 +187,7 @@ export default function GameDetail({
 
     const [detectedRegion, setDetectedRegion] = useState<string | null>(null);
     const [showModal, setShowModal] = useState(false);
+    const [showGuideModal, setShowGuideModal] = useState(false);
 
     const paymentMethodEntries = React.useMemo(
         () =>
@@ -188,12 +215,35 @@ export default function GameDetail({
         }));
     };
 
+    // Flash sale derived
+    const flashFlatGroups = flashSaleGroups as { [category: string]: Product[] };
+    const flashProducts: Product[] = Object.values(flashFlatGroups).flat();
+    const hasFlashSale = flashProducts.length > 0;
+    const flashEndsAt = hasFlashSale ? (flashProducts[0].flash_sale_ends_at ?? null) : null;
+    const [flashCountdown, setFlashCountdown] = useState<{ h: string; m: string; s: string } | null>(null);
+    useEffect(() => {
+        if (!flashEndsAt) return;
+        const endMs = flashEndsAt * 1000;
+        const update = () => {
+            const diff = Math.max(0, Math.floor((endMs - Date.now()) / 1000));
+            setFlashCountdown({
+                h: String(Math.floor(diff / 3600)).padStart(2, '0'),
+                m: String(Math.floor((diff % 3600) / 60)).padStart(2, '0'),
+                s: String(diff % 60).padStart(2, '0'),
+            });
+        };
+        update();
+        const id = setInterval(update, 1000);
+        return () => clearInterval(id);
+    }, [flashEndsAt]);
+
     // Derived States
-    const allProducts: Product[] = hasRegions
-        ? Object.values(regionedGroups).flatMap((cats) =>
-              Object.values(cats).flat(),
-          )
-        : Object.values(flatGroups).flat();
+    const allProducts: Product[] = [
+        ...flashProducts,
+        ...(hasRegions
+            ? Object.values(regionedGroups).flatMap((cats) => Object.values(cats).flat())
+            : Object.values(flatGroups).flat()),
+    ];
     const selectedProduct = allProducts.find((p) => p.id === data.product_id);
     const selectedPayment = Object.values(paymentMethods)
         .flat()
@@ -256,7 +306,7 @@ export default function GameDetail({
         null,
     );
 
-    const MIHOYO_GAMES = ['hsr', 'genshin-impact', 'zzz'];
+    const MIHOYO_GAMES = ['honkai-star-rail', 'genshin-impact', 'zzz'];
     const isMihoyoGame = MIHOYO_GAMES.includes(game.slug);
 
     const detectMihoyoServer = (uid: string) => {
@@ -459,14 +509,25 @@ export default function GameDetail({
             className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[#1A1A24] transition-all hover:border-[#6a359c] ${data.product_id === product.id ? 'border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)] ring-1 ring-primary' : 'border-[#31334c]'}`}
         >
             {product.discount_percent > 0 && (
-                <div className="flex items-center justify-between bg-orange-500 px-2.5 py-1">
-                    <span className="text-[10px] font-bold text-white">
-                        Disc {product.discount_percent}%
-                    </span>
-                    <span className="text-[10px] text-white/70 line-through">
-                        Rp {product.original_price?.toLocaleString('id-ID')}
-                    </span>
-                </div>
+                product.flash_sale_ends_at ? (
+                    <div className="flex items-center justify-between bg-orange-600 px-2.5 py-1 shadow-[0_0_8px_rgba(234,88,12,0.5)]">
+                        <span className="text-[10px] font-bold text-white">
+                            ⚡ Flash Sale {product.discount_percent}%
+                        </span>
+                        <span className="text-[10px] text-white/70 line-through">
+                            Rp {product.original_price?.toLocaleString('id-ID')}
+                        </span>
+                    </div>
+                ) : (
+                    <div className="flex items-center justify-between bg-orange-500 px-2.5 py-1">
+                        <span className="text-[10px] font-bold text-white">
+                            Disc {product.discount_percent}%
+                        </span>
+                        <span className="text-[10px] text-white/70 line-through">
+                            Rp {product.original_price?.toLocaleString('id-ID')}
+                        </span>
+                    </div>
+                )
             )}
             <div className="relative z-10 flex flex-col justify-between p-3 md:p-4">
                 <div className="mb-2 flex items-start justify-between gap-2">
@@ -669,7 +730,10 @@ export default function GameDetail({
                         </span>
 
                         <div className="ml-auto hidden md:block">
-                            <button className="flex items-center gap-2 rounded-full border border-[#31334c] px-4 py-1.5 text-xs text-gray-300 transition hover:bg-white/5 hover:text-white">
+                            <button
+                                onClick={() => setShowGuideModal(true)}
+                                className="flex items-center gap-2 rounded-full border border-[#31334c] px-4 py-1.5 text-xs text-gray-300 transition hover:bg-white/5 hover:text-white"
+                            >
                                 Cara Pembelian{' '}
                                 <svg
                                     width="14"
@@ -832,55 +896,74 @@ export default function GameDetail({
                                 </div>
                                 <div className="space-y-4 p-5">
                                     <div
-                                        className={`grid grid-cols-1 gap-4 ${game.need_zone ? 'md:grid-cols-2' : ''}`}
+                                        className={`grid grid-cols-1 gap-4 ${(game.input_fields?.length ?? 0) > 1 || (!game.input_fields && game.need_zone) ? 'md:grid-cols-2' : ''}`}
                                     >
-                                        <div>
-                                            <label className="mb-1 block text-xs text-white/70">
-                                                User ID
-                                            </label>
-                                            <input
-                                                type="text"
-                                                placeholder="Masukkan User ID"
-                                                value={data.user_id}
-                                                onChange={(e) =>
-                                                    setData(
-                                                        'user_id',
-                                                        e.target.value,
-                                                    )
-                                                }
-                                                className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
-                                            />
-                                        </div>
-                                        {game.need_zone && (
-                                            <div>
-                                                <label className="mb-1 block text-xs text-white/70">
-                                                    Server
-                                                </label>
-                                                <input
-                                                    type="text"
-                                                    disabled={isMihoyoGame}
-                                                    placeholder={
-                                                        isMihoyoGame
-                                                            ? 'Otomatis dari UID'
-                                                            : 'Masukkan Server'
-                                                    }
-                                                    value={
-                                                        isMihoyoGame
-                                                            ? detectMihoyoServer(
-                                                                  data.user_id,
-                                                              )?.name || ''
-                                                            : data.server_id
-                                                    }
-                                                    onChange={(e) =>
-                                                        !isMihoyoGame &&
-                                                        setData(
-                                                            'server_id',
-                                                            e.target.value,
-                                                        )
-                                                    }
-                                                    className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary disabled:bg-[#1a1a24] disabled:text-white/60"
-                                                />
-                                            </div>
+                                        {game.input_fields && game.input_fields.length > 0 ? (
+                                            game.input_fields.map((field) => (
+                                                <div key={field.name}>
+                                                    <label className="mb-1 block text-xs text-white/70">
+                                                        {field.label} {field.is_required && <span className="text-red-500">*</span>}
+                                                    </label>
+                                                    <input
+                                                        type={field.type === 'number' ? 'number' : 'text'}
+                                                        placeholder={field.placeholder || `Masukkan ${field.label}`}
+                                                        value={data[field.name as keyof typeof data] || ''}
+                                                        onChange={(e) => setData(field.name as any, e.target.value)}
+                                                        className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
+                                                    />
+                                                </div>
+                                            ))
+                                        ) : (
+                                            <>
+                                                <div>
+                                                    <label className="mb-1 block text-xs text-white/70">
+                                                        User ID
+                                                    </label>
+                                                    <input
+                                                        type="text"
+                                                        placeholder="Masukkan User ID"
+                                                        value={data.user_id}
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                'user_id',
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
+                                                    />
+                                                </div>
+                                                {game.need_zone && (
+                                                    <div>
+                                                        <label className="mb-1 block text-xs text-white/70">
+                                                            Server
+                                                        </label>
+                                                        <input
+                                                            type="text"
+                                                            disabled={isMihoyoGame}
+                                                            placeholder={
+                                                                isMihoyoGame
+                                                                    ? 'Otomatis dari UID'
+                                                                    : 'Masukkan Server'
+                                                            }
+                                                            value={
+                                                                isMihoyoGame
+                                                                    ? detectMihoyoServer(
+                                                                          data.user_id,
+                                                                      )?.name || ''
+                                                                    : data.server_id
+                                                            }
+                                                            onChange={(e) =>
+                                                                !isMihoyoGame &&
+                                                                setData(
+                                                                    'server_id',
+                                                                    e.target.value,
+                                                                )
+                                                            }
+                                                            className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary disabled:bg-[#1a1a24] disabled:text-white/60"
+                                                        />
+                                                    </div>
+                                                )}
+                                            </>
                                         )}
                                     </div>
                                     <div
@@ -1007,6 +1090,84 @@ export default function GameDetail({
                                     </div>
                                 </div>
                                 <div className="space-y-6 p-4">
+                                    {/* ===== Flash Sale Block ===== */}
+                                    {hasFlashSale && (
+                                        <div className="overflow-hidden rounded-xl border-2 border-orange-500/60 bg-[#1a1505]">
+                                            {/* Flash Sale Header */}
+                                            <div className="flex items-center justify-between bg-orange-500/15 px-4 py-2.5">
+                                                <div className="flex items-center gap-2">
+                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-orange-400">
+                                                        <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
+                                                    </svg>
+                                                    <span className="text-sm font-black uppercase tracking-wide text-orange-400">Flash Sale</span>
+                                                </div>
+                                                {flashCountdown && (
+                                                    <div className="flex items-center gap-1 text-xs font-bold">
+                                                        <span className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-orange-400">{flashCountdown.h}</span>
+                                                        <span className="text-orange-400">:</span>
+                                                        <span className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-orange-400">{flashCountdown.m}</span>
+                                                        <span className="text-orange-400">:</span>
+                                                        <span className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-orange-400">{flashCountdown.s}</span>
+                                                    </div>
+                                                )}
+                                            </div>
+                                            {/* Flash Sale Products */}
+                                            <div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-3 md:gap-3">
+                                                {flashProducts.map((product) => {
+                                                    const pct = product.flash_sale_stock && product.flash_sale_stock > 0
+                                                        ? Math.min(100, Math.round((product.flash_sale_purchased / product.flash_sale_stock) * 100))
+                                                        : null;
+                                                    const outOfStock = product.flash_sale_stock !== null && product.flash_sale_purchased >= product.flash_sale_stock;
+                                                    return (
+                                                        <div
+                                                            key={product.id}
+                                                            onClick={() => {
+                                                                if (outOfStock) return;
+                                                                if (!canSelectProduct) {
+                                                                    swalWarning(!section1Complete ? 'Isi User ID dan Server terlebih dahulu.' : 'Isi nomor WhatsApp terlebih dahulu.');
+                                                                    return;
+                                                                }
+                                                                handleProductSelect(product.id);
+                                                            }}
+                                                            className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[#1A1A24] transition-all ${outOfStock ? 'cursor-not-allowed opacity-50' : 'hover:border-orange-500/60'} ${data.product_id === product.id ? 'border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.25)] ring-1 ring-orange-500' : 'border-orange-500/30'}`}
+                                                        >
+                                                            <div className="flex items-center justify-between bg-orange-600 px-2.5 py-1">
+                                                                <span className="text-[10px] font-bold text-white">
+                                                                    {product.discount_percent > 0 ? `Disc ${product.discount_percent}%` : '⚡ Flash Sale'}
+                                                                </span>
+                                                                {product.original_price && (
+                                                                    <span className="text-[10px] text-white/70 line-through">
+                                                                        Rp {product.original_price.toLocaleString('id-ID')}
+                                                                    </span>
+                                                                )}
+                                                            </div>
+                                                            <div className="p-3">
+                                                                <div className="line-clamp-2 text-xs font-bold leading-tight text-[#FFC107]">{product.clean_name}</div>
+                                                                {product.extra && <div className="mt-0.5 truncate text-[9px] text-gray-400">{product.extra}</div>}
+                                                                <div className="mt-2 text-sm font-bold text-white">
+                                                                    Rp {product.price.toLocaleString('id-ID')}
+                                                                </div>
+                                                                {pct !== null && (
+                                                                    <div className="mt-2">
+                                                                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                                                                            <div className="h-full rounded-full bg-orange-500" style={{ width: `${pct}%` }} />
+                                                                        </div>
+                                                                        <p className="mt-1 text-[10px] text-gray-500">
+                                                                            {outOfStock ? 'Out of Stock' : `${product.flash_sale_purchased} / ${product.flash_sale_stock} purchased`}
+                                                                        </p>
+                                                                    </div>
+                                                                )}
+                                                            </div>
+                                                            {data.product_id === product.id && (
+                                                                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent" />
+                                                            )}
+                                                        </div>
+                                                    );
+                                                })}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {hasRegions
                                         ? // Mode region: urutkan detected region di atas
                                           Object.keys(regionedGroups)
@@ -2007,6 +2168,54 @@ export default function GameDetail({
                                         : 'Buat Pesanan!'}
                                 </button>
                             </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* Guide Modal (Cara Pembelian) */}
+            {showGuideModal && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
+                    <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-[#1e1f29] shadow-2xl ring-1 ring-white/10">
+                        <div className="flex items-center justify-between border-b border-[#31334c] bg-[#242533] px-5 py-4">
+                            <h3 className="text-lg font-bold text-white">Cara Pembelian</h3>
+                            <button
+                                onClick={() => setShowGuideModal(false)}
+                                className="rounded-full bg-white/5 p-1.5 text-gray-400 hover:bg-white/10 hover:text-white"
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                    <path d="M18 6L6 18M6 6l12 12" />
+                                </svg>
+                            </button>
+                        </div>
+                        <div className="max-h-[70vh] overflow-y-auto p-5">
+                            {game.guide_image && (
+                                <img
+                                    src={'/storage/' + game.guide_image}
+                                    alt="Panduan"
+                                    className="mb-4 w-full rounded-xl border border-[#31334c] object-contain"
+                                />
+                            )}
+                            {game.guide_content ? (
+                                <div
+                                    className="prose prose-invert prose-sm max-w-none text-gray-300"
+                                    dangerouslySetInnerHTML={{ __html: game.guide_content }}
+                                />
+                            ) : (
+                                !game.guide_image && (
+                                    <p className="text-center text-sm text-gray-500">
+                                        Tidak ada instruksi panduan yang tersedia untuk game ini.
+                                    </p>
+                                )
+                            )}
+                        </div>
+                        <div className="border-t border-[#31334c] p-4">
+                            <button
+                                onClick={() => setShowGuideModal(false)}
+                                className="w-full rounded-xl bg-white/10 py-3 font-bold text-white transition hover:bg-white/20"
+                            >
+                                Mengerti
+                            </button>
                         </div>
                     </div>
                 </div>

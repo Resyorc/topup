@@ -12,7 +12,7 @@ export default function GuestLayout({
 }: {
     children: React.ReactNode;
 }) {
-    const { auth, broadcastMessages } = usePage().props as any;
+    const { auth, broadcastMessages, webSetting } = usePage().props as any;
     const currentUrl = usePage().url;
     const tickerMsgs =
         broadcastMessages && broadcastMessages.length > 0
@@ -56,16 +56,14 @@ export default function GuestLayout({
                             href="/"
                             className="flex shrink-0 cursor-pointer items-center focus:outline-0"
                         >
-                            <picture>
-                                <source srcSet="/logo-2x.webp" type="image/webp" />
-                                <img
-                                    src="/logo.png"
-                                    alt="Nuvelo"
-                                    className="h-10 w-auto md:h-12"
-                                    width="280"
-                                    height="96"
-                                />
-                            </picture>
+                            {webSetting?.logo ? (
+                                <img src={webSetting.logo} alt="Nuvelo" className="h-10 w-auto md:h-12" />
+                            ) : (
+                                <picture>
+                                    <source srcSet="/logo-2x.webp" type="image/webp" />
+                                    <img src="/logo.png" alt="Nuvelo" className="h-10 w-auto md:h-12" width="280" height="96" />
+                                </picture>
+                            )}
                         </Link>
 
                         {/* Desktop Search Bar */}
@@ -232,6 +230,48 @@ export default function GuestLayout({
                                         </span>
                                     </div>
                                 </Link>
+
+                                <Link
+                                    href="/blog"
+                                    className={`group relative flex cursor-pointer items-center py-2 text-nowrap transition md:py-3 ${isActive('/blog') ? 'text-client-warning' : 'text-white hover:text-gray-200'}`}
+                                >
+                                    <div className="flex items-center justify-between gap-2 md:gap-2.5">
+                                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="md:h-4.5 md:w-4.5">
+                                            <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
+                                            <path d="M18 14h-8" /><path d="M15 18h-5" /><path d="M10 6h8v4h-8V6Z" />
+                                        </svg>
+                                        <span className="text-xs md:text-sm">Blog</span>
+                                    </div>
+                                </Link>
+
+                                <Link
+                                    href="/price-list"
+                                    className={`group relative flex cursor-pointer items-center py-2 text-nowrap transition md:py-3 ${isActive('/price-list') ? 'text-client-warning' : 'text-white hover:text-gray-200'}`}
+                                >
+                                    <div className="flex items-center justify-between gap-2 md:gap-2.5">
+                                        <svg
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                            className="md:h-4.5 md:w-4.5"
+                                        >
+                                            <line x1="8" y1="6" x2="21" y2="6" />
+                                            <line x1="8" y1="12" x2="21" y2="12" />
+                                            <line x1="8" y1="18" x2="21" y2="18" />
+                                            <line x1="3" y1="6" x2="3.01" y2="6" />
+                                            <line x1="3" y1="12" x2="3.01" y2="12" />
+                                            <line x1="3" y1="18" x2="3.01" y2="18" />
+                                        </svg>
+                                        <span className="text-xs md:text-sm">
+                                            Daftar Harga
+                                        </span>
+                                    </div>
+                                </Link>
                             </div>
 
                             {/* Divider — desktop only */}
@@ -330,6 +370,35 @@ export default function GuestLayout({
                         </span>
                     </Link>
 
+                    <Link
+                        href="/price-list"
+                        className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition ${isActive('/price-list') ? 'text-primary' : 'text-gray-400 hover:text-gray-200'}`}
+                    >
+                        {isActive('/price-list') && (
+                            <span className="absolute -top-2 left-1/2 h-0.75 w-6 -translate-x-1/2 rounded-b bg-primary"></span>
+                        )}
+                        <svg
+                            width="22"
+                            height="22"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        >
+                            <line x1="8" y1="6" x2="21" y2="6" />
+                            <line x1="8" y1="12" x2="21" y2="12" />
+                            <line x1="8" y1="18" x2="21" y2="18" />
+                            <line x1="3" y1="6" x2="3.01" y2="6" />
+                            <line x1="3" y1="12" x2="3.01" y2="12" />
+                            <line x1="3" y1="18" x2="3.01" y2="18" />
+                        </svg>
+                        <span className="text-xs font-medium">
+                            Harga
+                        </span>
+                    </Link>
+
                     {/* Akun — only shown when user is logged in. Links to dashboard. */}
                     {auth?.user && (
                         <Link
@@ -368,19 +437,14 @@ export default function GuestLayout({
                                 href="/"
                                 className="mb-3 flex items-center md:mb-4"
                             >
-                                <picture>
-                                    <source
-                                        srcSet="/logo-2x.webp"
-                                        type="image/webp"
-                                    />
-                                    <img
-                                        src="/logo.png"
-                                        alt="Nuvelo"
-                                        className="h-7 w-auto md:h-9"
-                                        width="280"
-                                        height="96"
-                                    />
-                                </picture>
+                                {webSetting?.logo ? (
+                                    <img src={webSetting.logo} alt="Nuvelo" className="h-7 w-auto md:h-9" />
+                                ) : (
+                                    <picture>
+                                        <source srcSet="/logo-2x.webp" type="image/webp" />
+                                        <img src="/logo.png" alt="Nuvelo" className="h-7 w-auto md:h-9" width="280" height="96" />
+                                    </picture>
+                                )}
                             </Link>
                             <p className="text-xs leading-relaxed text-gray-400 md:text-sm">
                                 <strong className="text-[#c084fc]">Nuvelo</strong>{' '}
@@ -429,6 +493,30 @@ export default function GuestLayout({
                                         Cek Invoice
                                     </Link>
                                 </li>
+                                <li>
+                                    <Link
+                                        href="/price-list"
+                                        className="transition hover:text-primary"
+                                    >
+                                        Daftar Harga
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        href="/blog"
+                                        className="transition hover:text-primary"
+                                    >
+                                        Blog
+                                    </Link>
+                                </li>
+                                <li>
+                                    <Link
+                                        href="/api-docs"
+                                        className="transition hover:text-primary"
+                                    >
+                                        API Docs
+                                    </Link>
+                                </li>
                             </ul>
                         </div>
 
@@ -440,7 +528,7 @@ export default function GuestLayout({
                             <ul className="space-y-2 text-xs text-gray-400 md:space-y-3 md:text-sm">
                                 <li>
                                     <a
-                                        href="https://wa.me/6285158330663"
+                                        href={`https://wa.me/${webSetting?.waBubble?.number || '6285158330663'}`}
                                         target="_blank"
                                         className="transition hover:text-primary"
                                     >
@@ -526,18 +614,22 @@ export default function GuestLayout({
                     <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 border-t border-[#31334c] px-4 pt-4 text-xs text-gray-300 md:flex-row md:gap-0 md:pt-6">
                         <p>&copy; 2026 Nuvelo. All rights reserved.</p>
                         <div className="mt-2 flex gap-4 md:mt-0">
-                            <Link
-                                href="/kebijakan-privasi"
-                                className="transition hover:text-white"
-                            >
-                                Kebijakan Privasi
-                            </Link>
-                            <Link
-                                href="/syarat-ketentuan"
-                                className="transition hover:text-white"
-                            >
-                                Syarat & Ketentuan
-                            </Link>
+                            {webSetting?.footerLinks && webSetting.footerLinks.length > 0 ? (
+                                webSetting.footerLinks.map((link: any, i: number) => (
+                                    <Link key={i} href={link.url} className="transition hover:text-white">
+                                        {link.label}
+                                    </Link>
+                                ))
+                            ) : (
+                                <>
+                                    <Link href="/kebijakan-privasi" className="transition hover:text-white">
+                                        Kebijakan Privasi
+                                    </Link>
+                                    <Link href="/syarat-ketentuan" className="transition hover:text-white">
+                                        Syarat & Ketentuan
+                                    </Link>
+                                </>
+                            )}
                         </div>
                     </div>
                 </footer>

@@ -7,6 +7,7 @@ namespace App\Services;
 use Exception;
 use Illuminate\Http\Client\PendingRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 
 class DigiflazzService
 {
@@ -58,6 +59,7 @@ class DigiflazzService
         $response = $this->client()->post('/cek-saldo', $payload);
 
         if (! $response->successful()) {
+            Log::channel('digiflazz')->error('Digiflazz API Error: '.$response->body());
             throw new Exception('Digiflazz API Error: '.$response->body());
         }
 
@@ -78,10 +80,20 @@ class DigiflazzService
         $response = $this->client()->post('/price-list', $payload);
 
         if (! $response->successful()) {
+            Log::channel('digiflazz')->error('Digiflazz API Error: '.$response->body());
             throw new Exception('Digiflazz API Error: '.$response->body());
         }
 
-        return $response->json('data') ?? [];
+        $json = $response->json();
+
+        if (isset($json['data'])) {
+            return $json['data'];
+        }
+
+        // Tangkap kondisi dimana HTTP 200 tetapi API error (terkena Rate Limit RC: 83 dll)
+        $msg = $json['message'] ?? 'Unknown error';
+        Log::channel('digiflazz')->error("Digiflazz API Error: {$msg}", $json ?? []);
+        throw new Exception("Digiflazz API Error: {$msg}");
     }
 
     /**
@@ -100,12 +112,14 @@ class DigiflazzService
         $response = $this->client()->post('/transaction', $payload);
 
         if (! $response->successful()) {
+            Log::channel('digiflazz')->error('Digiflazz API Error: '.$response->body());
             throw new Exception('Digiflazz API Error: '.$response->body());
         }
 
         $data = $response->json('data') ?? [];
 
         if (isset($data['status']) && strtolower($data['status']) === 'gagal') {
+            Log::channel('digiflazz')->error('Digiflazz Transaction Error: '.($data['message'] ?? 'Unknown error'));
             throw new Exception('Digiflazz Transaction Error: '.($data['message'] ?? 'Unknown error'));
         }
 
@@ -131,6 +145,7 @@ class DigiflazzService
         $response = $this->client()->post('/transaction', $payload);
 
         if (! $response->successful()) {
+            Log::channel('digiflazz')->error('Digiflazz API Error: '.$response->body());
             throw new Exception('Digiflazz API Error: '.$response->body());
         }
 
@@ -153,6 +168,7 @@ class DigiflazzService
         $response = $this->client()->post('/deposit', $payload);
 
         if (! $response->successful()) {
+            Log::channel('digiflazz')->error('Digiflazz API Error: '.$response->body());
             throw new Exception('Digiflazz API Error: '.$response->body());
         }
 

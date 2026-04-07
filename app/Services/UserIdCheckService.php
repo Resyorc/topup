@@ -229,7 +229,7 @@ class UserIdCheckService
 
     private function shouldAutoDetectMihoyoZone(string $gameSlug): bool
     {
-        return in_array($gameSlug, ['hsr', 'genshin-impact', 'zzz'], true);
+        return in_array($gameSlug, ['honkai-star-rail', 'genshin-impact', 'zzz'], true);
     }
 
     private function resolveMihoyoServer(string $uid, array $serverZones = []): ?array

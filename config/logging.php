@@ -82,6 +82,14 @@ return [
             'replace_placeholders' => true,
         ],
 
+        'digiflazz' => [
+            'driver' => 'daily',
+            'path' => storage_path('logs/digiflazz.log'),
+            'level' => env('LOG_LEVEL', 'debug'),
+            'days' => 14,
+            'replace_placeholders' => true,
+        ],
+
         'papertrail' => [
             'driver' => 'monolog',
             'level' => env('LOG_LEVEL', 'debug'),

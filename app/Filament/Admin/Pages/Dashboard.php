@@ -8,4 +8,9 @@ class Dashboard extends \Filament\Pages\Dashboard
     {
         return auth()->user()->hasAnyRole(['Super Admin', 'Staff', 'CS']);
     }
+
+    public function getColumns(): int | array
+    {
+        return 2;
+    }
 }

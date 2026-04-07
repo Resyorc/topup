@@ -24,6 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
         // Trust semua proxy — aman karena server berada di belakang Cloudflare
         $middleware->trustProxies(at: '*');
 
+        $middleware->alias([
+            'auth.api_key' => \App\Http\Middleware\AuthenticateApiKey::class,
+        ]);
+
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->web(append: [

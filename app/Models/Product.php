@@ -12,6 +12,10 @@ class Product extends Model
 {
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'flash_sale_ends_at' => 'datetime',
+    ];
+
     public function game(): BelongsTo
     {
         return $this->belongsTo(Game::class);
@@ -20,5 +24,10 @@ class Product extends Model
     public function transactions(): HasMany
     {
         return $this->hasMany(Transaction::class);
+    }
+
+    public function providerProducts(): HasMany
+    {
+        return $this->hasMany(ProviderProduct::class);
     }
 }

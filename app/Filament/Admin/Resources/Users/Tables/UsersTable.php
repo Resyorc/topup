@@ -34,13 +34,21 @@ class UsersTable
                     ->sortable(),
 
                 IconColumn::make('email_verified_at')
-                    ->label('Verifikasi Email')
+                    ->label('Email Verified')
                     ->boolean()
                     ->getStateUsing(fn ($record) => ! is_null($record->email_verified_at))
                     ->trueIcon('heroicon-o-check-badge')
                     ->falseIcon('heroicon-o-x-circle')
                     ->trueColor('success')
                     ->falseColor('danger'),
+
+                IconColumn::make('api_access_enabled')
+                    ->label('API Access')
+                    ->boolean()
+                    ->trueIcon('heroicon-o-key')
+                    ->falseIcon('heroicon-o-lock-closed')
+                    ->trueColor('success')
+                    ->falseColor('gray'),
 
                 TextColumn::make('tier')
                     ->label('Tier')
@@ -77,6 +85,26 @@ class UsersTable
             ])
             ->defaultSort('created_at', 'desc')
             ->actions([
+                Action::make('toggle_api_access')
+                    ->label(fn ($record) => $record->api_access_enabled ? 'Cabut API Access' : 'Aktifkan API Access')
+                    ->icon(fn ($record) => $record->api_access_enabled ? 'heroicon-o-lock-closed' : 'heroicon-o-key')
+                    ->color(fn ($record) => $record->api_access_enabled ? 'danger' : 'success')
+                    ->requiresConfirmation()
+                    ->modalHeading(fn ($record) => $record->api_access_enabled ? 'Cabut API Access' : 'Aktifkan API Access')
+                    ->modalDescription(fn ($record) => $record->api_access_enabled
+                        ? "API Key {$record->name} akan dinonaktifkan. Semua request API menggunakan key lama akan ditolak."
+                        : "Aktifkan akses API untuk {$record->name}. Pastikan user sudah verifikasi email dan terpercaya."
+                    )
+                    ->modalSubmitActionLabel(fn ($record) => $record->api_access_enabled ? 'Ya, Cabut Akses' : 'Ya, Aktifkan')
+                    ->action(function ($record) {
+                        $record->update(['api_access_enabled' => ! $record->api_access_enabled]);
+                        \Filament\Notifications\Notification::make()
+                            ->title($record->api_access_enabled ? 'API Access diaktifkan' : 'API Access dicabut')
+                            ->success()
+                            ->send();
+                    })
+                    ->visible(fn () => auth()->user()->hasAnyRole(['Super Admin', 'Staff'])),
+
                 Action::make('reset_password')
                     ->label('Reset Password')
                     ->icon('heroicon-o-key')
@@ -108,6 +136,12 @@ class UsersTable
                     ->placeholder('Semua')
                     ->trueLabel('Sudah Verifikasi')
                     ->falseLabel('Belum Verifikasi'),
+
+                TernaryFilter::make('api_access_enabled')
+                    ->label('API Access')
+                    ->placeholder('Semua')
+                    ->trueLabel('Sudah Diaktifkan')
+                    ->falseLabel('Belum Diaktifkan'),
 
                 SelectFilter::make('roles')
                     ->label('Role')
