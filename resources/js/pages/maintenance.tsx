@@ -4,9 +4,11 @@ import { useEffect, useState } from 'react';
 interface Props {
     estimatedEnd?: string | null;
     message?: string | null;
+    waNumber?: string | null;
+    logo?: string | null;
 }
 
-export default function Maintenance({ estimatedEnd, message }: Props) {
+export default function Maintenance({ estimatedEnd, message, waNumber, logo }: Props) {
     const [visible, setVisible] = useState(false);
     const [rotation1, setRotation1] = useState(0);
     const [rotation2, setRotation2] = useState(0);
@@ -92,18 +94,22 @@ export default function Maintenance({ estimatedEnd, message }: Props) {
                     </div>
 
                     {/* Brand */}
-                    <div
-                        className="text-4xl font-bold text-transparent bg-clip-text mb-2 select-none"
-                        style={{
-                            backgroundImage: 'linear-gradient(135deg, #b058ff 0%, #7c3aed 50%, #a855f7 100%)',
-                            fontFamily: 'Orbitron, monospace',
-                        }}
-                    >
-                        NUVELO
-                    </div>
+                    {logo ? (
+                        <img src={logo} alt="Logo" className="h-12 mx-auto mb-2 object-contain select-none" />
+                    ) : (
+                        <div
+                            className="text-4xl font-bold text-transparent bg-clip-text mb-2 select-none"
+                            style={{
+                                backgroundImage: 'linear-gradient(135deg, #b058ff 0%, #7c3aed 50%, #a855f7 100%)',
+                                fontFamily: 'Orbitron, monospace',
+                            }}
+                        >
+                            NUVELO
+                        </div>
+                    )}
 
                     {/* Divider line */}
-                    <div className="mx-auto my-4 h-px w-32 bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
+                    <div className="mx-auto my-4 h-px w-32 bg-linear-to-r from-transparent via-purple-500 to-transparent" />
 
                     {/* Title */}
                     <h1 className="text-2xl md:text-3xl font-semibold text-white mb-3">
@@ -142,16 +148,16 @@ export default function Maintenance({ estimatedEnd, message }: Props) {
                     </div>
 
                     {/* Divider */}
-                    <div className="mx-auto mb-6 h-px w-full bg-gradient-to-r from-transparent via-purple-500/30 to-transparent" />
+                    <div className="mx-auto mb-6 h-px w-full bg-linear-to-r from-transparent via-purple-500/30 to-transparent" />
 
                     {/* Contact */}
                     <div className="flex flex-wrap items-center justify-center gap-4 mb-6">
                         <a
-                            href="https://wa.me/6281234567890"
+                            href={waNumber ? `https://wa.me/${waNumber.replace(/\D/g, '')}` : '#'}
                             target="_blank"
                             rel="noreferrer"
                             className="inline-flex items-center gap-2 px-5 py-2.5 rounded-full text-sm font-medium text-white
-                                       bg-gradient-to-r from-green-600 to-emerald-600
+                                       bg-linear-to-r from-green-600 to-emerald-600
                                        hover:from-green-500 hover:to-emerald-500
                                        transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-green-500/30
                                        active:scale-95"
