@@ -148,13 +148,13 @@ class AiSkuAnalyzerService
             $avgMargin = $marginContext[$g['id']] ?? null;
             $line      = "  - ID {$g['id']}: {$g['name']} | {$sold} transaksi";
             if ($avgMargin) {
-                $line .= " | margin rata-rata berlaku: Rp " . number_format($avgMargin, 0, ',', '.');
+                $line .= " | margin rata-rata berlaku: Rp " . number_format((float) $avgMargin, 0, ',', '.');
             }
             return $line;
         })->join("\n");
 
         $skuList = collect($skus)
-            ->map(fn ($s) => "  {$s['sku_code']} | {$s['product_name']} | Brand: {$s['brand']} | Seller: {$s['seller_name']} | Rp " . number_format($s['price'], 0, ',', '.'))
+            ->map(fn ($s) => "  {$s['sku_code']} | {$s['product_name']} | Brand: {$s['brand']} | Seller: {$s['seller_name']} | Rp " . number_format((float) $s['price'], 0, ',', '.'))
             ->join("\n");
 
         return <<<PROMPT

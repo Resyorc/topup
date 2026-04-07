@@ -88,10 +88,7 @@ class ProductGroupingService
 
     private function mapProduct($product): array
     {
-        $userRole = auth()->check() ? auth()->user()->roles->first()?->name : 'Guest';
-        $tier = strtolower($userRole ?? 'Guest');
-        
-        // Allowed tiers
+        $tier = auth()->check() ? (auth()->user()->tier ?? 'guest') : 'guest';
         if (!in_array($tier, ['guest', 'bronze', 'silver', 'gold', 'platinum'])) {
             $tier = 'guest';
         }
