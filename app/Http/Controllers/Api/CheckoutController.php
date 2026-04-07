@@ -40,10 +40,17 @@ class CheckoutController extends Controller
         $customerEmail = $validated['customer_email'] ?? 'guest@nuvelo.com';
         $authenticatedUserId = auth()->id();
 
-        $product = Product::findOrFail($validated['product_id']);
+        $product = Product::with(['providerProducts' => function ($q) {
+            $q->where('is_active', true)->orderBy('price', 'asc');
+        }])->findOrFail($validated['product_id']);
 
         if (! $product->is_available) {
             return response()->json(['error' => 'Product is currently unavailable.'], 400);
+        }
+
+        $providerSku = $product->providerProducts->first()?->provider_sku;
+        if (! $providerSku) {
+            return response()->json(['error' => 'Produk tidak memiliki SKU provider aktif. Silakan hubungi admin.'], 400);
         }
 
         // Harga berdasarkan tier user: guest, bronze, silver, gold, platinum
@@ -125,7 +132,7 @@ class CheckoutController extends Controller
 
         $orderItems = [
             [
-                'sku' => $product->provider_sku,
+                'sku' => $providerSku,
                 'name' => $product->game->name.' - '.$product->name,
                 'price' => $effectivePrice,
                 'quantity' => $qty,
@@ -324,7 +331,7 @@ class CheckoutController extends Controller
         }
 
         try {
-            $transaction = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $customerName, $authenticatedUserId, $user, $coinService, $effectivePrice, $request) {
+            $transaction = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $customerName, $authenticatedUserId, $user, $coinService, $effectivePrice, $request, $providerSku) {
 
                 // Re-check double order di dalam transaction dengan lockForUpdate — cegah race condition.
                 $duplicate = Transaction::where('product_id', $product->id)
@@ -386,7 +393,7 @@ class CheckoutController extends Controller
                 // 3. Kirim ke Digiflazz langsung
                 $digiflazzService = app(\App\Services\DigiflazzService::class);
                 $digiflazzService->createTransaction(
-                    $product->provider_sku,
+                    $providerSku,
                     $transaction->customer_game_id.($transaction->customer_zone_id ?? ''),
                     $transaction->invoice_id,
                 );
