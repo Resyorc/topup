@@ -28,10 +28,14 @@ class MaintenanceMode
 
         $estimatedEnd = Setting::get('maintenance_estimated_end');
         $message      = Setting::get('maintenance_message');
+        $waNumber     = Setting::get('wa_bubble_number');
+        $logo         = Setting::get('web_logo') ? asset('storage/' . Setting::get('web_logo')) : null;
 
         return Inertia::render('maintenance', [
             'estimatedEnd' => $estimatedEnd ?: null,
             'message'      => $message ?: null,
+            'waNumber'     => $waNumber ?: null,
+            'logo'         => $logo,
         ])->toResponse($request)->setStatusCode(503);
     }
 }
