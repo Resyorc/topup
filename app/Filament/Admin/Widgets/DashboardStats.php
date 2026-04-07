@@ -14,6 +14,8 @@ class DashboardStats extends StatsOverviewWidget
 {
     protected static ?int $sort = 1;
 
+    protected int|string|array $columnSpan = 'full';
+
     protected function getStats(): array
     {
         $today     = Carbon::today();

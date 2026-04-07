@@ -8,6 +8,7 @@ use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
+use Filament\Tables\Columns\ImageColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Filters\TernaryFilter;
 use Filament\Tables\Table;
@@ -18,36 +19,52 @@ class ProductsTable
     {
         return $table
             ->columns([
+                ImageColumn::make('logo_url')
+                    ->label('Logo')
+                    ->circular()
+                    ->disk('public'),
+
                 TextColumn::make('game.name')
-                    ->searchable(),
-                TextColumn::make('provider_sku')
-                    ->searchable(),
-                TextColumn::make('name')
-                    ->searchable(),
-                TextColumn::make('price_cost')
-                    ->money('IDR', locale: 'id')
-                    ->sortable(),
-                TextColumn::make('margin_flat')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('margin_percent')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('price_sell')
-                    ->money('IDR', locale: 'id')
-                    ->sortable(),
-                TextColumn::make('profit')
-                    ->label('Profit')
-                    ->getStateUsing(fn ($record) => $record->price_sell - $record->price_cost)
-                    ->money('IDR', locale: 'id')
-                    ->sortable(query: fn ($query, $direction) => $query->orderByRaw("(price_sell - price_cost) $direction")),
-                IconColumn::make('is_available')
-                    ->boolean(),
-                TextColumn::make('created_at')
-                    ->dateTime()
+                    ->label('Game')
+                    ->searchable()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->badge(),
+
+                TextColumn::make('name')
+                    ->label('Nama Produk')
+                    ->searchable()
+                    ->wrap(),
+
+                TextColumn::make('providerProducts_count')
+                    ->counts('providerProducts')
+                    ->label('Seller')
+                    ->badge()
+                    ->color('info')
+                    ->sortable(),
+
+                TextColumn::make('price_cost')
+                    ->label('Modal')
+                    ->money('IDR', locale: 'id')
+                    ->sortable(),
+
+                TextColumn::make('price_guest')
+                    ->label('Harga Guest')
+                    ->money('IDR', locale: 'id')
+                    ->sortable()
+                    ->color('success'),
+
+                TextColumn::make('flash_sale_price')
+                    ->label('Flash Sale')
+                    ->money('IDR', locale: 'id')
+                    ->sortable()
+                    ->color('danger'),
+
+                IconColumn::make('is_available')
+                    ->label('Tersedia')
+                    ->boolean(),
+                    
                 TextColumn::make('updated_at')
+                    ->label('Terakhir Update')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

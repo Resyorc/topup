@@ -42,7 +42,8 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user() ? array_merge($request->user()->toArray(), [
-                    'avatar_url' => $request->user()->avatar_url,
+                    'avatar_url'        => $request->user()->avatar_url,
+                    'api_access_enabled' => (bool) $request->user()->api_access_enabled,
                 ]) : null,
             ],
             'flash' => [
@@ -52,6 +53,20 @@ class HandleInertiaRequests extends Middleware
             ),
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'appUrl' => rtrim(config('app.url'), '/'),
+            'webSetting' => fn () => [
+                'logo' => \App\Models\Setting::get('web_logo') ? asset('storage/' . \App\Models\Setting::get('web_logo')) : null,
+                'themeColor' => \App\Models\Setting::get('web_theme_color', '#10b981'),
+                'waBubble' => [
+                    'enabled' => (bool) \App\Models\Setting::get('wa_bubble_enabled', false),
+                    'number' => \App\Models\Setting::get('wa_bubble_number'),
+                    'message' => \App\Models\Setting::get('wa_bubble_message'),
+                ],
+                'footerLinks' => json_decode(\App\Models\Setting::get('footer_links', '[]'), true),
+                'turnstile' => [
+                    'enabled' => (bool) \App\Models\Setting::get('enable_turnstile', false),
+                    'siteKey' => \App\Models\Setting::get('turnstile_site_key'),
+                ],
+            ],
         ];
     }
 }

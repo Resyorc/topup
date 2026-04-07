@@ -138,6 +138,64 @@ class GameForm
                         ->defaultItems(0),
                 ])
                 ->collapsible(),
+
+            Section::make('Field Input Transaksi')
+                ->description('Buat custom field untuk input ID (misal: User ID, Server ID).')
+                ->schema([
+                    Repeater::make('input_fields')
+                        ->label('')
+                        ->schema([
+                            TextInput::make('name')
+                                ->label('Field Name (key)')
+                                ->required()
+                                ->placeholder('contoh: user_id'),
+                            TextInput::make('label')
+                                ->label('Label')
+                                ->required()
+                                ->placeholder('contoh: User ID'),
+                            Select::make('type')
+                                ->label('Tipe Input')
+                                ->options([
+                                    'text' => 'Text',
+                                    'number' => 'Number',
+                                ])
+                                ->default('text')
+                                ->required(),
+                            TextInput::make('placeholder')
+                                ->label('Placeholder')
+                                ->nullable()
+                                ->placeholder('contoh: Masukkan User ID Anda'),
+                        ])
+                        ->columns(2)
+                        ->addActionLabel('Tambah Field Input')
+                        ->reorderable()
+                        ->collapsible()
+                        ->defaultItems(0),
+                ])
+                ->collapsible(),
+
+            Section::make('Panduan Pembelian')
+                ->description('Gambar dan instruksi cara mencari ID untuk game ini.')
+                ->schema([
+                    FileUpload::make('guide_image')
+                        ->label('Gambar Panduan')
+                        ->image()
+                        ->disk('public')
+                        ->directory('games/guides'),
+                    \Filament\Forms\Components\RichEditor::make('guide_content')
+                        ->label('Instruksi Panduan')
+                        ->toolbarButtons([
+                            'bold',
+                            'italic',
+                            'link',
+                            'bulletList',
+                            'orderedList',
+                            'redo',
+                            'undo',
+                        ])
+                        ->columnSpanFull(),
+                ])
+                ->collapsible(),
         ]);
     }
 }

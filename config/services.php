@@ -67,6 +67,10 @@ return [
         'api_key' => env('ANTHROPIC_API_KEY'),
     ],
 
+    'autopilot' => [
+        'margin_percent' => env('AUTOPILOT_MARGIN_PERCENT', 10),
+    ],
+
     'openai' => [
         'api_key' => env('OPENAI_API_KEY'),
     ],
@@ -123,7 +127,7 @@ return [
             'crisis-action' => ['voucher_id' => 3745,    'price' => 300000.0,   'voucher_type' => 'HEROGAMES',          'need_zone' => true],
             'eos-red' => ['voucher_id' => 182235,  'price' => 852139.0,   'voucher_type' => 'EOS_RED',            'need_zone' => true],
             'genshin-impact' => ['voucher_id' => 116054,  'price' => 16500.0,    'voucher_type' => 'GENSHIN_IMPACT',     'need_zone' => true],
-            'hsr' => [
+            'honkai-star-rail' => [
                 'voucher_id' => 855316, 'price' => 16000.0, 'voucher_type' => 'HONKAI_STAR_RAIL', 'need_zone' => true,
                 'server_zones' => ['6' => 'prod_official_usa', '7' => 'prod_official_eur', '8' => 'prod_official_asia', '9' => 'prod_official_cht'],
             ],

@@ -1,14 +1,31 @@
 <!DOCTYPE html>
-<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark'=> ($appearance ?? 'system') == 'dark'])>
+@php
+    $defaultMode = \App\Models\Setting::get('default_theme_mode', 'system');
+    $appearance = $appearance ?? $defaultMode;
+    $seoTitle = \App\Models\Setting::get('seo_title', config('app.name', 'Nuvelo'));
+    $seoDesc = \App\Models\Setting::get('seo_description', '');
+    $seoKeywords = \App\Models\Setting::get('seo_keywords', '');
+    $ogImage = \App\Models\Setting::get('seo_og_image') ? asset('storage/' . \App\Models\Setting::get('seo_og_image')) : '';
+    $favicon = \App\Models\Setting::get('web_favicon') ? asset('storage/' . \App\Models\Setting::get('web_favicon')) : secure_asset('favicon.ico');
+@endphp
+<html lang="{{ str_replace('_', '-', app()->getLocale()) }}" @class(['dark'=> $appearance == 'dark'])>
 
 <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
 
+    <meta name="description" content="{{ $seoDesc }}">
+    <meta name="keywords" content="{{ $seoKeywords }}">
+    <meta property="og:title" content="{{ $seoTitle }}">
+    <meta property="og:description" content="{{ $seoDesc }}">
+    @if($ogImage)
+    <meta property="og:image" content="{{ $ogImage }}">
+    @endif
+
     {{-- Inline script to detect system dark mode preference and apply it immediately --}}
     <script nonce="{{ Vite::cspNonce() }}">
         (function() {
-                const appearance = '{{ $appearance ?? "system" }}';
+                const appearance = '{{ $appearance }}';
 
                 if (appearance === 'system') {
                     const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
@@ -31,6 +48,8 @@
         }
     </style>
 
+    <title inertia>{{ $seoTitle }}</title>
+
     {{-- Google Analytics — dimuat setelah browser idle agar tidak blokir render --}}
     <script nonce="{{ Vite::cspNonce() }}">
         window.dataLayer = window.dataLayer || [];
@@ -48,11 +67,7 @@
         window.addEventListener('load', loadGtag);
     </script>
 
-    <title inertia>{{ config('app.name', 'Nuvelo') }}</title>
-
-    <link rel="icon" href="{{ secure_asset('favicon.ico') }}" sizes="any">
-    <link rel="icon" href="{{ secure_asset('favicon.svg') }}" type="image/svg+xml">
-    <link rel="apple-touch-icon" href="{{ secure_asset('apple-touch-icon.svg') }}">
+    <link rel="icon" href="{{ $favicon }}">
 
     {{-- Preconnect untuk mempercepat handshake ke font servers --}}
     <link rel="preconnect" href="https://fonts.bunny.net">

@@ -88,21 +88,48 @@ class ProductGroupingService
 
     private function mapProduct($product): array
     {
+        $userRole = auth()->check() ? auth()->user()->roles->first()?->name : 'Guest';
+        $tier = strtolower($userRole ?? 'Guest');
+        
+        // Allowed tiers
+        if (!in_array($tier, ['guest', 'bronze', 'silver', 'gold', 'platinum'])) {
+            $tier = 'guest';
+        }
+        $priceField = "price_{$tier}";
+        $basePrice = $product->$priceField ?? $product->price_guest ?? 0;
+
+        $isFlashSale = $product->flash_sale_price !== null
+            && $product->flash_sale_ends_at !== null
+            && $product->flash_sale_ends_at->gt(now());
+
+        $effectivePrice = $isFlashSale ? $product->flash_sale_price : $basePrice;
+        $skuCode = $product->providerProducts?->first()?->provider_sku ?? ('SKU-' . $product->id);
+
+        // Harga coret untuk flash sale: price_guest → fake_price → flash_sale_price × 1.2
+        $flashOriginal = $basePrice ?: ($product->fake_price ?: (int) ceil($product->flash_sale_price * 1.2));
+
         return [
             'id'               => $product->id,
-            'sku'              => $product->provider_sku,
+            'sku'              => $skuCode,
             'name'             => $product->name,
-            'price'            => (int) ceil($product->price_sell),
-            'original_price'   => $product->fake_price ? (int) ceil($product->fake_price) : null,
-            'discount_percent' => $product->fake_price
-                ? (int) round((($product->fake_price - $product->price_sell) / $product->fake_price) * 100)
-                : 0,
+            'price'            => (int) ceil($effectivePrice),
+            'original_price'   => $isFlashSale
+                ? (int) ceil($flashOriginal)
+                : ($product->fake_price ? (int) ceil($product->fake_price) : null),
+            'discount_percent' => $isFlashSale
+                ? ($flashOriginal > 0 ? (int) round((($flashOriginal - $product->flash_sale_price) / $flashOriginal) * 100) : 0)
+                : ($product->fake_price && $product->fake_price > 0
+                    ? (int) round((($product->fake_price - $basePrice) / $product->fake_price) * 100)
+                    : 0),
             'extra'            => str_contains($product->name, '(')
                 ? substr($product->name, strpos($product->name, '('))
                 : null,
             'clean_name'       => str_contains($product->name, '(')
                 ? trim(substr($product->name, 0, strpos($product->name, '(')))
                 : $product->name,
+            'flash_sale_ends_at'  => $isFlashSale ? $product->flash_sale_ends_at->timestamp : null,
+            'flash_sale_stock'    => $isFlashSale ? $product->flash_sale_stock : null,
+            'flash_sale_purchased' => $isFlashSale ? (int) $product->flash_sale_purchased : 0,
         ];
     }
 

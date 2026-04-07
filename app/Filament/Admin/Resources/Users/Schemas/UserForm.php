@@ -4,6 +4,7 @@ namespace App\Filament\Admin\Resources\Users\Schemas;
 
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -53,6 +54,12 @@ class UserForm
                         ->multiple()
                         ->preload()
                         ->visible(fn () => auth()->user()->isSuperAdmin()),
+
+                    Toggle::make('api_access_enabled')
+                        ->label('Aktifkan API Access')
+                        ->helperText('Hanya aktifkan jika user sudah verifikasi email dan identitasnya terpercaya. Memberikan akses ke Reseller API.')
+                        ->visible(fn () => auth()->user()->hasAnyRole(['Super Admin', 'Staff']))
+                        ->columnSpanFull(),
                 ])
                 ->columns(2),
         ]);

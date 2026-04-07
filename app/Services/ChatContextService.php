@@ -47,7 +47,7 @@ class ChatContextService
         }
 
         if (! empty($context['game_slug'])) {
-            $game = Game::with(['products' => fn ($q) => $q->where('is_available', true)->orderBy('price_sell')])
+            $game = Game::with(['products' => fn ($q) => $q->where('is_available', true)->orderBy('price_guest')])
                 ->where('slug', $context['game_slug'])
                 ->where('is_active', true)
                 ->first();
@@ -197,7 +197,7 @@ PROMPT;
     private function gameContext(Game $game): string
     {
         $products = $game->products->take(20)->map(function ($p) {
-            $price = number_format((int) $p->price_sell, 0, ',', '.');
+            $price = number_format((int) $p->price_guest, 0, ',', '.');
 
             return "  - {$p->name}: Rp {$price}";
         })->implode("\n");

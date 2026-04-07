@@ -18,8 +18,9 @@ class GameController extends Controller
     {
         // 1. Fetch the Game including its active products and category
         $game = Game::with(['category', 'products' => function ($query) {
-            $query->where('is_available', true)
-                ->orderBy('price_sell', 'asc');
+            $query->with('providerProducts')
+                ->where('is_available', true)
+                ->orderBy('price_guest', 'asc');
         }])
             ->where('slug', $slug)
             ->where('is_active', true)
@@ -42,11 +43,33 @@ class GameController extends Controller
             'region_map' => collect($game->region_map ?? [])->mapWithKeys(
                 fn ($entry) => [strtoupper($entry['country'] ?? '') => strtolower($entry['sku_prefix'] ?? '')]
             )->filter()->toArray(),
+            'input_fields' => $game->input_fields,
+            'guide_image' => $game->guide_image,
+            'guide_content' => $game->guide_content,
         ];
 
-        // 3. Group products via dedicated service (per-game dynamic rules)
+        // 3. Pisahkan produk flash sale dari produk biasa
+        $now = now();
+        $flashSaleProducts = $game->products->filter(function ($p) use ($now) {
+            return $p->flash_sale_price !== null
+                && $p->flash_sale_ends_at !== null
+                && $p->flash_sale_ends_at->gt($now);
+        });
+        $regularProducts = $game->products->filter(function ($p) use ($now) {
+            return ! ($p->flash_sale_price !== null
+                && $p->flash_sale_ends_at !== null
+                && $p->flash_sale_ends_at->gt($now));
+        });
+
+        // 4. Group regular products via dedicated service
         $productsGrouped = $productGroupingService->groupByGame(
-            $game->products,
+            $regularProducts,
+            $game,
+        );
+
+        // 5. Map flash sale products
+        $mappedFlashSale = $productGroupingService->groupByGame(
+            $flashSaleProducts,
             $game,
         );
 
@@ -113,8 +136,9 @@ class GameController extends Controller
         $paymentMethods = $sorted;
 
         return Inertia::render('game-detail', [
-            'game' => $gameData,
-            'productGroups' => $productsGrouped,
+            'game'           => $gameData,
+            'productGroups'  => $productsGrouped,
+            'flashSaleGroups' => $mappedFlashSale,
             'paymentMethods' => $paymentMethods,
             'loyaltyMinAmount' => (int) Setting::get('loyalty_min_amount', config('services.loyalty.min_amount', 5000)),
             'loyaltyRate' => (float) Setting::get('loyalty_rate_percent', config('services.loyalty.rate_percent', 1)),

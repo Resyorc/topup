@@ -46,6 +46,27 @@ class CheckoutController extends Controller
             return response()->json(['error' => 'Product is currently unavailable.'], 400);
         }
 
+        // Harga berdasarkan tier user: guest, bronze, silver, gold, platinum
+        $userTier = auth()->check() ? (auth()->user()->tier ?? 'guest') : 'guest';
+        if (! in_array($userTier, ['guest', 'bronze', 'silver', 'gold', 'platinum'])) {
+            $userTier = 'guest';
+        }
+        $tierPriceField = 'price_' . $userTier;
+        $tierPrice = (int) ($product->$tierPriceField ?? $product->price_guest ?? 0);
+
+        // Harga efektif: flash_sale_price jika ada flash sale aktif, selain itu harga tier user
+        $isFlashSale = $product->flash_sale_price !== null
+            && $product->flash_sale_ends_at !== null
+            && $product->flash_sale_ends_at->gt(now());
+        $effectivePrice = $isFlashSale ? (int) ceil($product->flash_sale_price) : $tierPrice;
+
+        // Cek stok flash sale
+        if ($isFlashSale && $product->flash_sale_stock !== null) {
+            if ($product->flash_sale_purchased >= $product->flash_sale_stock) {
+                return response()->json(['success' => false, 'message' => 'Stok flash sale sudah habis.'], 422);
+            }
+        }
+
         // Cegah double order: early check di luar transaction untuk UX yang cepat.
         // Re-check dengan lockForUpdate dilakukan di dalam DB::transaction (lihat bawah).
         if ($authenticatedUserId) {
@@ -73,7 +94,7 @@ class CheckoutController extends Controller
         }
 
         $merchantRef = 'INV-'.strtoupper(Str::ulid());
-        $amount = (int) $product->price_sell * $qty;
+        $amount = $effectivePrice * $qty;
 
         // ===== VOUCHER =====
         $discount = 0;
@@ -94,7 +115,7 @@ class CheckoutController extends Controller
         if ($validated['payment_method'] === 'COIN') {
             return $this->checkoutWithCoin(
                 $validated, $product, $qty, $merchantRef, $amount, $chargeAmount,
-                $discount, $voucherCode, $customerName, $authenticatedUserId, $coinService, $request
+                $discount, $voucherCode, $customerName, $authenticatedUserId, $coinService, $request, $effectivePrice
             );
         }
 
@@ -106,7 +127,7 @@ class CheckoutController extends Controller
             [
                 'sku' => $product->provider_sku,
                 'name' => $product->game->name.' - '.$product->name,
-                'price' => (int) $product->price_sell,
+                'price' => $effectivePrice,
                 'quantity' => $qty,
             ],
         ];
@@ -114,7 +135,7 @@ class CheckoutController extends Controller
         $duplicateInfo = null;
 
         try {
-            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $orderItems, $customerName, $customerEmail, $tripayService, $authenticatedUserId, $expiredTime, $expiredAt, $voucherService, &$duplicateInfo) {
+            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $orderItems, $customerName, $customerEmail, $tripayService, $authenticatedUserId, $expiredTime, $expiredAt, $voucherService, $effectivePrice, &$duplicateInfo) {
 
                 // Re-check double order di dalam transaction dengan lockForUpdate — cegah race condition.
                 if ($authenticatedUserId) {
@@ -165,7 +186,7 @@ class CheckoutController extends Controller
                     'fee' => $fee,
                     'discount' => $discount,
                     'voucher_code' => $voucherCode,
-                    'profit' => ($product->price_sell - $product->price_cost) * $qty - $discount,
+                    'profit' => ($effectivePrice - $product->price_cost) * $qty - $discount,
                     'status' => 'pending',
                     'sn' => null,
                     'payment_url' => $paymentResponse['checkout_url'] ?? null,
@@ -182,6 +203,11 @@ class CheckoutController extends Controller
                 // Atomic: re-validasi + increment used_count dalam satu lock — cegah race condition voucher.
                 if ($voucherCode) {
                     $voucherService->validateAndClaim($voucherCode, $amount, $request->user());
+                }
+
+                // Increment flash sale purchased counter
+                if ($isFlashSale) {
+                    $product->increment('flash_sale_purchased', $qty);
                 }
 
                 return [
@@ -269,6 +295,7 @@ class CheckoutController extends Controller
         ?int $authenticatedUserId,
         CoinService $coinService,
         \Illuminate\Http\Request $request,
+        int $effectivePrice,
     ) {
         // Harus login untuk pakai coin
         if (! $authenticatedUserId) {
@@ -297,7 +324,7 @@ class CheckoutController extends Controller
         }
 
         try {
-            $transaction = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $customerName, $authenticatedUserId, $user, $coinService) {
+            $transaction = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $customerName, $authenticatedUserId, $user, $coinService, $effectivePrice, $request) {
 
                 // Re-check double order di dalam transaction dengan lockForUpdate — cegah race condition.
                 $duplicate = Transaction::where('product_id', $product->id)
@@ -335,7 +362,7 @@ class CheckoutController extends Controller
                     'amount' => $amount,
                     'discount' => $discount,
                     'voucher_code' => $voucherCode,
-                    'profit' => ($product->price_sell - $product->price_cost) * $qty - $discount,
+                    'profit' => ($effectivePrice - $product->price_cost) * $qty - $discount,
                     'status' => 'processing', // langsung processing
                     'payment_status' => 'paid',       // langsung paid
                     'payment_method' => 'COIN',
@@ -346,6 +373,14 @@ class CheckoutController extends Controller
                 // Atomic: re-validasi + increment used_count dalam satu lock — cegah race condition voucher.
                 if ($voucherCode) {
                     app(VoucherService::class)->validateAndClaim($voucherCode, $amount, $request->user());
+                }
+
+                // Increment flash sale purchased counter
+                $isFs = $product->flash_sale_price !== null
+                    && $product->flash_sale_ends_at !== null
+                    && $product->flash_sale_ends_at->gt(now());
+                if ($isFs) {
+                    $product->increment('flash_sale_purchased', $qty);
                 }
 
                 // 3. Kirim ke Digiflazz langsung

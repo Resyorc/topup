@@ -77,6 +77,8 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'google_id',
         'tier',
         'avatar',
+        'api_key',
+        'api_access_enabled',
     ];
 
     public function getAvatarUrlAttribute(): ?string

@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppNotification;
+use App\Models\DigiflazzSku;
 use App\Models\ErrorLog;
 use App\Models\Game;
 use App\Models\Transaction;
@@ -11,6 +12,7 @@ use App\Models\User;
 use App\Services\CoinService;
 use App\Services\LoyaltyService;
 use App\Services\TierService;
+use App\Services\TopupPriceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 
@@ -145,6 +147,24 @@ class DigiflazzCallbackController extends Controller
             dispatch(SendWhatsAppNotification::topupFailed($transaction->load('product.game')));
 
             Log::info("Digiflazz Topup GAGAL for Invoice: {$refId} - RC: {$rc}");
+        } elseif ($status === 'gangguan') {
+            $skuCode = $trxData['buyer_sku_code'] ?? null;
+
+            Log::channel('digiflazz')->warning(
+                "Webhook GANGGUAN diterima: ref_id={$refId}, SKU={$skuCode}, RC=" . ($trxData['rc'] ?? '-')
+            );
+
+            if ($skuCode) {
+                DigiflazzSku::where('sku_code', $skuCode)->update(['is_active' => false]);
+
+                // Cari product langsung via provider_sku (mapping 1:1)
+                $product = \App\Models\Product::where('provider_sku', $skuCode)->first();
+                if ($product) {
+                    app(TopupPriceService::class)->failoverProduct($product);
+                }
+            }
+
+            // Transaksi tetap pending — aktif kembali otomatis saat sync berikutnya jika SKU pulih
         }
 
         return response()->json(['success' => true]);

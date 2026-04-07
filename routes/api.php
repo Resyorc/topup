@@ -45,3 +45,9 @@ Route::middleware(['web', 'throttle:chat'])->post('/chat', [ChatController::clas
 // Webhook / Callbacks Integration
 Route::post('/callback/tripay', [TripayCallbackController::class, 'handle'])->middleware('throttle:60,1');
 Route::post('/callback/digiflazz', [DigiflazzCallbackController::class, 'handle'])->middleware('throttle:60,1');
+
+// ===== Reseller API v1 =====
+Route::prefix('v1')->middleware(['auth.api_key', 'throttle:120,1'])->group(function () {
+    Route::get('/games', [\App\Http\Controllers\Api\V1\ResellerProductController::class, 'games']);
+    Route::get('/products', [\App\Http\Controllers\Api\V1\ResellerProductController::class, 'products']);
+});

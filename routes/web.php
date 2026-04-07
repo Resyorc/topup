@@ -16,9 +16,14 @@ Route::get('/auth/google/callback', [GoogleController::class, 'callback'])->name
 Route::get('/sitemap.xml', SitemapController::class)->name('sitemap');
 
 Route::get('/', [HomeController::class, 'index'])->name('home');
+Route::get('/price-list', [App\Http\Controllers\PriceListController::class, 'index'])->name('price-list');
 Route::get('/order/{slug}', [App\Http\Controllers\GameController::class, 'show'])->name('game.detail');
 Route::get('/invoice', [App\Http\Controllers\InvoiceController::class, 'show'])->name('invoice');
 Route::get('/invoice/data', [App\Http\Controllers\InvoiceController::class, 'data'])->name('invoice.data');
+Route::get('/invoice/by-phone', [App\Http\Controllers\InvoiceController::class, 'searchByPhone'])->name('invoice.by-phone');
+Route::get('/blog', [App\Http\Controllers\ArticleController::class, 'index'])->name('blog');
+Route::get('/blog/{slug}', [App\Http\Controllers\ArticleController::class, 'show'])->name('blog.show');
+Route::inertia('/api-docs', 'api-docs')->name('api-docs');
 Route::inertia('/syarat-ketentuan', 'syarat-ketentuan')->name('terms');
 Route::inertia('/kebijakan-privasi', 'kebijakan-privasi')->name('privacy');
 
@@ -29,6 +34,8 @@ Route::middleware('auth')->group(function () {
     Route::get('dashboard/member-club', [DashboardController::class, 'memberClub'])->name('dashboard.member-club');
     Route::post('dashboard/settings/avatar', [ProfileAvatarController::class, 'update'])->name('dashboard.settings.avatar');
     Route::delete('dashboard/settings/avatar', [ProfileAvatarController::class, 'destroy'])->name('dashboard.settings.avatar.destroy');
+    Route::get('dashboard/api-credentials', [App\Http\Controllers\ApiCredentialController::class, 'index'])->name('dashboard.api-credentials');
+    Route::post('dashboard/api-credentials/regenerate', [App\Http\Controllers\ApiCredentialController::class, 'regenerate'])->name('dashboard.api-credentials.regenerate');
 
     // Fitur coin — butuh verifikasi email
     Route::middleware('verified')->group(function () {
