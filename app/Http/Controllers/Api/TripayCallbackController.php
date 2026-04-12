@@ -178,7 +178,17 @@ class TripayCallbackController extends Controller
             // Handle Payment Status
             if ($data->status === 'PAID') {
                 $product = $transaction->product;
-                $sku = is_string($product?->provider_sku) ? trim($product->provider_sku) : '';
+
+                // Ambil SKU provider aktif dari relasi terbaru (provider_products)
+                $sku = (string) ($product?->providerProducts()
+                    ->where('is_active', true)
+                    ->orderBy('price', 'asc')
+                    ->value('provider_sku') ?? '');
+
+                // Fallback untuk data lama (jika kolom provider_sku masih ada di products)
+                if ($sku === '' && isset($product?->provider_sku) && is_string($product->provider_sku)) {
+                    $sku = trim($product->provider_sku);
+                }
 
                 if ($sku === '') {
                     Log::error('Tripay Callback Missing provider_sku', [
