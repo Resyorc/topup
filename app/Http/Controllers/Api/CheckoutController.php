@@ -142,7 +142,7 @@ class CheckoutController extends Controller
         $duplicateInfo = null;
 
         try {
-            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $orderItems, $customerName, $customerEmail, $tripayService, $authenticatedUserId, $expiredTime, $expiredAt, $voucherService, $effectivePrice, $isFlashSale, &$duplicateInfo) {
+            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $orderItems, $customerName, $customerEmail, $tripayService, $authenticatedUserId, $expiredTime, $expiredAt, $voucherService, $effectivePrice, $isFlashSale, $providerSku, &$duplicateInfo) {
 
                 // Re-check double order di dalam transaction dengan lockForUpdate — cegah race condition.
                 if ($authenticatedUserId) {
