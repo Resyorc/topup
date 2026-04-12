@@ -177,37 +177,76 @@ class TripayCallbackController extends Controller
 
             // Handle Payment Status
             if ($data->status === 'PAID') {
-                $product = $transaction->product;
-                $sku = is_string($product?->provider_sku) ? trim($product->provider_sku) : '';
+                // Gunakan SKU yang di-snapshot saat checkout (paling reliable).
+                // Fallback ke provider_products untuk transaksi lama yang dibuat sebelum kolom ini ada.
+                $sku = (string) ($transaction->provider_sku ?? '');
+
+                if ($sku === '') {
+                    $product = $transaction->product;
+
+                    if (! $product) {
+                        $reason = 'Produk tidak ditemukan (product_id tidak valid atau sudah dihapus).';
+                        $trace  = ['cause' => 'product_not_found'];
+                    } else {
+                        $totalProviderProducts  = $product->providerProducts()->count();
+                        $activeProviderProducts = $product->providerProducts()->where('is_active', true)->count();
+
+                        if ($totalProviderProducts === 0) {
+                            $reason = 'Produk belum di-mapping ke provider (tidak ada provider_products).';
+                            $trace  = ['cause' => 'no_provider_products', 'product_id' => $product->id, 'product_name' => $product->name];
+                        } elseif ($activeProviderProducts === 0) {
+                            $reason = 'Semua provider_products untuk produk ini tidak aktif (is_active = false).';
+                            $trace  = ['cause' => 'no_active_provider_products', 'product_id' => $product->id, 'product_name' => $product->name, 'total' => $totalProviderProducts];
+                        } else {
+                            $reason = null;
+                            $trace  = null;
+                        }
+                    }
+
+                    if ($reason === null) {
+                        $sku = (string) ($product->providerProducts()
+                            ->where('is_active', true)
+                            ->orderBy('price', 'asc')
+                            ->value('provider_sku') ?? '');
+                    }
+
+                    if ($sku === '' && $reason === null) {
+                        $reason = 'Record provider_products aktif ditemukan namun nilai provider_sku kosong/null.';
+                        $trace  = ['cause' => 'empty_provider_sku_value', 'product_id' => $product->id, 'product_name' => $product->name];
+                    }
+                } else {
+                    $reason = null;
+                    $trace  = null;
+                }
 
                 if ($sku === '') {
                     Log::error('Tripay Callback Missing provider_sku', [
-                        'invoice_id' => $transaction->invoice_id,
-                        'product_id' => $transaction->product_id,
-                        'merchant_ref' => $data->merchant_ref,
+                        'invoice_id'    => $transaction->invoice_id,
+                        'product_id'    => $transaction->product_id,
+                        'merchant_ref'  => $data->merchant_ref,
+                        'reason'        => $reason,
                     ]);
 
                     ErrorLog::create([
-                        'level' => 'error',
-                        'message' => 'Tripay callback gagal diproses: provider_sku kosong.',
-                        'exception' => 'MissingProviderSku',
-                        'file' => __FILE__,
-                        'line' => __LINE__,
-                        'trace' => json_encode([
-                            'invoice_id' => $transaction->invoice_id,
-                            'product_id' => $transaction->product_id,
+                        'level'      => 'error',
+                        'message'    => "Tripay callback gagal diproses: provider_sku kosong. {$reason}",
+                        'exception'  => 'MissingProviderSku',
+                        'file'       => __FILE__,
+                        'line'       => __LINE__,
+                        'trace'      => json_encode(array_merge($trace ?? [], [
+                            'invoice_id'   => $transaction->invoice_id,
                             'merchant_ref' => $data->merchant_ref,
-                        ], JSON_UNESCAPED_UNICODE),
-                        'url' => request()->fullUrl(),
-                        'method' => request()->method(),
-                        'ip' => request()->ip(),
+                        ]), JSON_UNESCAPED_UNICODE),
+                        'url'        => request()->fullUrl(),
+                        'method'     => request()->method(),
+                        'ip'         => request()->ip(),
                         'occurred_at' => now(),
                     ]);
 
                     $transaction->update([
                         'payment_status' => 'paid',
-                        'status' => 'failed',
-                        'failure_reason' => 'Produk tidak valid: provider SKU tidak ditemukan.',
+                        'status'         => 'failed',
+                        'failure_reason' => "Produk tidak valid: {$reason}",
                     ]);
 
                     return;
