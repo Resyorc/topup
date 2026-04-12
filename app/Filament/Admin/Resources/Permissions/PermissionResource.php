@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\Permissions;
 
-use App\Filament\Admin\Clusters\Settings\SettingsCluster;
 use App\Filament\Admin\Resources\Permissions\Pages\CreatePermission;
 use App\Filament\Admin\Resources\Permissions\Pages\EditPermission;
 use App\Filament\Admin\Resources\Permissions\Pages\ListPermissions;
@@ -14,6 +13,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Spatie\Permission\Models\Permission;
+use UnitEnum;
 
 class PermissionResource extends Resource
 {
@@ -27,7 +27,7 @@ class PermissionResource extends Resource
 
     protected static ?int $navigationSort = 3;
 
-    protected static ?string $cluster = SettingsCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'User Management';
 
     public static function canAccess(): bool
     {

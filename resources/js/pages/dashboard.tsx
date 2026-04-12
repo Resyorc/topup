@@ -104,26 +104,9 @@ export default function Dashboard() {
             bar: 'bg-orange-400',
         };
 
-    const tierThresholds: Record<string, number> = {
-        bronze: 0,
-        silver: 500_000,
-        gold: 2_000_000,
-        platinum: 10_000_000,
-    };
     const currentTier = tierInfo?.current ?? 'bronze';
     const tc = tierColor(currentTier);
-    const progressPercent = tierInfo?.next_threshold
-        ? Math.min(
-              100,
-              Math.round(
-                  ((tierInfo.total_spending -
-                      (tierThresholds[currentTier] ?? 0)) /
-                      (tierInfo.next_threshold -
-                          (tierThresholds[currentTier] ?? 0))) *
-                      100,
-              ),
-          )
-        : 100;
+    const isTopTier = currentTier === 'platinum';
 
     return (
         <UserLayout title="Dashboard">
@@ -331,46 +314,25 @@ export default function Dashboard() {
                             </div>
                         </div>
 
-                        {/* Progress ke tier berikutnya */}
+                        {/* Upgrade CTA */}
                         <div className="flex-1 md:max-w-xs">
-                            {tierInfo?.next_threshold ? (
-                                <>
-                                    <div className="mb-2 flex justify-between text-xs text-gray-400">
-                                        <span>Total belanja</span>
-                                        <span>
-                                            {formatCurrency(
-                                                tierInfo.total_spending,
-                                            )}{' '}
-                                            /{' '}
-                                            {formatCurrency(
-                                                tierInfo.next_threshold,
-                                            )}
-                                        </span>
-                                    </div>
-                                    <div className="h-2 w-full overflow-hidden rounded-full bg-white/10">
-                                        <div
-                                            className={`h-full rounded-full transition-all ${tc.bar}`}
-                                            style={{
-                                                width: `${progressPercent}%`,
-                                            }}
-                                        />
-                                    </div>
-                                    <p className="mt-2 text-xs text-gray-400">
-                                        {formatCurrency(
-                                            Math.max(
-                                                0,
-                                                tierInfo.next_threshold -
-                                                    tierInfo.total_spending,
-                                            ),
-                                        )}{' '}
-                                        lagi ke tier berikutnya
-                                    </p>
-                                </>
-                            ) : (
+                            {isTopTier ? (
                                 <div
                                     className={`rounded-xl px-4 py-3 text-center text-sm font-semibold ${tc.badge}`}
                                 >
                                     Tier tertinggi telah dicapai! 🎉
+                                </div>
+                            ) : (
+                                <div className="flex flex-col gap-2">
+                                    <p className="text-xs text-gray-400">
+                                        Upgrade ke tier lebih tinggi untuk mendapatkan harga lebih murah &amp; multiplier coin lebih besar.
+                                    </p>
+                                    <Link
+                                        href="/membership"
+                                        className="w-full rounded-xl bg-gradient-to-r from-primary to-[#9b4dec] py-2.5 text-center text-sm font-bold text-white shadow transition hover:opacity-90"
+                                    >
+                                        Upgrade Membership →
+                                    </Link>
                                 </div>
                             )}
                         </div>

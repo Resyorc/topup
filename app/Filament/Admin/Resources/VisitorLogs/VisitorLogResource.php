@@ -2,13 +2,13 @@
 
 namespace App\Filament\Admin\Resources\VisitorLogs;
 
-use App\Filament\Admin\Clusters\MonitorCluster;
 use App\Filament\Admin\Resources\VisitorLogs\Pages\ListVisitorLogs;
 use App\Filament\Admin\Resources\VisitorLogs\Tables\VisitorLogsTable;
 use App\Models\VisitorLog;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
+use UnitEnum;
 
 class VisitorLogResource extends Resource
 {
@@ -20,7 +20,7 @@ class VisitorLogResource extends Resource
 
     protected static ?string $title = 'Visitor Log';
 
-    protected static ?string $cluster = MonitorCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Monitoring';
 
     protected static ?int $navigationSort = 10;
 

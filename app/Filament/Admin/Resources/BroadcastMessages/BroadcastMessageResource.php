@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\BroadcastMessages;
 
-use App\Filament\Admin\Clusters\Settings\SettingsCluster;
 use App\Filament\Admin\Resources\BroadcastMessages\Pages\CreateBroadcastMessage;
 use App\Filament\Admin\Resources\BroadcastMessages\Pages\EditBroadcastMessage;
 use App\Filament\Admin\Resources\BroadcastMessages\Pages\ListBroadcastMessages;
@@ -14,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class BroadcastMessageResource extends Resource
 {
@@ -21,7 +21,7 @@ class BroadcastMessageResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedMegaphone;
 
-    protected static ?string $cluster = SettingsCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Marketing & Konten';
 
     protected static ?string $recordTitleAttribute = 'message';
 

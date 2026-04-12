@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\Vouchers;
 
-use App\Filament\Admin\Clusters\Settings\SettingsCluster;
 use App\Filament\Admin\Resources\Vouchers\Pages\CreateVoucher;
 use App\Filament\Admin\Resources\Vouchers\Pages\EditVoucher;
 use App\Filament\Admin\Resources\Vouchers\Pages\ListVouchers;
@@ -14,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class VoucherResource extends Resource
 {
@@ -27,7 +27,7 @@ class VoucherResource extends Resource
 
     protected static ?string $pluralModelLabel = 'Voucher & Kupon';
 
-    protected static ?string $cluster = SettingsCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Marketing & Konten';
 
     protected static ?int $navigationSort = 5;
 

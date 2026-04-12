@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\AuditLogs;
 
-use App\Filament\Admin\Clusters\MonitorCluster;
 use App\Filament\Admin\Resources\AuditLogs\Pages\ListAuditLogs;
 use App\Filament\Admin\Resources\AuditLogs\Tables\AuditLogsTable;
 use App\Models\AuditLog;
@@ -10,6 +9,7 @@ use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class AuditLogResource extends Resource
 {
@@ -23,7 +23,7 @@ class AuditLogResource extends Resource
 
     protected static ?int $navigationSort = 10;
 
-    protected static ?string $cluster = MonitorCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Monitoring';
 
     public static function canAccess(): bool
     {

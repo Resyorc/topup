@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\Roles;
 
-use App\Filament\Admin\Clusters\Settings\SettingsCluster;
 use App\Filament\Admin\Resources\Roles\Pages\CreateRole;
 use App\Filament\Admin\Resources\Roles\Pages\EditRole;
 use App\Filament\Admin\Resources\Roles\Pages\ListRoles;
@@ -14,6 +13,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Spatie\Permission\Models\Role;
+use UnitEnum;
 
 class RoleResource extends Resource
 {
@@ -27,7 +27,7 @@ class RoleResource extends Resource
 
     protected static ?int $navigationSort = 2;
 
-    protected static ?string $cluster = SettingsCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'User Management';
 
     public static function canAccess(): bool
     {

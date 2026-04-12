@@ -60,11 +60,7 @@ export default function MemberClub() {
     const { auth } = usePage().props as any;
     const currentTier: string = auth?.user?.tier ?? 'bronze';
     const currentTierData = TIERS.find(t => t.key === currentTier) ?? TIERS[0];
-
-    const totalSpending: number = (usePage().props as any).tierInfo?.total_spending ?? 0;
-    const progressPercent = currentTierData.next
-        ? Math.min(100, Math.round(((totalSpending - currentTierData.threshold) / (currentTierData.next - currentTierData.threshold)) * 100))
-        : 100;
+    const isTopTier = currentTier === 'platinum';
 
     return (
         <UserLayout title="Nuvelo Member Club">
@@ -91,30 +87,28 @@ export default function MemberClub() {
                             <p className="mt-1 text-sm text-gray-400">
                                 Multiplier coins aktif: <span className="font-bold text-white">{currentTierData.multiplier}x</span>
                             </p>
-                            <p className="text-sm text-gray-400">
-                                Total belanja: <span className="font-bold text-white">{formatCurrency(totalSpending)}</span>
-                            </p>
                         </div>
                     </div>
 
-                    {currentTierData.next ? (
-                        <div className="flex-1 md:max-w-xs">
-                            <div className="mb-2 flex justify-between text-xs text-gray-400">
-                                <span>Progress ke {TIERS.find(t => t.threshold === currentTierData.next)?.label}</span>
-                                <span>{progressPercent}%</span>
+                    <div className="flex-1 md:max-w-xs">
+                        {isTopTier ? (
+                            <div className={`rounded-xl border px-6 py-3 text-center text-sm font-semibold ${currentTierData.color.badge}`}>
+                                Tier tertinggi telah dicapai! 🎉
                             </div>
-                            <div className="h-2.5 w-full overflow-hidden rounded-full bg-white/10">
-                                <div className={`h-full rounded-full transition-all ${currentTierData.color.bar}`} style={{ width: `${progressPercent}%` }} />
+                        ) : (
+                            <div className="flex flex-col gap-2">
+                                <p className="text-xs text-gray-400">
+                                    Upgrade ke tier lebih tinggi untuk mendapatkan harga lebih murah &amp; multiplier coin lebih besar.
+                                </p>
+                                <a
+                                    href="/membership"
+                                    className="w-full rounded-xl bg-gradient-to-r from-primary to-[#9b4dec] py-2.5 text-center text-sm font-bold text-white shadow transition hover:opacity-90"
+                                >
+                                    Upgrade Membership →
+                                </a>
                             </div>
-                            <p className="mt-2 text-xs text-gray-400">
-                                {formatCurrency(Math.max(0, currentTierData.next - totalSpending))} lagi untuk naik tier
-                            </p>
-                        </div>
-                    ) : (
-                        <div className={`rounded-xl border px-6 py-3 text-center text-sm font-semibold ${currentTierData.color.badge}`}>
-                            Tier tertinggi telah dicapai! 🎉
-                        </div>
-                    )}
+                        )}
+                    </div>
                 </div>
             </div>
 
@@ -131,9 +125,9 @@ export default function MemberClub() {
                             <div className={`mb-1 inline-flex items-center rounded-full border px-2.5 py-0.5 text-xs font-bold ${tier.color.badge}`}>
                                 {tier.label}
                             </div>
-                            <p className="mt-3 text-xs text-gray-500">Mulai dari</p>
+                            <p className="mt-3 text-xs text-gray-500">Akses via</p>
                             <p className="text-sm font-bold text-white">
-                                {tier.threshold === 0 ? 'Gratis (default)' : formatCurrency(tier.threshold)}
+                                {tier.key === 'bronze' ? 'Gratis (default)' : 'Upgrade Membership'}
                             </p>
                             <p className="mt-2 text-xs text-gray-500">Multiplier coins</p>
                             <p className="text-lg font-black text-white">{tier.multiplier}x</p>
@@ -207,12 +201,12 @@ export default function MemberClub() {
 
             {/* Catatan */}
             <div className="rounded-xl border border-[#31334c] bg-[#1e1f29] p-5 text-sm text-gray-400">
-                <p className="mb-1 font-semibold text-white">📋 Cara kerja tier</p>
+                <p className="mb-1 font-semibold text-white">📋 Cara kerja tier membership</p>
                 <ul className="list-inside list-disc space-y-1">
-                    <li>Tier dihitung dari <span className="text-white">total akumulatif belanja lifetime</span>, tidak di-reset.</li>
-                    <li>Tier naik otomatis setelah setiap transaksi sukses diproses.</li>
-                    <li>1 Krysta Coin = Rp 1, bisa digunakan sebagai metode pembayaran.</li>
-                    <li>Coins tidak berlaku untuk transaksi yang dibayar dengan Krysta Coin.</li>
+                    <li>Tier diupgrade dengan hanya <span className="text-white">satu kali bayar</span> secara permanen.</li>
+                    <li>Harga member (lebih murah) langsung aktif setelah pembayaran dikonfirmasi.</li>
+                    <li>1 Krysta Coin = Rp 1, bisa digunakan sebagai saldo metode pembayaran.</li>
+                    <li>Coins tidak didapatkan untuk transaksi yang dibayar menggunakan saldo Krysta Coin.</li>
                 </ul>
             </div>
         </UserLayout>

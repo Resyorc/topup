@@ -122,7 +122,7 @@ class CheckoutController extends Controller
         if ($validated['payment_method'] === 'COIN') {
             return $this->checkoutWithCoin(
                 $validated, $product, $qty, $merchantRef, $amount, $chargeAmount,
-                $discount, $voucherCode, $customerName, $authenticatedUserId, $coinService, $request, $effectivePrice
+                $discount, $voucherCode, $customerName, $authenticatedUserId, $coinService, $request, $effectivePrice, $providerSku
             );
         }
 
@@ -142,7 +142,7 @@ class CheckoutController extends Controller
         $duplicateInfo = null;
 
         try {
-            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $orderItems, $customerName, $customerEmail, $tripayService, $authenticatedUserId, $expiredTime, $expiredAt, $voucherService, $effectivePrice, &$duplicateInfo) {
+            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $orderItems, $customerName, $customerEmail, $tripayService, $authenticatedUserId, $expiredTime, $expiredAt, $voucherService, $effectivePrice, $isFlashSale, &$duplicateInfo) {
 
                 // Re-check double order di dalam transaction dengan lockForUpdate — cegah race condition.
                 if ($authenticatedUserId) {
@@ -303,6 +303,7 @@ class CheckoutController extends Controller
         CoinService $coinService,
         \Illuminate\Http\Request $request,
         int $effectivePrice,
+        string $providerSku
     ) {
         // Harus login untuk pakai coin
         if (! $authenticatedUserId) {

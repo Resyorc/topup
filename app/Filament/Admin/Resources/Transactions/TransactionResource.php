@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\Transactions;
 
-use App\Filament\Admin\Clusters\MonitorCluster;
 use App\Filament\Admin\Resources\Transactions\Pages\ListTransactions;
 use App\Filament\Admin\Resources\Transactions\Schemas\TransactionForm;
 use App\Filament\Admin\Resources\Transactions\Tables\TransactionsTable;
@@ -12,16 +11,17 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class TransactionResource extends Resource
 {
     protected static ?string $model = Transaction::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedReceiptRefund;
 
     protected static ?string $recordTitleAttribute = 'invoice_id';
 
-    protected static ?string $cluster = MonitorCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Operasional';
 
     public static function canAccess(): bool
     {

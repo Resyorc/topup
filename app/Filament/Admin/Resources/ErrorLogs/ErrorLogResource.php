@@ -2,13 +2,13 @@
 
 namespace App\Filament\Admin\Resources\ErrorLogs;
 
-use App\Filament\Admin\Clusters\MonitorCluster;
 use App\Filament\Admin\Resources\ErrorLogs\Pages\ListErrorLogs;
 use App\Filament\Admin\Resources\ErrorLogs\Tables\ErrorLogsTable;
 use App\Models\ErrorLog;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
+use UnitEnum;
 
 class ErrorLogResource extends Resource
 {
@@ -20,7 +20,7 @@ class ErrorLogResource extends Resource
 
     protected static ?string $title = 'Error Log';
 
-    protected static ?string $cluster = MonitorCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Monitoring';
 
     protected static ?int $navigationSort = 12;
 

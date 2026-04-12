@@ -11,3 +11,4 @@ Artisan::command('inspire', function () {
 Schedule::command('digiflazz:sync-products')->everyFourHours();
 Schedule::command('digiflazz:check-balance')->hourly();
 Schedule::command('transactions:expire-pending')->everyMinute();
+Schedule::command('products:recalculate-margins')->hourly();

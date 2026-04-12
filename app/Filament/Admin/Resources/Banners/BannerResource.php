@@ -7,13 +7,13 @@ use App\Filament\Admin\Resources\Banners\Pages\EditBanner;
 use App\Filament\Admin\Resources\Banners\Pages\ListBanners;
 use App\Filament\Admin\Resources\Banners\Schemas\BannerForm;
 use App\Filament\Admin\Resources\Banners\Tables\BannersTable;
-use App\Filament\Admin\Clusters\Konten\KontenCluster;
 use App\Models\Banner;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class BannerResource extends Resource
 {
@@ -21,7 +21,7 @@ class BannerResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPhoto;
 
-    protected static ?string $cluster = KontenCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Marketing & Konten';
 
     protected static ?string $recordTitleAttribute = 'link';
 

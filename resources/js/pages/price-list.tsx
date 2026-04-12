@@ -11,12 +11,11 @@ interface Category {
 interface Product {
     id: string;
     name: string;
-    clean_name: string;
-    price: number;
-    original_price: number | null;
-    discount_percent: number;
-    extra: string | null;
-    flash_sale_ends_at: number | null;
+    price_guest: number;
+    price_bronze: number;
+    price_silver: number;
+    price_gold: number;
+    price_platinum: number;
 }
 
 interface GameEntry {
@@ -27,8 +26,7 @@ interface GameEntry {
     category_id: number;
     category_name: string | null;
     product_count: number;
-    min_price: number | null;
-    products: Record<string, Product[]> | Record<string, Record<string, Product[]>>;
+    products: Product[];
 }
 
 interface PriceListProps {
@@ -36,65 +34,62 @@ interface PriceListProps {
     priceList: GameEntry[];
 }
 
-function flattenProducts(products: GameEntry['products']): Product[] {
-    const values = Object.values(products);
-    if (values.length === 0) return [];
-    // Check if nested (regions) or flat (categories)
-    if (Array.isArray(values[0])) {
-        return (values as Product[][]).flat();
-    }
-    return Object.values(values as Record<string, Product[]>).flat().flat();
+const TIERS = [
+    { key: 'price_guest',    label: 'Guest',    color: 'text-gray-300' },
+    { key: 'price_bronze',   label: 'Bronze',   color: 'text-amber-600' },
+    { key: 'price_silver',   label: 'Silver',   color: 'text-slate-300' },
+    { key: 'price_gold',     label: 'Gold',     color: 'text-yellow-400' },
+    { key: 'price_platinum', label: 'Platinum', color: 'text-cyan-400' },
+] as const;
+
+function fmt(n: number) {
+    return 'Rp ' + n.toLocaleString('id-ID');
 }
 
-function StatusBadge({ status }: { status: string }) {
-    const map: Record<string, string> = {
-        success: 'bg-green-500/20 text-green-400',
-        failed: 'bg-red-500/20 text-red-400',
-        pending: 'bg-yellow-500/20 text-yellow-400',
-        processing: 'bg-blue-500/20 text-blue-400',
-        paid: 'bg-cyan-500/20 text-cyan-400',
-        expired: 'bg-gray-500/20 text-gray-400',
-        canceled: 'bg-gray-500/20 text-gray-400',
-        coin_topup: 'bg-amber-500/20 text-amber-400',
-    };
-    return (
-        <span className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${map[status] ?? 'bg-gray-500/20 text-gray-400'}`}>
-            {status}
-        </span>
-    );
+function getImageUrl(thumbnail: string | null, name: string) {
+    if (thumbnail) return thumbnail;
+    return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&color=ffffff&background=8327d8&size=256&rounded=true&font-size=0.33`;
 }
 
 export default function PriceList({ categories, priceList }: PriceListProps) {
     const [activeCategoryId, setActiveCategoryId] = useState<number | 'all'>('all');
-    const [search, setSearch] = useState('');
-    const [expandedGame, setExpandedGame] = useState<number | null>(null);
+    const [selectedGameId, setSelectedGameId]     = useState<number | null>(null);
+    const [search, setSearch]                     = useState('');
 
-    const filtered = useMemo(() => {
+    // Filtered game list for dropdown
+    const filteredGames = useMemo(() => {
         let list = priceList;
-
         if (activeCategoryId !== 'all') {
             list = list.filter((g) => g.category_id === activeCategoryId);
         }
-
         if (search.trim()) {
             const q = search.trim().toLowerCase();
-            list = list.filter((g) => {
-                if (g.name.toLowerCase().includes(q)) return true;
-                const products = flattenProducts(g.products);
-                return products.some((p) => p.clean_name.toLowerCase().includes(q));
-            });
+            list = list.filter((g) => g.name.toLowerCase().includes(q));
         }
-
         return list;
     }, [priceList, activeCategoryId, search]);
 
-    const toggleGame = (id: number) =>
-        setExpandedGame((prev) => (prev === id ? null : id));
+    // Auto-select first game when filters change
+    const selectedGame = useMemo(() => {
+        // If currently selected game is still in filtered list, keep it
+        if (selectedGameId) {
+            const found = filteredGames.find((g) => g.id === selectedGameId);
+            if (found) return found;
+        }
+        return filteredGames[0] ?? null;
+    }, [filteredGames, selectedGameId]);
 
-    const getImageUrl = (thumbnail: string | null, name: string) => {
-        if (thumbnail) return thumbnail;
-        return `https://ui-avatars.com/api/?name=${encodeURIComponent(name)}&color=ffffff&background=8327d8&size=256&rounded=true&font-size=0.33`;
-    };
+    // Filter products by search (product name)
+    const displayProducts = useMemo(() => {
+        if (!selectedGame) return [];
+        if (!search.trim()) return selectedGame.products;
+        const q = search.trim().toLowerCase();
+        // If search matches game name, show all products
+        if (selectedGame.name.toLowerCase().includes(q)) return selectedGame.products;
+        return selectedGame.products.filter((p) => p.name.toLowerCase().includes(q));
+    }, [selectedGame, search]);
+
+    const memberTiers = TIERS.filter((t) => t.key !== 'price_guest');
 
     return (
         <GuestLayout>
@@ -103,155 +98,152 @@ export default function PriceList({ categories, priceList }: PriceListProps) {
             <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
                 {/* Header */}
                 <div className="mb-8">
-                    <h1 className="text-2xl font-black text-white md:text-3xl">
-                        Daftar Harga
-                    </h1>
+                    <h1 className="text-2xl font-black text-white md:text-3xl">Daftar Harga</h1>
                     <p className="mt-1 text-sm text-gray-400">
                         Cek harga produk untuk semua game yang tersedia.
                     </p>
                 </div>
 
-                {/* Search + Category Filter */}
-                <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center">
-                    <input
-                        type="text"
-                        value={search}
-                        onChange={(e) => setSearch(e.target.value)}
-                        placeholder="Cari game atau produk..."
-                        className="w-full rounded-xl border border-[#31334c] bg-[#1A1A24] px-4 py-3 text-sm text-white placeholder-gray-500 outline-none transition focus:border-primary md:max-w-sm"
-                    />
+                {/* Controls Row */}
+                <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-start">
 
-                    <div className="flex flex-wrap gap-2">
-                        <button
-                            onClick={() => setActiveCategoryId('all')}
-                            className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${activeCategoryId === 'all' ? 'bg-primary text-white' : 'border border-[#31334c] text-gray-400 hover:border-primary hover:text-white'}`}
-                        >
-                            Semua
-                        </button>
-                        {categories.map((c) => (
+                    {/* LEFT: Dropdown game + search */}
+                    <div className="flex flex-col gap-3 lg:w-72 lg:shrink-0">
+                        {/* Search */}
+                        <input
+                            type="text"
+                            value={search}
+                            onChange={(e) => setSearch(e.target.value)}
+                            placeholder="Cari game..."
+                            className="w-full rounded-xl border border-[#31334c] bg-[#1A1A24] px-4 py-2.5 text-sm text-white placeholder-gray-500 outline-none transition focus:border-primary"
+                        />
+
+                        {/* Category Pills */}
+                        <div className="flex flex-wrap gap-2">
                             <button
-                                key={c.id}
-                                onClick={() => setActiveCategoryId(c.id)}
-                                className={`rounded-full px-4 py-1.5 text-xs font-semibold transition ${activeCategoryId === c.id ? 'bg-primary text-white' : 'border border-[#31334c] text-gray-400 hover:border-primary hover:text-white'}`}
+                                onClick={() => { setActiveCategoryId('all'); setSelectedGameId(null); }}
+                                className={`rounded-full px-3 py-1 text-xs font-semibold transition ${activeCategoryId === 'all' ? 'bg-primary text-white' : 'border border-[#31334c] text-gray-400 hover:border-primary hover:text-white'}`}
                             >
-                                {c.name}
+                                Semua
                             </button>
-                        ))}
+                            {categories.map((c) => (
+                                <button
+                                    key={c.id}
+                                    onClick={() => { setActiveCategoryId(c.id); setSelectedGameId(null); }}
+                                    className={`rounded-full px-3 py-1 text-xs font-semibold transition ${activeCategoryId === c.id ? 'bg-primary text-white' : 'border border-[#31334c] text-gray-400 hover:border-primary hover:text-white'}`}
+                                >
+                                    {c.name}
+                                </button>
+                            ))}
+                        </div>
+
+                        {/* Game List Sidebar */}
+                        <div className="flex flex-col gap-1 overflow-y-auto rounded-2xl border border-[#31334c] bg-[#1e1f29] p-2 lg:max-h-[calc(100vh-260px)]">
+                            {filteredGames.length === 0 ? (
+                                <p className="py-6 text-center text-xs text-gray-500">Tidak ada game ditemukan.</p>
+                            ) : (
+                                filteredGames.map((game) => {
+                                    const isActive = selectedGame?.id === game.id;
+                                    return (
+                                        <button
+                                            key={game.id}
+                                            onClick={() => setSelectedGameId(game.id)}
+                                            className={`flex items-center gap-3 rounded-xl px-3 py-2.5 text-left transition ${isActive ? 'bg-primary/20 ring-1 ring-primary/40' : 'hover:bg-white/5'}`}
+                                        >
+                                            <img
+                                                src={getImageUrl(game.thumbnail, game.name)}
+                                                alt={game.name}
+                                                className="h-9 w-9 shrink-0 rounded-lg object-cover"
+                                            />
+                                            <div className="min-w-0 flex-1">
+                                                <div className={`truncate text-sm font-semibold ${isActive ? 'text-white' : 'text-gray-300'}`}>
+                                                    {game.name}
+                                                </div>
+                                                <div className="text-[11px] text-gray-500">{game.product_count} produk</div>
+                                            </div>
+                                        </button>
+                                    );
+                                })
+                            )}
+                        </div>
+                    </div>
+
+                    {/* RIGHT: Pricing Table */}
+                    <div className="flex-1">
+                        {!selectedGame ? (
+                            <div className="flex h-60 items-center justify-center rounded-2xl border border-[#31334c] bg-[#1e1f29] text-gray-500">
+                                Pilih game di sebelah kiri.
+                            </div>
+                        ) : (
+                            <div className="rounded-2xl border border-[#31334c] bg-[#1e1f29]">
+                                {/* Game Header */}
+                                <div className="flex items-center gap-4 border-b border-[#31334c] px-5 py-4">
+                                    <img
+                                        src={getImageUrl(selectedGame.thumbnail, selectedGame.name)}
+                                        alt={selectedGame.name}
+                                        className="h-12 w-12 shrink-0 rounded-xl object-cover"
+                                    />
+                                    <div className="flex-1 min-w-0">
+                                        <h2 className="text-base font-bold text-white">{selectedGame.name}</h2>
+                                        <p className="text-xs text-gray-400">{selectedGame.category_name} · {selectedGame.product_count} produk</p>
+                                    </div>
+                                    <Link
+                                        href={`/order/${selectedGame.slug}`}
+                                        className="shrink-0 rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white transition hover:bg-primary/90"
+                                    >
+                                        Top Up Sekarang →
+                                    </Link>
+                                </div>
+
+                                {/* Table */}
+                                <div className="overflow-x-auto">
+                                    <table className="w-full text-sm">
+                                        <thead>
+                                            <tr className="border-b border-[#31334c]">
+                                                <th className="px-4 py-3 text-left text-xs font-semibold text-gray-400">Produk</th>
+                                                <th className="px-3 py-3 text-right text-xs font-semibold text-gray-300">Guest</th>
+                                                <th className="px-3 py-3 text-right text-xs font-semibold text-amber-600">Bronze</th>
+                                                <th className="px-3 py-3 text-right text-xs font-semibold text-slate-300">Silver</th>
+                                                <th className="px-3 py-3 text-right text-xs font-semibold text-yellow-400">Gold</th>
+                                                <th className="px-3 py-3 text-right text-xs font-semibold text-cyan-400">Platinum</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            {displayProducts.length === 0 ? (
+                                                <tr>
+                                                    <td colSpan={6} className="py-10 text-center text-xs text-gray-500">
+                                                        Tidak ada produk ditemukan.
+                                                    </td>
+                                                </tr>
+                                            ) : (
+                                                displayProducts.map((product, i) => (
+                                                    <tr
+                                                        key={product.id}
+                                                        className={`border-b border-[#31334c]/50 transition hover:bg-white/[0.03] ${i % 2 === 0 ? '' : 'bg-white/[0.015]'}`}
+                                                    >
+                                                        <td className="px-4 py-3 text-xs font-medium text-white">{product.name}</td>
+                                                        {TIERS.map((tier) => (
+                                                            <td key={tier.key} className={`px-3 py-3 text-right text-xs font-semibold ${tier.color} tabular-nums`}>
+                                                                {fmt(product[tier.key])}
+                                                            </td>
+                                                        ))}
+                                                    </tr>
+                                                ))
+                                            )}
+                                        </tbody>
+                                    </table>
+                                </div>
+
+                                {/* Legend */}
+                                <div className="border-t border-[#31334c] px-5 py-3">
+                                    <p className="text-[11px] text-gray-500">
+                                        Harga member berlaku setelah login. Tier lebih tinggi mendapatkan harga lebih murah.
+                                    </p>
+                                </div>
+                            </div>
+                        )}
                     </div>
                 </div>
-
-                {/* Game List */}
-                {filtered.length === 0 ? (
-                    <div className="py-20 text-center text-gray-500">
-                        Tidak ada game ditemukan.
-                    </div>
-                ) : (
-                    <div className="flex flex-col gap-3">
-                        {filtered.map((game) => {
-                            const isExpanded = expandedGame === game.id;
-                            const allProducts = flattenProducts(game.products);
-
-                            // Filter products if searching by product name
-                            const searchQ = search.trim().toLowerCase();
-                            const displayProducts = searchQ && !game.name.toLowerCase().includes(searchQ)
-                                ? allProducts.filter((p) => p.clean_name.toLowerCase().includes(searchQ))
-                                : allProducts;
-
-                            return (
-                                <div
-                                    key={game.id}
-                                    className="overflow-hidden rounded-2xl border border-[#31334c] bg-[#1e1f29]"
-                                >
-                                    {/* Game Row Header */}
-                                    <button
-                                        className="flex w-full items-center gap-4 px-4 py-4 text-left transition hover:bg-white/5"
-                                        onClick={() => toggleGame(game.id)}
-                                    >
-                                        <img
-                                            src={getImageUrl(game.thumbnail, game.name)}
-                                            alt={game.name}
-                                            className="h-12 w-12 shrink-0 rounded-xl object-cover"
-                                        />
-                                        <div className="min-w-0 flex-1">
-                                            <div className="font-bold text-white">{game.name}</div>
-                                            <div className="mt-0.5 text-xs text-gray-400">
-                                                {game.category_name} &middot; {game.product_count} produk
-                                                {game.min_price && (
-                                                    <> &middot; Mulai <span className="font-semibold text-primary">Rp {game.min_price.toLocaleString('id-ID')}</span></>
-                                                )}
-                                            </div>
-                                        </div>
-
-                                        <div className="flex items-center gap-3 shrink-0">
-                                            <Link
-                                                href={`/order/${game.slug}`}
-                                                onClick={(e) => e.stopPropagation()}
-                                                className="hidden rounded-lg bg-primary px-3 py-1.5 text-xs font-bold text-white transition hover:bg-primary/90 sm:block"
-                                            >
-                                                Top Up
-                                            </Link>
-                                            <svg
-                                                className={`h-4 w-4 text-gray-400 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                                                fill="none"
-                                                viewBox="0 0 24 24"
-                                                stroke="currentColor"
-                                                strokeWidth={2}
-                                            >
-                                                <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                                            </svg>
-                                        </div>
-                                    </button>
-
-                                    {/* Product Table */}
-                                    {isExpanded && (
-                                        <div className="border-t border-[#31334c] px-4 pb-4 pt-3">
-                                            <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
-                                                {displayProducts.map((product) => (
-                                                    <div
-                                                        key={product.id}
-                                                        className="flex items-center justify-between rounded-xl border border-[#31334c] bg-[#1A1A24] px-3 py-2.5"
-                                                    >
-                                                        <div className="min-w-0 flex-1">
-                                                            <div className="truncate text-xs font-semibold text-[#FFC107]">
-                                                                {product.clean_name}
-                                                            </div>
-                                                            {product.extra && (
-                                                                <div className="truncate text-[10px] text-gray-500">{product.extra}</div>
-                                                            )}
-                                                        </div>
-                                                        <div className="ml-3 shrink-0 text-right">
-                                                            {product.discount_percent > 0 && (
-                                                                <div className="flex items-center justify-end gap-1">
-                                                                    <span className={`rounded px-1 py-0.5 text-[9px] font-bold text-white ${product.flash_sale_ends_at ? 'bg-orange-600' : 'bg-orange-500'}`}>
-                                                                        {product.flash_sale_ends_at ? '⚡' : ''}{product.discount_percent}%
-                                                                    </span>
-                                                                    <span className="text-[10px] text-gray-500 line-through">
-                                                                        Rp {product.original_price?.toLocaleString('id-ID')}
-                                                                    </span>
-                                                                </div>
-                                                            )}
-                                                            <div className="text-sm font-bold text-white">
-                                                                Rp {product.price.toLocaleString('id-ID')}
-                                                            </div>
-                                                        </div>
-                                                    </div>
-                                                ))}
-                                            </div>
-                                            <div className="mt-3 flex justify-end">
-                                                <Link
-                                                    href={`/order/${game.slug}`}
-                                                    className="rounded-lg bg-primary px-4 py-2 text-xs font-bold text-white transition hover:bg-primary/90"
-                                                >
-                                                    Top Up Sekarang →
-                                                </Link>
-                                            </div>
-                                        </div>
-                                    )}
-                                </div>
-                            );
-                        })}
-                    </div>
-                )}
             </div>
         </GuestLayout>
     );

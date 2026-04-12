@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\Products;
 
-use App\Filament\Admin\Clusters\CatalogCluster;
 use App\Filament\Admin\Resources\Products\Pages\CreateProduct;
 use App\Filament\Admin\Resources\Products\Pages\EditProduct;
 use App\Filament\Admin\Resources\Products\Pages\ListProducts;
@@ -14,16 +13,17 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class ProductResource extends Resource
 {
     protected static ?string $model = Product::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedShoppingBag;
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $cluster = CatalogCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Operasional';
 
     public static function canAccess(): bool
     {
@@ -55,10 +55,11 @@ class ProductResource extends Resource
         return ProductsTable::configure($table);
     }
 
+
     public static function getRelations(): array
     {
         return [
-            //
+            \App\Filament\Admin\Resources\Products\RelationManagers\ProviderProductsRelationManager::class,
         ];
     }
 

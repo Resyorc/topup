@@ -3,47 +3,47 @@
 namespace App\Console\Commands;
 
 use App\Models\Product;
+use App\Models\Setting;
 use App\Services\TopupPriceService;
 use Illuminate\Console\Command;
 
 class RecalculateProductMargins extends Command
 {
     /**
-     * Hitung ulang margin & harga semua produk berdasarkan persentase dari price_cost.
+     * Hitung ulang margin & harga semua produk berdasarkan Global Pricing Rules.
+     * Persentase per tier dibaca dari Setting (bisa dikonfigurasi di Admin Panel).
      *
-     * Tier multiplier (dari silver sebagai base):
-     *   guest ×1.5 | bronze ×1.2 | silver ×1.0 | gold ×0.8 | platinum ×0.6
+     * Default:
+     *   guest 4% | bronze 3% | silver 2% | gold 1% | platinum 0.5%
      *
-     * Bracket margin otomatis berdasarkan harga modal:
-     *   < 2.000      → 30%
-     *   2.000–9.999  → 20%
-     *   10.000–49.999 → 15%
-     *   ≥ 50.000     → 10%
-     *
-     * Override manual via --percent=N untuk semua produk.
+     * Margin flat = round(price_cost × pct%, kelipatan 50), min Rp 50.
      */
     protected $signature = 'products:recalculate-margins
-                            {--percent= : Override persentase margin silver (contoh: --percent=15)}
                             {--dry-run  : Tampilkan preview tanpa menyimpan ke DB}
                             {--game=    : Batasi ke game_id tertentu}';
 
-    protected $description = 'Recalculate margin & tier prices untuk semua produk berdasarkan % price_cost';
-
-    private const TIER_MULTIPLIERS = [
-        'guest'    => 1.5,
-        'bronze'   => 1.2,
-        'silver'   => 1.0,
-        'gold'     => 0.8,
-        'platinum' => 0.6,
-    ];
+    protected $description = 'Recalculate margin & tier prices untuk semua produk berdasarkan Global Pricing Rules';
 
     public function handle(TopupPriceService $priceService): int
     {
-        $isDryRun      = $this->option('dry-run');
-        $forcePercent  = $this->option('percent') !== null ? (float) $this->option('percent') : null;
-        $gameId        = $this->option('game');
+        $isDryRun = $this->option('dry-run');
+        $gameId   = $this->option('game');
 
-        $this->info('=== Recalculate Product Margins ===');
+        // Baca persentase tier dari Setting, fallback ke default
+        $tiers = [
+            'guest'    => (float) Setting::get('pricing_pct_guest',    4.0),
+            'bronze'   => (float) Setting::get('pricing_pct_bronze',   3.0),
+            'silver'   => (float) Setting::get('pricing_pct_silver',   2.0),
+            'gold'     => (float) Setting::get('pricing_pct_gold',     1.0),
+            'platinum' => (float) Setting::get('pricing_pct_platinum', 0.5),
+        ];
+
+        $this->info('=== Global Pricing Rules — Recalculate Product Margins ===');
+        $this->table(
+            ['Tier', '%'],
+            collect($tiers)->map(fn ($pct, $tier) => [ucfirst($tier), "{$pct}%"])->values()->toArray()
+        );
+
         if ($isDryRun) {
             $this->warn('[DRY RUN] Tidak ada perubahan yang disimpan.');
         }
@@ -58,7 +58,7 @@ class RecalculateProductMargins extends Command
         $updated = 0;
 
         $query->chunk(200, function ($products) use (
-            $priceService, $isDryRun, $forcePercent, &$total, &$skipped, &$updated
+            $priceService, $isDryRun, $tiers, &$total, &$skipped, &$updated
         ) {
             foreach ($products as $product) {
                 $total++;
@@ -70,25 +70,20 @@ class RecalculateProductMargins extends Command
                     continue;
                 }
 
-                $pct         = $forcePercent ?? $this->autoPercent($cost);
-                $baseMargin  = $this->roundTo50($cost * $pct / 100);
-                $baseMargin  = max(150, $baseMargin);
-
                 $margins = [];
                 $prices  = [];
-                foreach (self::TIER_MULTIPLIERS as $tier => $multiplier) {
-                    $m           = max(150, $this->roundTo50($baseMargin * $multiplier));
+                foreach ($tiers as $tier => $pct) {
+                    $m              = max(50, $this->roundTo50($cost * $pct / 100));
                     $margins[$tier] = $m;
                     $prices[$tier]  = (int) $priceService->calculateSellPrice($cost, $m);
                 }
 
                 $this->line(sprintf(
-                    '  %-4s #%-4d %-40s | cost %6s | base %4s | G:%s B:%s S:%s Gold:%s P:%s',
+                    '  %-4s #%-4d %-40s | cost %8s | G:%s B:%s S:%s Gold:%s P:%s',
                     $isDryRun ? 'PRV' : 'UPD',
                     $product->id,
                     substr($product->name, 0, 40),
                     number_format($cost, 0, ',', '.'),
-                    number_format($baseMargin, 0, ',', '.'),
                     number_format($prices['guest'], 0, ',', '.'),
                     number_format($prices['bronze'], 0, ',', '.'),
                     number_format($prices['silver'], 0, ',', '.'),
@@ -125,19 +120,6 @@ class RecalculateProductMargins extends Command
         }
 
         return self::SUCCESS;
-    }
-
-    /**
-     * Bracket persentase margin silver otomatis berdasarkan harga modal.
-     */
-    private function autoPercent(float $cost): float
-    {
-        return match (true) {
-            $cost < 2_000   => 30.0,
-            $cost < 10_000  => 20.0,
-            $cost < 50_000  => 15.0,
-            default         => 10.0,
-        };
     }
 
     private function roundTo50(float $value): int

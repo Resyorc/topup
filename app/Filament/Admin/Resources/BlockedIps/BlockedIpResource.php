@@ -2,13 +2,13 @@
 
 namespace App\Filament\Admin\Resources\BlockedIps;
 
-use App\Filament\Admin\Clusters\MonitorCluster;
 use App\Filament\Admin\Resources\BlockedIps\Pages\ListBlockedIps;
 use App\Filament\Admin\Resources\BlockedIps\Tables\BlockedIpsTable;
 use App\Models\BlockedIp;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
+use UnitEnum;
 
 class BlockedIpResource extends Resource
 {
@@ -20,7 +20,7 @@ class BlockedIpResource extends Resource
 
     protected static ?string $title = 'IP Diblokir';
 
-    protected static ?string $cluster = MonitorCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Monitoring';
 
     protected static ?int $navigationSort = 12;
 

@@ -5,6 +5,7 @@ use App\Http\Controllers\CoinHistoryController;
 use App\Http\Controllers\CoinTopupController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\HomeController;
+use App\Http\Controllers\MembershipController;
 use App\Http\Controllers\ProfileAvatarController;
 use App\Http\Controllers\SitemapController;
 use App\Http\Controllers\UserTransactionController;
@@ -42,6 +43,10 @@ Route::middleware('auth')->group(function () {
         Route::get('dashboard/topup-saldo', [CoinTopupController::class, 'index'])->name('dashboard.coin-topups.index');
         Route::post('dashboard/topup-saldo', [CoinTopupController::class, 'store'])->name('dashboard.coin-topups.store');
         Route::get('dashboard/coin-history', [CoinHistoryController::class, 'index'])->name('dashboard.coin-history');
+
+        // Membership upgrade (one-time paid)
+        Route::get('membership', [MembershipController::class, 'index'])->name('membership');
+        Route::post('membership/checkout', [MembershipController::class, 'checkout'])->name('membership.checkout');
     });
 });
 
