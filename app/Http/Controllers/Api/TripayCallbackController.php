@@ -10,6 +10,7 @@ use App\Models\MembershipOrder;
 use App\Models\Transaction;
 use App\Services\CoinService;
 use App\Services\DigiflazzService;
+use Throwable;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -177,20 +178,83 @@ class TripayCallbackController extends Controller
             // Handle Payment Status
             if ($data->status === 'PAID') {
                 $product = $transaction->product;
-                $topupResult = $digiflazzService->createTransaction(
-                    $product->provider_sku,
-                    $transaction->customer_game_id.$transaction->customer_zone_id,
-                    $transaction->invoice_id,
-                );
+                $sku = is_string($product?->provider_sku) ? trim($product->provider_sku) : '';
 
-                $transaction->update([
-                    'payment_status' => 'paid',
-                    'status' => 'processing',
-                ]);
+                if ($sku === '') {
+                    Log::error('Tripay Callback Missing provider_sku', [
+                        'invoice_id' => $transaction->invoice_id,
+                        'product_id' => $transaction->product_id,
+                        'merchant_ref' => $data->merchant_ref,
+                    ]);
 
-                dispatch(SendWhatsAppNotification::paymentReceived($transaction->load('product.game')));
+                    ErrorLog::create([
+                        'level' => 'error',
+                        'message' => 'Tripay callback gagal diproses: provider_sku kosong.',
+                        'exception' => 'MissingProviderSku',
+                        'file' => __FILE__,
+                        'line' => __LINE__,
+                        'trace' => json_encode([
+                            'invoice_id' => $transaction->invoice_id,
+                            'product_id' => $transaction->product_id,
+                            'merchant_ref' => $data->merchant_ref,
+                        ], JSON_UNESCAPED_UNICODE),
+                        'url' => request()->fullUrl(),
+                        'method' => request()->method(),
+                        'ip' => request()->ip(),
+                        'occurred_at' => now(),
+                    ]);
 
-                Log::info('Digiflazz Topup Result', ['ref' => $transaction->invoice_id, 'result' => $topupResult]);
+                    $transaction->update([
+                        'payment_status' => 'paid',
+                        'status' => 'failed',
+                        'failure_reason' => 'Produk tidak valid: provider SKU tidak ditemukan.',
+                    ]);
+
+                    return;
+                }
+
+                try {
+                    $topupResult = $digiflazzService->createTransaction(
+                        $sku,
+                        $transaction->customer_game_id.$transaction->customer_zone_id,
+                        $transaction->invoice_id,
+                    );
+
+                    $transaction->update([
+                        'payment_status' => 'paid',
+                        'status' => 'processing',
+                    ]);
+
+                    dispatch(SendWhatsAppNotification::paymentReceived($transaction->load('product.game')));
+
+                    Log::info('Digiflazz Topup Result', ['ref' => $transaction->invoice_id, 'result' => $topupResult]);
+                } catch (Throwable $e) {
+                    Log::error('Tripay Callback Digiflazz Transaction Failed', [
+                        'invoice_id' => $transaction->invoice_id,
+                        'product_id' => $transaction->product_id,
+                        'merchant_ref' => $data->merchant_ref,
+                        'error' => $e->getMessage(),
+                    ]);
+
+                    ErrorLog::create([
+                        'level' => 'error',
+                        'message' => 'Tripay callback gagal saat kirim transaksi ke Digiflazz.',
+                        'exception' => get_class($e),
+                        'file' => $e->getFile(),
+                        'line' => $e->getLine(),
+                        'trace' => $e->getTraceAsString(),
+                        'url' => request()->fullUrl(),
+                        'method' => request()->method(),
+                        'ip' => request()->ip(),
+                        'occurred_at' => now(),
+                    ]);
+
+                    $transaction->update([
+                        'payment_status' => 'paid',
+                        'status' => 'failed',
+                        'failure_reason' => 'Topup gagal diproses provider. Silakan hubungi CS.',
+                    ]);
+                }
 
             } elseif (in_array($data->status, ['EXPIRED', 'FAILED'])) {
                 $transaction->update([
