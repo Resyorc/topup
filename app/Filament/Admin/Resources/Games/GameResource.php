@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\Games;
 
-use App\Filament\Admin\Clusters\CatalogCluster;
 use App\Filament\Admin\Resources\Games\Pages\CreateGame;
 use App\Filament\Admin\Resources\Games\Pages\EditGame;
 use App\Filament\Admin\Resources\Games\Pages\ListGames;
@@ -14,16 +13,17 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class GameResource extends Resource
 {
     protected static ?string $model = Game::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedPuzzlePiece;
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $cluster = CatalogCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Operasional';
 
     public static function canAccess(): bool
     {

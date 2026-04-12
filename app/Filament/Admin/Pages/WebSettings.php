@@ -2,10 +2,8 @@
 
 namespace App\Filament\Admin\Pages;
 
-use App\Filament\Admin\Clusters\Settings\SettingsCluster;
 use App\Models\Setting;
 use BackedEnum;
-use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
 use Filament\Forms\Components\Select;
@@ -19,6 +17,8 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\Facades\Artisan;
+use UnitEnum;
 
 class WebSettings extends Page implements HasForms
 {
@@ -34,7 +34,7 @@ class WebSettings extends Page implements HasForms
 
     protected static ?int $navigationSort = 11;
 
-    protected static ?string $cluster = SettingsCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Settings';
 
     public ?array $data = [];
 
@@ -47,29 +47,36 @@ class WebSettings extends Page implements HasForms
     {
         $this->form->fill([
             // Tab 1
-            'web_logo'           => Setting::get('web_logo', null),
-            'web_favicon'        => Setting::get('web_favicon', null),
-            'web_theme_color'    => Setting::get('web_theme_color', '#10b981'),
-            'default_theme_mode' => Setting::get('default_theme_mode', 'system'),
+            'web_logo'             => Setting::get('web_logo', null),
+            'web_favicon'          => Setting::get('web_favicon', null),
 
             // Tab 2
-            'seo_title'          => Setting::get('seo_title', 'Nuvelo - Top Up Games Cepat & Murah'),
-            'seo_description'    => Setting::get('seo_description', 'Layanan top up game tercepat, termurah dan terpercaya.'),
-            'seo_keywords'       => Setting::get('seo_keywords', 'topup game, diamond ml, uc pubg'),
-            'seo_og_image'       => Setting::get('seo_og_image', null),
-            'sitemap_url'        => Setting::get('sitemap_url', url('/sitemap.xml')),
+            'seo_title'            => Setting::get('seo_title', 'Nuvelo - Top Up Games Cepat & Murah'),
+            'seo_description'      => Setting::get('seo_description', 'Layanan top up game tercepat, termurah dan terpercaya.'),
+            'seo_keywords'         => Setting::get('seo_keywords', 'topup game, diamond ml, uc pubg'),
+            'seo_og_image'         => Setting::get('seo_og_image', null),
+            'sitemap_url'          => Setting::get('sitemap_url', url('/sitemap.xml')),
 
             // Tab 3
-            'wa_bubble_enabled'  => (bool) Setting::get('wa_bubble_enabled', false),
-            'wa_bubble_number'   => Setting::get('wa_bubble_number', ''),
-            'wa_bubble_message'  => Setting::get('wa_bubble_message', 'Halo CS Nuvelo, saya butuh bantuan.'),
-            'footer_links'       => json_decode(Setting::get('footer_links', '[]'), true),
+            'wa_bubble_enabled'    => (bool) Setting::get('wa_bubble_enabled', false),
+            'wa_bubble_number'     => Setting::get('wa_bubble_number', ''),
+            'wa_bubble_message'    => Setting::get('wa_bubble_message', 'Halo CS Nuvelo, saya butuh bantuan.'),
+            'footer_links'         => json_decode(Setting::get('footer_links', '[]'), true),
+            'sosmed_instagram'     => Setting::get('sosmed_instagram', ''),
+            'sosmed_tiktok'        => Setting::get('sosmed_tiktok', ''),
 
-            // Tab 4
-            'enable_turnstile'   => (bool) Setting::get('enable_turnstile', false),
-            'turnstile_site_key' => Setting::get('turnstile_site_key', ''),
-            'turnstile_secret_key'=> Setting::get('turnstile_secret_key', ''),
-            'otp_provider'       => Setting::get('otp_provider', 'fonnte'),
+            // Tab 4 — Global Pricing
+            'pricing_pct_guest'    => (float) Setting::get('pricing_pct_guest',    4.0),
+            'pricing_pct_bronze'   => (float) Setting::get('pricing_pct_bronze',   3.0),
+            'pricing_pct_silver'   => (float) Setting::get('pricing_pct_silver',   2.0),
+            'pricing_pct_gold'     => (float) Setting::get('pricing_pct_gold',     1.0),
+            'pricing_pct_platinum' => (float) Setting::get('pricing_pct_platinum', 0.5),
+
+            // Tab 5
+            'enable_turnstile'     => (bool) Setting::get('enable_turnstile', false),
+            'turnstile_site_key'   => Setting::get('turnstile_site_key', ''),
+            'turnstile_secret_key' => Setting::get('turnstile_secret_key', ''),
+            'otp_provider'         => Setting::get('otp_provider', 'fonnte'),
         ]);
     }
 
@@ -92,16 +99,6 @@ class WebSettings extends Page implements HasForms
                                     ->image()
                                     ->directory('settings')
                                     ->disk('public'),
-                                ColorPicker::make('web_theme_color')
-                                    ->label('Warna Tema Utama')
-                                    ->default('#10b981'),
-                                Select::make('default_theme_mode')
-                                    ->label('Mode Tampilan Bawaan')
-                                    ->options([
-                                        'light'  => 'Terang (Light)',
-                                        'dark'   => 'Gelap (Dark)',
-                                        'system' => 'Mengikuti Sistem (Auto)',
-                                    ])
                             ])->columns(2),
 
                         Tabs\Tab::make('SEO & Meta')
@@ -135,6 +132,7 @@ class WebSettings extends Page implements HasForms
                             ->schema([
                                 Toggle::make('wa_bubble_enabled')
                                     ->label('Aktifkan Widget Chat WA')
+                                    ->helperText('Menampilkan tombol WhatsApp melayang di pojok kanan bawah layar pengunjung.')
                                     ->columnSpanFull(),
                                 TextInput::make('wa_bubble_number')
                                     ->label('Nomor WhatsApp CS')
@@ -144,6 +142,18 @@ class WebSettings extends Page implements HasForms
                                     ->label('Pesan Awal Otomatis')
                                     ->rows(2)
                                     ->columnSpanFull(),
+
+                                \Filament\Schemas\Components\Fieldset::make('Tautan Sosial Media')
+                                    ->schema([
+                                        TextInput::make('sosmed_instagram')
+                                            ->label('Link Instagram')
+                                            ->url()
+                                            ->placeholder('https://instagram.com/...'),
+                                        TextInput::make('sosmed_tiktok')
+                                            ->label('Link TikTok')
+                                            ->url()
+                                            ->placeholder('https://tiktok.com/@...'),
+                                    ])->columns(2),
 
                                 Repeater::make('footer_links')
                                     ->label('Tautan Bagian Bawah (Footer Links)')
@@ -155,6 +165,55 @@ class WebSettings extends Page implements HasForms
                                     ->columnSpanFull()
                                     ->addActionLabel('Tambah Tautan'),
                             ])->columns(2),
+
+                        Tabs\Tab::make('Global Pricing')
+                            ->icon('heroicon-o-currency-dollar')
+                            ->schema([
+                                \Filament\Schemas\Components\Section::make('Persentase Margin per Tier')
+                                    ->description('Margin dihitung otomatis: Margin Flat = price_cost × %. Nilai dibulatkan ke kelipatan Rp 50, minimum Rp 50.')
+                                    ->schema([
+                                        TextInput::make('pricing_pct_guest')
+                                            ->label('Guest (%)')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->maxValue(100)
+                                            ->step(0.1)
+                                            ->suffix('%')
+                                            ->default(4.0),
+                                        TextInput::make('pricing_pct_bronze')
+                                            ->label('Bronze (%)')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->maxValue(100)
+                                            ->step(0.1)
+                                            ->suffix('%')
+                                            ->default(3.0),
+                                        TextInput::make('pricing_pct_silver')
+                                            ->label('Silver (%)')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->maxValue(100)
+                                            ->step(0.1)
+                                            ->suffix('%')
+                                            ->default(2.0),
+                                        TextInput::make('pricing_pct_gold')
+                                            ->label('Gold (%)')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->maxValue(100)
+                                            ->step(0.1)
+                                            ->suffix('%')
+                                            ->default(1.0),
+                                        TextInput::make('pricing_pct_platinum')
+                                            ->label('Platinum (%)')
+                                            ->numeric()
+                                            ->minValue(0)
+                                            ->maxValue(100)
+                                            ->step(0.1)
+                                            ->suffix('%')
+                                            ->default(0.5),
+                                    ])->columns(5),
+                            ]),
 
                         Tabs\Tab::make('Keamanan & OTP')
                             ->icon('heroicon-o-shield-check')
@@ -186,7 +245,6 @@ class WebSettings extends Page implements HasForms
     {
         $data = $this->form->getState();
 
-        // Menyimpan semua setelan satu per satu
         foreach ($data as $key => $value) {
             if ($key === 'footer_links') {
                 $value = json_encode($value ?? []);
@@ -200,6 +258,20 @@ class WebSettings extends Page implements HasForms
         Notification::make()
             ->title('Konfigurasi web tersimpan')
             ->body('Seluruh perubahan konfigurasi berhasil diteruskan ke database.')
+            ->success()
+            ->send();
+    }
+
+    public function applyGlobalPricing(): void
+    {
+        // Simpan terlebih dahulu agar persentase terbaru sudah ada di DB
+        $this->save();
+
+        Artisan::call('products:recalculate-margins');
+
+        Notification::make()
+            ->title('Global Pricing Diterapkan!')
+            ->body('Semua harga produk telah dihitung ulang berdasarkan persentase margin yang baru.')
             ->success()
             ->send();
     }

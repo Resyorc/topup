@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\Categories;
 
-use App\Filament\Admin\Clusters\CatalogCluster;
 use App\Filament\Admin\Resources\Categories\Pages\CreateCategory;
 use App\Filament\Admin\Resources\Categories\Pages\EditCategory;
 use App\Filament\Admin\Resources\Categories\Pages\ListCategories;
@@ -14,16 +13,17 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class CategoryResource extends Resource
 {
     protected static ?string $model = Category::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedTag;
 
     protected static ?string $recordTitleAttribute = 'name';
 
-    protected static ?string $cluster = CatalogCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Operasional';
 
     public static function canAccess(): bool
     {

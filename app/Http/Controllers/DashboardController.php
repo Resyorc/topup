@@ -30,24 +30,11 @@ class DashboardController extends Controller
 
         $coinsBalance = (int) ($user->fresh()->coin_balance ?? 0);
 
-        $totalSpending = Transaction::where('user_id', $user->id)
-            ->where('status', 'success')
-            ->sum('amount');
-
         $tierService   = app(TierService::class);
-        $nextThresholds = [
-            'bronze'   => 500_000,
-            'silver'   => 2_000_000,
-            'gold'     => 10_000_000,
-            'platinum' => null,
-        ];
         $currentTier   = $user->tier ?? 'bronze';
-        $nextThreshold = $nextThresholds[$currentTier];
         $tierInfo = [
-            'current'        => $currentTier,
-            'multiplier'     => $tierService->getMultiplier($currentTier),
-            'total_spending' => (int) $totalSpending,
-            'next_threshold' => $nextThreshold,
+            'current'    => $currentTier,
+            'multiplier' => $tierService->getMultiplier($currentTier),
         ];
 
         $recentTransactions = Transaction::query()
@@ -112,26 +99,14 @@ class DashboardController extends Controller
 
     public function memberClub(Request $request)
     {
-        $user          = $request->user();
-        $tierService   = app(TierService::class);
-        $currentTier   = $user->tier ?? 'bronze';
-        $totalSpending = Transaction::where('user_id', $user->id)
-            ->where('status', 'success')
-            ->sum('amount');
-
-        $nextThresholds = [
-            'bronze'   => 500_000,
-            'silver'   => 2_000_000,
-            'gold'     => 10_000_000,
-            'platinum' => null,
-        ];
+        $user        = $request->user();
+        $tierService = app(TierService::class);
+        $currentTier = $user->tier ?? 'bronze';
 
         return Inertia::render('user/member-club', [
             'tierInfo' => [
-                'current'        => $currentTier,
-                'multiplier'     => $tierService->getMultiplier($currentTier),
-                'total_spending' => (int) $totalSpending,
-                'next_threshold' => $nextThresholds[$currentTier],
+                'current'    => $currentTier,
+                'multiplier' => $tierService->getMultiplier($currentTier),
             ],
         ]);
     }

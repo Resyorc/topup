@@ -62,6 +62,10 @@ class HandleInertiaRequests extends Middleware
                     'message' => \App\Models\Setting::get('wa_bubble_message'),
                 ],
                 'footerLinks' => json_decode(\App\Models\Setting::get('footer_links', '[]'), true),
+                'sosmed' => [
+                    'instagram' => \App\Models\Setting::get('sosmed_instagram'),
+                    'tiktok' => \App\Models\Setting::get('sosmed_tiktok'),
+                ],
                 'turnstile' => [
                     'enabled' => (bool) \App\Models\Setting::get('enable_turnstile', false),
                     'siteKey' => \App\Models\Setting::get('turnstile_site_key'),

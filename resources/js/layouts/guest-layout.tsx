@@ -14,13 +14,7 @@ export default function GuestLayout({
 }) {
     const { auth, broadcastMessages, webSetting } = usePage().props as any;
     const currentUrl = usePage().url;
-    const tickerMsgs =
-        broadcastMessages && broadcastMessages.length > 0
-            ? broadcastMessages
-            : [
-                  '🔥 PROMO SPESIAL MINGGU INI!',
-                  'TOP UP DI Nuvelo CEPAT & TERPERCAYA',
-              ];
+    const hasBroadcast = broadcastMessages && broadcastMessages.length > 0;
 
     // Bangun chat context dari URL saat ini
     const chatContext = useMemo(() => {
@@ -275,31 +269,36 @@ export default function GuestLayout({
                             </div>
 
                             {/* Divider — desktop only */}
-                            <div className="hidden md:block">
-                                <svg
-                                    width="1"
-                                    height="30"
-                                    viewBox="0 0 1 30"
-                                    fill="none"
-                                    xmlns="http://www.w3.org/2000/svg"
-                                    className="fill-white/30"
-                                >
-                                    <path
-                                        fillRule="evenodd"
-                                        clipRule="evenodd"
-                                        d="M0.5 0C0.367392 0 0.240214 0.0831764 0.146446 0.231231C0.052678 0.379286 0 0.580092 0 0.789474V29.2105C0 29.4199 0.052678 29.6207 0.146446 29.7688C0.240214 29.9168 0.367392 30 0.5 30C0.632608 30 0.759786 29.9168 0.853554 29.7688C0.947322 29.6207 1 29.4199 1 29.2105V0.789474C1 0.580092 0.947322 0.379286 0.853554 0.231231C0.759786 0.0831764 0.632608 0 0.5 0Z"
-                                    />
-                                </svg>
-                            </div>
+                            {/* Divider — desktop only */}
+                            {hasBroadcast && (
+                                <div className="hidden md:block">
+                                    <svg
+                                        width="1"
+                                        height="30"
+                                        viewBox="0 0 1 30"
+                                        fill="none"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        className="fill-white/30"
+                                    >
+                                        <path
+                                            fillRule="evenodd"
+                                            clipRule="evenodd"
+                                            d="M0.5 0C0.367392 0 0.240214 0.0831764 0.146446 0.231231C0.052678 0.379286 0 0.580092 0 0.789474V29.2105C0 29.4199 0.052678 29.6207 0.146446 29.7688C0.240214 29.9168 0.367392 30 0.5 30C0.632608 30 0.759786 29.9168 0.853554 29.7688C0.947322 29.6207 1 29.4199 1 29.2105V0.789474C1 0.580092 0.947322 0.379286 0.853554 0.231231C0.759786 0.0831764 0.632608 0 0.5 0Z"
+                                        />
+                                    </svg>
+                                </div>
+                            )}
 
                             {/* Ticker */}
-                            <div className="relative w-full flex-grow overflow-hidden py-2 md:py-0">
-                                <NewsTicker
-                                    messages={tickerMsgs}
-                                    speed={30}
-                                    separator="◈"
-                                />
-                            </div>
+                            {hasBroadcast && (
+                                <div className="relative w-full flex-grow overflow-hidden py-2 md:py-0">
+                                    <NewsTicker
+                                        messages={broadcastMessages}
+                                        speed={30}
+                                        separator="◈"
+                                    />
+                                </div>
+                            )}
                         </div>
                     </div>
                 </header>
@@ -526,24 +525,28 @@ export default function GuestLayout({
                                 Kontak
                             </h3>
                             <ul className="space-y-2 text-xs text-gray-400 md:space-y-3 md:text-sm">
-                                <li>
-                                    <a
-                                        href={`https://wa.me/${webSetting?.waBubble?.number || '6285158330663'}`}
-                                        target="_blank"
-                                        className="transition hover:text-primary"
-                                    >
-                                        WhatsApp
-                                    </a>
-                                </li>
-                                <li>
-                                    <a
-                                        href="https://www.instagram.com/nuvelo.id?igsh=YnA5eXhzNjA3eTdw"
-                                        target="_blank"
-                                        className="transition hover:text-primary"
-                                    >
-                                        Instagram
-                                    </a>
-                                </li>
+                                {webSetting?.waBubble?.number && (
+                                    <li>
+                                        <a
+                                            href={`https://wa.me/${webSetting.waBubble.number}`}
+                                            target="_blank"
+                                            className="transition hover:text-primary"
+                                        >
+                                            WhatsApp
+                                        </a>
+                                    </li>
+                                )}
+                                {webSetting?.sosmed?.instagram && (
+                                    <li>
+                                        <a
+                                            href={webSetting.sosmed.instagram}
+                                            target="_blank"
+                                            className="transition hover:text-primary"
+                                        >
+                                            Instagram
+                                        </a>
+                                    </li>
+                                )}
                             </ul>
                         </div>
 
@@ -553,59 +556,64 @@ export default function GuestLayout({
                                 Sosial Media
                             </h3>
                             <div className="flex gap-4">
-                                <a
-                                    href="https://www.instagram.com/nuvelo.id?igsh=YnA5eXhzNjA3eTdw"
-                                    target="_blank"
-                                    aria-label="Ikuti kami di Instagram"
-                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[#26273b] text-gray-300 transition hover:bg-primary hover:text-white"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
+                                {webSetting?.sosmed?.instagram && (
+                                    <a
+                                        href={webSetting.sosmed.instagram}
+                                        target="_blank"
+                                        aria-label="Ikuti kami di Instagram"
+                                        className="flex h-8 w-8 items-center justify-center rounded-full bg-[#26273b] text-gray-300 transition hover:bg-primary hover:text-white"
                                     >
-                                        <rect
-                                            x="2"
-                                            y="2"
-                                            width="20"
-                                            height="20"
-                                            rx="5"
-                                            ry="5"
-                                        />
-                                        <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                                        <line
-                                            x1="17.5"
-                                            y1="6.5"
-                                            x2="17.51"
-                                            y2="6.5"
-                                        />
-                                    </svg>
-                                </a>
-                                {/* <a
-                                    href="#"
-                                    aria-label="Ikuti kami di TikTok"
-                                    className="flex h-8 w-8 items-center justify-center rounded-full bg-[#26273b] text-gray-300 transition hover:bg-primary hover:text-white"
-                                >
-                                    <svg
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        width="16"
-                                        height="16"
-                                        viewBox="0 0 24 24"
-                                        fill="none"
-                                        stroke="currentColor"
-                                        strokeWidth="2"
-                                        strokeLinecap="round"
-                                        strokeLinejoin="round"
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
+                                            <rect
+                                                x="2"
+                                                y="2"
+                                                width="20"
+                                                height="20"
+                                                rx="5"
+                                                ry="5"
+                                            />
+                                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+                                            <line
+                                                x1="17.5"
+                                                y1="6.5"
+                                                x2="17.51"
+                                                y2="6.5"
+                                            />
+                                        </svg>
+                                    </a>
+                                )}
+                                {webSetting?.sosmed?.tiktok && (
+                                    <a
+                                        href={webSetting.sosmed.tiktok}
+                                        target="_blank"
+                                        aria-label="Ikuti kami di TikTok"
+                                        className="flex h-8 w-8 items-center justify-center rounded-full bg-[#26273b] text-gray-300 transition hover:bg-primary hover:text-white"
                                     >
-                                        <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
-                                    </svg>
-                                </a> */}
+                                        <svg
+                                            xmlns="http://www.w3.org/2000/svg"
+                                            width="16"
+                                            height="16"
+                                            viewBox="0 0 24 24"
+                                            fill="none"
+                                            stroke="currentColor"
+                                            strokeWidth="2"
+                                            strokeLinecap="round"
+                                            strokeLinejoin="round"
+                                        >
+                                            <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+                                        </svg>
+                                    </a>
+                                )}
                             </div>
                         </div>
                     </div>
@@ -647,6 +655,25 @@ export default function GuestLayout({
                     },
                 }}
             />
+
+            {webSetting?.waBubble?.enabled && webSetting?.waBubble?.number && (
+                <a
+                    href={`https://wa.me/${webSetting.waBubble.number}?text=${encodeURIComponent(webSetting.waBubble.message || '')}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="fixed bottom-[138px] right-4 z-[290] flex h-13 w-13 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_0_20px_rgba(37,211,102,0.4)] transition hover:scale-105 hover:bg-[#20bd5a] md:bottom-[88px] md:right-6"
+                    aria-label="Hubungi kami via WhatsApp"
+                >
+                    <svg
+                        xmlns="http://www.w3.org/2000/svg"
+                        viewBox="0 0 24 24"
+                        fill="currentColor"
+                        className="h-7 w-7"
+                    >
+                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm.029 18.88c-1.161 0-2.305-.292-3.318-.844l-3.677.964.984-3.595c-.607-1.052-.927-2.246-.926-3.468.001-3.825 3.113-6.937 6.937-6.937 3.825 0 6.938 3.112 6.938 6.937-.001 3.825-3.113 6.938-6.938 6.938z" />
+                    </svg>
+                </a>
+            )}
 
             <Suspense fallback={null}>
                 <LiveChat context={chatContext} />

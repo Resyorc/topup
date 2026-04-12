@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Pages;
 
-use App\Filament\Admin\Clusters\Settings\SettingsCluster;
 use App\Models\Setting;
 use BackedEnum;
 use Filament\Forms\Components\TextInput;
@@ -13,6 +12,7 @@ use Filament\Pages\Page;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
+use UnitEnum;
 
 class LoyaltySettings extends Page implements HasForms
 {
@@ -28,7 +28,7 @@ class LoyaltySettings extends Page implements HasForms
 
     protected static ?int $navigationSort = 10;
 
-    protected static ?string $cluster = SettingsCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Marketing & Konten';
 
     public ?array $data = [];
 
@@ -46,9 +46,11 @@ class LoyaltySettings extends Page implements HasForms
             'tier_multiplier_silver'   => (float) Setting::get('tier_multiplier_silver', 1.25),
             'tier_multiplier_gold'     => (float) Setting::get('tier_multiplier_gold', 1.5),
             'tier_multiplier_platinum' => (float) Setting::get('tier_multiplier_platinum', 2.0),
-            'tier_threshold_silver'    => (int) Setting::get('tier_threshold_silver', 500_000),
-            'tier_threshold_gold'      => (int) Setting::get('tier_threshold_gold', 2_000_000),
-            'tier_threshold_platinum'  => (int) Setting::get('tier_threshold_platinum', 10_000_000),
+
+            // Harga upgrade membership
+            'membership_price_silver'   => (int) Setting::get('membership_price_silver', 25_000),
+            'membership_price_gold'     => (int) Setting::get('membership_price_gold', 75_000),
+            'membership_price_platinum' => (int) Setting::get('membership_price_platinum', 150_000),
         ]);
     }
 
@@ -97,18 +99,18 @@ class LoyaltySettings extends Page implements HasForms
                     ])
                     ->columns(4),
 
-                Section::make('Threshold Naik Tier')
-                    ->description('Total belanja akumulatif (lifetime) yang dibutuhkan untuk naik ke tier tersebut.')
+                Section::make('Harga Upgrade Membership (One-Time)')
+                    ->description('User membayar sekali untuk langsung naik ke tier yang dipilih secara permanen.')
                     ->schema([
-                        TextInput::make('tier_threshold_silver')
-                            ->label('🥈 Silver mulai dari (Rp)')
-                            ->numeric()->minValue(1)->prefix('Rp')->required(),
-                        TextInput::make('tier_threshold_gold')
-                            ->label('🥇 Gold mulai dari (Rp)')
-                            ->numeric()->minValue(1)->prefix('Rp')->required(),
-                        TextInput::make('tier_threshold_platinum')
-                            ->label('💎 Platinum mulai dari (Rp)')
-                            ->numeric()->minValue(1)->prefix('Rp')->required(),
+                        TextInput::make('membership_price_silver')
+                            ->label('🥈 Upgrade ke Silver')
+                            ->numeric()->minValue(0)->prefix('Rp')->required(),
+                        TextInput::make('membership_price_gold')
+                            ->label('🥇 Upgrade ke Gold')
+                            ->numeric()->minValue(0)->prefix('Rp')->required(),
+                        TextInput::make('membership_price_platinum')
+                            ->label('💎 Upgrade ke Platinum')
+                            ->numeric()->minValue(0)->prefix('Rp')->required(),
                     ])
                     ->columns(3),
             ])
@@ -125,9 +127,9 @@ class LoyaltySettings extends Page implements HasForms
         Setting::set('tier_multiplier_silver', $data['tier_multiplier_silver']);
         Setting::set('tier_multiplier_gold', $data['tier_multiplier_gold']);
         Setting::set('tier_multiplier_platinum', $data['tier_multiplier_platinum']);
-        Setting::set('tier_threshold_silver', $data['tier_threshold_silver']);
-        Setting::set('tier_threshold_gold', $data['tier_threshold_gold']);
-        Setting::set('tier_threshold_platinum', $data['tier_threshold_platinum']);
+        Setting::set('membership_price_silver', $data['membership_price_silver']);
+        Setting::set('membership_price_gold', $data['membership_price_gold']);
+        Setting::set('membership_price_platinum', $data['membership_price_platinum']);
 
         Notification::make()
             ->title('Pengaturan tersimpan')

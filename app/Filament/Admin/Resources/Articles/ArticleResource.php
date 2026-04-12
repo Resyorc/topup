@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\Articles;
 
-// use App\Filament\Admin\Clusters\Konten\KontenCluster;
 use App\Filament\Admin\Resources\Articles\Pages\CreateArticle;
 use App\Filament\Admin\Resources\Articles\Pages\EditArticle;
 use App\Filament\Admin\Resources\Articles\Pages\ListArticles;
@@ -14,6 +13,7 @@ use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
+use UnitEnum;
 
 class ArticleResource extends Resource
 {
@@ -21,7 +21,7 @@ class ArticleResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedNewspaper;
 
-    // protected static ?string $cluster = KontenCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Marketing & Konten';
 
     protected static ?string $recordTitleAttribute = 'title';
 

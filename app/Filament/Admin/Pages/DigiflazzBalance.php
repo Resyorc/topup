@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Pages;
 
-use App\Filament\Admin\Clusters\MonitorCluster;
 use App\Models\Setting;
 use App\Services\DigiflazzService;
 use BackedEnum;
@@ -12,6 +11,7 @@ use Filament\Notifications\Notification;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Throwable;
+use UnitEnum;
 
 class DigiflazzBalance extends Page
 {
@@ -25,7 +25,7 @@ class DigiflazzBalance extends Page
 
     protected static ?int $navigationSort = 5;
 
-    protected static ?string $cluster = MonitorCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Operasional';
 
     public ?float $balance = null;
 

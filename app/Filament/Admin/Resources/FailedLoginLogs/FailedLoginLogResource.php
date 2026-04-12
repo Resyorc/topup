@@ -2,13 +2,13 @@
 
 namespace App\Filament\Admin\Resources\FailedLoginLogs;
 
-use App\Filament\Admin\Clusters\MonitorCluster;
 use App\Filament\Admin\Resources\FailedLoginLogs\Pages\ListFailedLoginLogs;
 use App\Filament\Admin\Resources\FailedLoginLogs\Tables\FailedLoginLogsTable;
 use App\Models\FailedLoginLog;
 use BackedEnum;
 use Filament\Resources\Resource;
 use Filament\Support\Icons\Heroicon;
+use UnitEnum;
 
 class FailedLoginLogResource extends Resource
 {
@@ -20,7 +20,7 @@ class FailedLoginLogResource extends Resource
 
     protected static ?string $title = 'Failed Login';
 
-    protected static ?string $cluster = MonitorCluster::class;
+    protected static UnitEnum|string|null $navigationGroup = 'Monitoring';
 
     protected static ?int $navigationSort = 11;
 

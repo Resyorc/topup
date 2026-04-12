@@ -48,16 +48,41 @@ class ProductsTable
                     ->sortable(),
 
                 TextColumn::make('price_guest')
-                    ->label('Harga Guest')
+                    ->label('Guest')
+                    ->money('IDR', locale: 'id')
+                    ->sortable()
+                    ->color('gray'),
+
+                TextColumn::make('price_bronze')
+                    ->label('Bronze')
+                    ->money('IDR', locale: 'id')
+                    ->sortable()
+                    ->color('warning'),
+
+                TextColumn::make('price_silver')
+                    ->label('Silver')
+                    ->money('IDR', locale: 'id')
+                    ->sortable()
+                    ->color('gray'),
+
+                TextColumn::make('price_gold')
+                    ->label('Gold')
                     ->money('IDR', locale: 'id')
                     ->sortable()
                     ->color('success'),
+
+                TextColumn::make('price_platinum')
+                    ->label('Platinum')
+                    ->money('IDR', locale: 'id')
+                    ->sortable()
+                    ->color('info'),
 
                 TextColumn::make('flash_sale_price')
                     ->label('Flash Sale')
                     ->money('IDR', locale: 'id')
                     ->sortable()
-                    ->color('danger'),
+                    ->color('danger')
+                    ->toggleable(isToggledHiddenByDefault: true),
 
                 IconColumn::make('is_available')
                     ->label('Tersedia')

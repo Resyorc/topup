@@ -4,12 +4,11 @@ namespace App\Http\Controllers;
 
 use App\Models\Category;
 use App\Models\Game;
-use App\Services\ProductGroupingService;
 use Inertia\Inertia;
 
 class PriceListController extends Controller
 {
-    public function index(ProductGroupingService $groupingService)
+    public function index()
     {
         $categories = Category::orderBy('name')->get(['id', 'name', 'slug']);
 
@@ -20,19 +19,24 @@ class PriceListController extends Controller
             ->orderBy('name', 'asc')
             ->get();
 
-        $priceList = $games->map(function ($game) use ($groupingService) {
+        $priceList = $games->map(function ($game) {
             return [
                 'id'            => $game->id,
                 'name'          => $game->name,
                 'slug'          => $game->slug,
-                'thumbnail'     => $game->thumbnail ? '/storage/'.$game->thumbnail : null,
+                'thumbnail'     => $game->thumbnail ? '/storage/' . $game->thumbnail : null,
                 'category_id'   => $game->category_id,
                 'category_name' => $game->category?->name,
                 'product_count' => $game->products->count(),
-                'min_price'     => $game->products->min('price_guest')
-                    ? (int) ceil($game->products->min('price_guest'))
-                    : null,
-                'products'      => $groupingService->groupByGame($game->products, $game),
+                'products'      => $game->products->map(fn ($p) => [
+                    'id'            => $p->id,
+                    'name'          => $p->name,
+                    'price_guest'   => (int) $p->price_guest,
+                    'price_bronze'  => (int) $p->price_bronze,
+                    'price_silver'  => (int) $p->price_silver,
+                    'price_gold'    => (int) $p->price_gold,
+                    'price_platinum'=> (int) $p->price_platinum,
+                ])->values(),
             ];
         });
 
