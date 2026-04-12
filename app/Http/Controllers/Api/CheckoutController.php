@@ -184,6 +184,7 @@ class CheckoutController extends Controller
                     'invoice_id' => $merchantRef,
                     'user_id' => $authenticatedUserId,
                     'product_id' => $product->id,
+                    'provider_sku' => $providerSku,
                     'customer_game_id' => $validated['customer_game_id'],
                     'customer_zone_id' => $validated['customer_zone_id'] ?? null,
                     'customer_whatsapp' => $validated['customer_whatsapp'],
