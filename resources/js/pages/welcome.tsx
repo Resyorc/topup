@@ -471,7 +471,7 @@ export default function Welcome({
                     )}
 
                     {/* "Lihat Lainnya" button — slightly compact on mobile */}
-                    {filteredGames.length >= 12 && (
+                    {filteredGames.length > displayLimit && (
                         <button
                             onClick={() => setDisplayLimit((prev) => prev + 12)}
                             className="group relative mt-8 flex w-full items-center justify-center gap-4 py-4 md:mt-12 md:py-6"
