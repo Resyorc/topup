@@ -45,7 +45,7 @@ class HomeController extends Controller
             ->whereNotNull('flash_sale_price')
             ->whereNotNull('flash_sale_ends_at')
             ->where('flash_sale_ends_at', '>', now())
-            ->with('game:id,name,slug')
+            ->with('game:id,name,slug,icon_rules,grouping_rules')
             ->orderBy('flash_sale_ends_at')
             ->get()
             ->map(function ($p) {
@@ -62,7 +62,7 @@ class HomeController extends Controller
                     'clean_name'          => $cleanName,
                     'game_name'           => $p->game->name,
                     'game_slug'           => $p->game->slug,
-                    'logo_url'            => $p->logo_url ? asset('storage/' . $p->logo_url) : null,
+                    'logo_url'            => $p->game->resolveProductIcon($p),
                     'flash_sale_price'    => $salePrice,
                     'regular_price'       => $regularPrice,
                     'discount_percent'    => $regularPrice > 0
@@ -91,4 +91,5 @@ class HomeController extends Controller
             'flashSaleItems'   => $flashSaleItems,
         ]);
     }
+
 }
