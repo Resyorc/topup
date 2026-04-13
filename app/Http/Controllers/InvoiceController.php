@@ -200,7 +200,7 @@ class InvoiceController extends Controller
             'product' => [
                 'name' => $transaction->product->name,
                 'extra' => '',
-                'icon_url' => $this->resolveProductIcon($transaction->product, $transaction->product->game),
+                'icon_url' => $transaction->product->game->resolveProductIcon($transaction->product),
             ],
 
             // ✅ Data pembayaran — untuk halaman pembayaran kustom
@@ -220,69 +220,6 @@ class InvoiceController extends Controller
             'total' => (int) $transaction->amount + (int) $transaction->fee,
             'loyalty_coins' => (int) $transaction->loyalty_coins,
         ];
-    }
-
-    private function resolveProductIcon(\App\Models\Product $product, \App\Models\Game $game): ?string
-    {
-        $rules = $game->icon_rules ?? [];
-        if (empty($rules)) {
-            return null;
-        }
-
-        // clean_name: nama produk tanpa bagian dalam kurung, e.g. "86 Diamond (Bonus 2)" → "86 Diamond"
-        $name = $product->name;
-        $cleanName = str_contains($name, '(')
-            ? trim(substr($name, 0, strpos($name, '(')))
-            : $name;
-
-        // Tentukan group dari grouping_rules (sama dengan ProductGroupingService)
-        $group = '';
-        foreach ($game->grouping_rules ?? [] as $rule) {
-            $groupLabel = $rule['group'] ?? '';
-            $keywords   = array_map('trim', explode(',', $rule['keywords'] ?? ''));
-            foreach ($keywords as $kw) {
-                if ($kw !== '' && str_contains(strtolower($name), strtolower($kw))) {
-                    $group = $groupLabel;
-                    break 2;
-                }
-            }
-        }
-
-        foreach ($rules as $rule) {
-            $type = $rule['type'] ?? '';
-            $icon = $rule['icon'] ?? null;
-
-            if ($type === 'group') {
-                $matchGroup = $rule['match_group'] ?? '';
-                if ($matchGroup !== '' && str_contains(strtolower($group), strtolower($matchGroup))) {
-                    return $icon ? '/storage/' . $icon : null;
-                }
-            } elseif ($type === 'keyword') {
-                $matchKeyword = $rule['match_keyword'] ?? '';
-                if ($matchKeyword !== '') {
-                    $keywords = array_map('trim', explode(',', $matchKeyword));
-                    foreach ($keywords as $kw) {
-                        if ($kw !== '' && str_contains(strtolower($cleanName), strtolower($kw))) {
-                            return $icon ? '/storage/' . $icon : null;
-                        }
-                    }
-                }
-            } elseif ($type === 'range') {
-                preg_match('/\d+/', $cleanName, $matches);
-                if (! empty($matches)) {
-                    $amount = (int) $matches[0];
-                    $min    = isset($rule['amount_min']) && $rule['amount_min'] !== '' ? (int) $rule['amount_min'] : null;
-                    $max    = isset($rule['amount_max']) && $rule['amount_max'] !== '' ? (int) $rule['amount_max'] : null;
-                    $minOk  = $min === null || $amount >= $min;
-                    $maxOk  = $max === null || $amount <= $max;
-                    if ($minOk && $maxOk) {
-                        return $icon ? '/storage/' . $icon : null;
-                    }
-                }
-            }
-        }
-
-        return null;
     }
 
     private function mapCoinTopupToInvoiceData(CoinTopup $coinTopup): array
