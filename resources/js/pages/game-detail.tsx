@@ -215,9 +215,16 @@ export default function GameDetail({
         }));
     };
 
-    // Flash sale derived
-    const flashFlatGroups = flashSaleGroups as { [category: string]: Product[] };
-    const flashProducts: Product[] = Object.values(flashFlatGroups).flat();
+    // Flash sale derived — handle both flat and region-nested structures
+    const flashProducts: Product[] = hasRegions
+        ? Object.values(
+              flashSaleGroups as {
+                  [region: string]: { [category: string]: Product[] };
+              },
+          ).flatMap((cats) => Object.values(cats).flat())
+        : Object.values(
+              flashSaleGroups as { [category: string]: Product[] },
+          ).flat();
     const hasFlashSale = flashProducts.length > 0;
     const flashEndsAt = hasFlashSale ? (flashProducts[0].flash_sale_ends_at ?? null) : null;
     const [flashCountdown, setFlashCountdown] = useState<{ h: string; m: string; s: string } | null>(null);
@@ -1142,8 +1149,20 @@ export default function GameDetail({
                                                                 )}
                                                             </div>
                                                             <div className="p-3">
-                                                                <div className="line-clamp-2 text-xs font-bold leading-tight text-[#FFC107]">{product.clean_name}</div>
-                                                                {product.extra && <div className="mt-0.5 truncate text-[9px] text-gray-400">{product.extra}</div>}
+                                                                <div className="mb-2 flex items-start justify-between gap-2">
+                                                                    <div className="min-w-0 flex-1">
+                                                                        <div className="line-clamp-2 text-xs font-bold leading-tight text-[#FFC107]">{product.clean_name}</div>
+                                                                        {product.extra && <div className="mt-0.5 truncate text-[9px] text-gray-400">{product.extra}</div>}
+                                                                    </div>
+                                                                    {(() => {
+                                                                        const iconUrl = resolveProductIcon(product, '', game.icon_rules);
+                                                                        return iconUrl ? (
+                                                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-white/5">
+                                                                                <img src={iconUrl} alt="icon" className="h-6 w-6 object-contain" />
+                                                                            </div>
+                                                                        ) : null;
+                                                                    })()}
+                                                                </div>
                                                                 <div className="mt-2 text-sm font-bold text-white">
                                                                     Rp {product.price.toLocaleString('id-ID')}
                                                                 </div>
