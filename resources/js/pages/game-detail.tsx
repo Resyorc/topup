@@ -77,9 +77,15 @@ interface GameDetailProps {
 function resolveProductIcon(
     product: Product,
     group: string,
-    rules: GameDetailProps['game']['icon_rules'],
+    rules: GameDetailProps['game']['icon_rules'] | Record<string, GameDetailProps['game']['icon_rules'][number]>,
 ): string | null {
-    for (const rule of rules) {
+    // Filament Repeater dengan ->reorderable() menyimpan sebagai object {uuid: item},
+    // bukan array. Handle kedua format.
+    const rulesArray: GameDetailProps['game']['icon_rules'] = Array.isArray(rules)
+        ? rules
+        : Object.values(rules as Record<string, GameDetailProps['game']['icon_rules'][number]>);
+
+    for (const rule of rulesArray) {
         if (rule.type === 'group') {
             if (
                 rule.match_group &&
@@ -521,18 +527,22 @@ export default function GameDetail({
                         <span className="text-[10px] font-bold text-white">
                             ⚡ Flash Sale {product.discount_percent}%
                         </span>
-                        <span className="text-[10px] text-white/70 line-through">
-                            Rp {product.original_price?.toLocaleString('id-ID')}
-                        </span>
+                        {product.original_price && product.original_price > product.price && (
+                            <span className="text-[10px] text-white/70 line-through">
+                                Rp {product.original_price.toLocaleString('id-ID')}
+                            </span>
+                        )}
                     </div>
                 ) : (
                     <div className="flex items-center justify-between bg-orange-500 px-2.5 py-1">
                         <span className="text-[10px] font-bold text-white">
                             Disc {product.discount_percent}%
                         </span>
-                        <span className="text-[10px] text-white/70 line-through">
-                            Rp {product.original_price?.toLocaleString('id-ID')}
-                        </span>
+                        {product.original_price && product.original_price > product.price && (
+                            <span className="text-[10px] text-white/70 line-through">
+                                Rp {product.original_price.toLocaleString('id-ID')}
+                            </span>
+                        )}
                     </div>
                 )
             )}
@@ -1142,7 +1152,7 @@ export default function GameDetail({
                                                                 <span className="text-[10px] font-bold text-white">
                                                                     {product.discount_percent > 0 ? `Disc ${product.discount_percent}%` : '⚡ Flash Sale'}
                                                                 </span>
-                                                                {product.original_price && (
+                                                                {product.original_price && product.original_price > product.price && (
                                                                     <span className="text-[10px] text-white/70 line-through">
                                                                         Rp {product.original_price.toLocaleString('id-ID')}
                                                                     </span>

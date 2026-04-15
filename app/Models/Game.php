@@ -35,7 +35,9 @@ class Game extends Model
      */
     public function resolveProductIcon(Product $product): ?string
     {
-        $rules = $this->icon_rules ?? [];
+        // Filament Repeater dengan ->reorderable() menyimpan sebagai {uuid: item}.
+        // array_values() normalisasi ke sequential array agar foreach aman.
+        $rules = array_values($this->icon_rules ?? []);
         if (empty($rules)) {
             return null;
         }

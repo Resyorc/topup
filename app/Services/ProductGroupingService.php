@@ -102,22 +102,20 @@ class ProductGroupingService
         $effectivePrice = $isFlashSale ? $product->flash_sale_price : $basePrice;
         $skuCode = $product->providerProducts?->first()?->provider_sku ?? ('SKU-' . $product->id);
 
-        // Harga coret untuk flash sale: price_guest → fake_price → flash_sale_price × 1.2
-        $flashOriginal = $basePrice ?: ($product->fake_price ?: (int) ceil($product->flash_sale_price * 1.2));
+        // Harga coret selalu dari fake_price, baik produk biasa maupun flash sale
+        $fakePrice      = $product->fake_price ? (int) ceil($product->fake_price) : null;
+        $salePrice      = (int) ceil($effectivePrice);
+        $discountPercent = ($fakePrice && $fakePrice > $salePrice)
+            ? (int) round((($fakePrice - $salePrice) / $fakePrice) * 100)
+            : 0;
 
         return [
             'id'               => $product->id,
             'sku'              => $skuCode,
             'name'             => $product->name,
-            'price'            => (int) ceil($effectivePrice),
-            'original_price'   => $isFlashSale
-                ? (int) ceil($flashOriginal)
-                : ($product->fake_price ? (int) ceil($product->fake_price) : null),
-            'discount_percent' => $isFlashSale
-                ? ($flashOriginal > 0 ? (int) round((($flashOriginal - $product->flash_sale_price) / $flashOriginal) * 100) : 0)
-                : ($product->fake_price && $product->fake_price > 0
-                    ? (int) round((($product->fake_price - $basePrice) / $product->fake_price) * 100)
-                    : 0),
+            'price'            => $salePrice,
+            'original_price'   => $fakePrice,
+            'discount_percent' => $discountPercent,
             'extra'            => str_contains($product->name, '(')
                 ? substr($product->name, strpos($product->name, '('))
                 : null,
@@ -159,7 +157,8 @@ class ProductGroupingService
      */
     private function buildKeywordRules(Game $game): array
     {
-        $rules = $game->grouping_rules;
+        // array_values() normalisasi UUID-keyed object dari Filament Repeater ke sequential array
+        $rules = array_values($game->grouping_rules ?? []);
 
         if (! empty($rules)) {
             $keywordRules = [];
