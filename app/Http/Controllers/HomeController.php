@@ -50,8 +50,8 @@ class HomeController extends Controller
             ->get()
             ->map(function ($p) {
                 $salePrice    = (int) ceil($p->flash_sale_price);
-                // Fallback: price_guest → fake_price → flash_sale_price * 1.2
-                $regularPrice = (int) ceil($p->price_guest ?: ($p->fake_price ?: $salePrice * 1.2));
+                // Harga coret dari fake_price
+                $fakePrice    = $p->fake_price ? (int) ceil($p->fake_price) : null;
                 $cleanName    = str_contains($p->name, '(')
                     ? trim(substr($p->name, 0, strpos($p->name, '(')))
                     : $p->name;
@@ -64,9 +64,9 @@ class HomeController extends Controller
                     'game_slug'           => $p->game->slug,
                     'logo_url'            => $p->game->resolveProductIcon($p),
                     'flash_sale_price'    => $salePrice,
-                    'regular_price'       => $regularPrice,
-                    'discount_percent'    => $regularPrice > 0
-                        ? (int) round((($regularPrice - $salePrice) / $regularPrice) * 100)
+                    'regular_price'       => $fakePrice ?? 0,
+                    'discount_percent'    => ($fakePrice && $fakePrice > $salePrice)
+                        ? (int) round((($fakePrice - $salePrice) / $fakePrice) * 100)
                         : 0,
                     'flash_sale_ends_at'  => $p->flash_sale_ends_at->timestamp,
                     'flash_sale_stock'    => $p->flash_sale_stock,

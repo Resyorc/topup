@@ -26,7 +26,7 @@ class CheckoutController extends Controller
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'customer_game_id' => 'required|string|max:50|regex:/^[a-zA-Z0-9._\-]+$/',
-            'customer_zone_id' => 'nullable|string|max:20|regex:/^[0-9]+$/',
+            'customer_zone_id' => 'nullable|string|max:20|regex:/^[a-zA-Z0-9]+$/',
             'customer_whatsapp' => 'required|string|regex:/^\+?[0-9]{8,15}$/',
             'payment_method' => 'required|string',
             'customer_name' => 'nullable|string|max:100',
