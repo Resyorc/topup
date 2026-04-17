@@ -1,0 +1,11 @@
+[phases.setup]
+nixPkgs = ["nodejs_22", "npm-9_x", "php82", "nginx", "libmysqlclient", "phpPackages.composer"]
+
+[phases.install]
+cmds = ["composer install --no-scripts --ignore-platform-reqs"]
+
+[phases.build]
+cmds = [
+    "php artisan wayfinder:generate --with-form || true",
+    "npm install && npm run build"
+]
