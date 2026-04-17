@@ -29,9 +29,11 @@ class AdminPanelProvider extends PanelProvider
 {
     public function panel(Panel $panel): Panel
     {
-        $logoPath = cache()->rememberForever('site_logo', function () {
-            return Setting::where('key', 'web_logo')->value('value');
-        });
+        $logoPath = app()->runningInConsole() 
+            ? null 
+            : cache()->rememberForever('site_logo', function () {
+                return Setting::where('key', 'web_logo')->value('value');
+            });
 
         return $panel
             ->id('admin')
