@@ -8,8 +8,5 @@ cmds = ["composer install --no-scripts --ignore-platform-reqs"]
 cmds = [
     "npm install",
     "CACHE_DRIVER=file SESSION_DRIVER=file php artisan wayfinder:generate --with-form || true",
-    "npm run build:ssr || npm run build"
+    "npm run build"
 ]
-
-[start]
-cmd = "php artisan inertia:start-ssr & node /assets/scripts/prestart.mjs /assets/nginx.template.conf /nginx.conf && (php-fpm -y /assets/php-fpm.conf & nginx -c /nginx.conf)"
