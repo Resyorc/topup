@@ -7,5 +7,6 @@ cmds = ["composer install --no-scripts --ignore-platform-reqs"]
 [phases.build]
 cmds = [
     "npm install",
+    "php artisan wayfinder:generate --with-form || true",
     "npm run build:ssr || npm run build"
 ]
