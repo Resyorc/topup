@@ -1,5 +1,5 @@
 [phases.setup]
-nixPkgs = ["nodejs_22", "npm-9_x", "php82", "nginx", "libmysqlclient", "phpPackages.composer"]
+nixPkgs = ["nodejs_22", "npm-9_x", "php82", "php82Extensions.redis", "nginx", "libmysqlclient", "phpPackages.composer"]
 
 [phases.install]
 cmds = ["composer install --no-scripts --ignore-platform-reqs"]
@@ -7,6 +7,6 @@ cmds = ["composer install --no-scripts --ignore-platform-reqs"]
 [phases.build]
 cmds = [
     "npm install",
-    "CACHE_DRIVER=file SESSION_DRIVER=file REDIS_CLIENT=predis php artisan wayfinder:generate --with-form || true",
+    "CACHE_DRIVER=file SESSION_DRIVER=file php artisan wayfinder:generate --with-form || true",
     "npm run build:ssr || npm run build"
 ]
