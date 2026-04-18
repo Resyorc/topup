@@ -11,6 +11,7 @@ RUN apk add --no-cache \
     libzip-dev \
     oniguruma-dev \
     libxml2-dev \
+    icu-dev \
     && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
     && docker-php-ext-install \
         pdo_mysql \
@@ -19,6 +20,7 @@ RUN apk add --no-cache \
         gd \
         bcmath \
         xml \
+        intl \
     && pecl install redis \
     && docker-php-ext-enable redis \
     && apk del .build-deps
