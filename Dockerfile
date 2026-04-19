@@ -3,7 +3,7 @@ FROM php:8.2-fpm-alpine
 # Install system dependencies
 RUN apk add --no-cache \
     nginx \
-    nodejs \
+    nodejs-current \
     npm \
     git \
     curl \
