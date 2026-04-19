@@ -56,10 +56,16 @@ RUN CACHE_DRIVER=file SESSION_DRIVER=file php artisan wayfinder:generate --with-
 RUN npm run build:ssr || npm run build
 
 # Set permissions
-RUN mkdir -p /var/log/nginx /run/nginx storage/logs storage/framework/cache \
+RUN mkdir -p /var/log/nginx /run/nginx \
+        /var/lib/nginx/tmp/client_body \
+        /var/lib/nginx/tmp/fastcgi \
+        /var/lib/nginx/tmp/proxy \
+        /var/lib/nginx/tmp/uwsgi \
+        /var/lib/nginx/tmp/scgi \
+        storage/logs storage/framework/cache \
         storage/framework/sessions storage/framework/views bootstrap/cache \
-    && chown -R www-data:www-data storage bootstrap/cache \
-    && chmod -R 775 storage bootstrap/cache
+    && chown -R www-data:www-data storage bootstrap/cache /var/lib/nginx \
+    && chmod -R 775 storage bootstrap/cache /var/lib/nginx
 
 # Copy configs
 COPY docker/nginx.conf /etc/nginx/nginx.conf
