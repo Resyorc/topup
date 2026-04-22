@@ -54,6 +54,7 @@ class ArticleForm
                     FileUpload::make('thumbnail')
                         ->label('Thumbnail')
                         ->image()
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                         ->disk('public')
                         ->directory('articles')
                         ->helperText('Rasio 16:9 disarankan.'),

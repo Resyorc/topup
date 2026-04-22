@@ -45,10 +45,12 @@ class GameForm
                                 ->nullable(),
                             FileUpload::make('image')
                                 ->image()
+                                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                 ->disk('public')
                                 ->directory('games'),
                             FileUpload::make('thumbnail')
                                 ->image()
+                                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                 ->disk('public')
                                 ->directory('games/thumbnails'),
                             Toggle::make('is_active')
@@ -143,6 +145,7 @@ class GameForm
                                             FileUpload::make('icon')
                                                 ->label('Icon')
                                                 ->image()
+                                                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                                 ->disk('public')
                                                 ->directory('icons/products'),
                                         ])
@@ -202,6 +205,7 @@ class GameForm
                             FileUpload::make('guide_image')
                                 ->label('Gambar Panduan')
                                 ->image()
+                                ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                 ->disk('public')
                                 ->directory('games/guides'),
                             RichEditor::make('guide_content')

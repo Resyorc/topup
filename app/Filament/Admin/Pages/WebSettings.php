@@ -86,11 +86,13 @@ class WebSettings extends Page implements HasForms
                                 FileUpload::make('web_logo')
                                     ->label('Logo Website')
                                     ->image()
+                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                     ->directory('settings')
                                     ->disk('public'),
                                 FileUpload::make('web_favicon')
                                     ->label('Favicon')
                                     ->image()
+                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                     ->directory('settings')
                                     ->disk('public'),
                             ])->columns(2),
@@ -113,6 +115,7 @@ class WebSettings extends Page implements HasForms
                                 FileUpload::make('seo_og_image')
                                     ->label('Gambar OpenGraph (Preview Social Media)')
                                     ->image()
+                                    ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                     ->directory('settings')
                                     ->disk('public'),
                                 TextInput::make('sitemap_url')

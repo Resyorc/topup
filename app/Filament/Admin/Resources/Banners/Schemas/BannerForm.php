@@ -18,6 +18,7 @@ class BannerForm
                     FileUpload::make('image')
                         ->label('Gambar Banner')
                         ->image()
+                        ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                         ->disk('public')
                         ->directory('banners')
                         ->required(),
