@@ -75,7 +75,6 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'phone',
         'password',
         'google_id',
-        'tier',
         'avatar',
         'api_key',
         'api_access_enabled',
@@ -96,7 +95,6 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'two_factor_secret',
         'two_factor_recovery_codes',
         'remember_token',
-        'phone',
         'google_id',
     ];
 

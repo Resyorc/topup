@@ -73,14 +73,9 @@ class TopupPriceService
                         $cost = (float) $cheapestProvider->price;
                         
                         $product->update([
-                            'price_cost'     => $cost,
-                            // Kalkulasi 5 Tier Harga Berdasarkan Fixed Margin masing-masing
-                            'price_guest'    => $this->calculateSellPrice($cost, (float) $product->margin_guest_flat),
-                            'price_bronze'   => $this->calculateSellPrice($cost, (float) $product->margin_bronze_flat),
-                            'price_silver'   => $this->calculateSellPrice($cost, (float) $product->margin_silver_flat),
-                            'price_gold'     => $this->calculateSellPrice($cost, (float) $product->margin_gold_flat),
-                            'price_platinum' => $this->calculateSellPrice($cost, (float) $product->margin_platinum_flat),
-                            'is_available'   => true,
+                            'price_cost'  => $cost,
+                            'price_sell'  => $this->calculateSellPrice($cost, (float) $product->margin_flat),
+                            'is_available' => true,
                         ]);
 
                         $updated++;
@@ -135,12 +130,8 @@ class TopupPriceService
                         // Gunakan harga alternatif jika ada
                         $cost = (float) $cheapest->price;
                         $product->update([
-                            'price_cost'     => $cost,
-                            'price_guest'    => $this->calculateSellPrice($cost, (float) $product->margin_guest_flat),
-                            'price_bronze'   => $this->calculateSellPrice($cost, (float) $product->margin_bronze_flat),
-                            'price_silver'   => $this->calculateSellPrice($cost, (float) $product->margin_silver_flat),
-                            'price_gold'     => $this->calculateSellPrice($cost, (float) $product->margin_gold_flat),
-                            'price_platinum' => $this->calculateSellPrice($cost, (float) $product->margin_platinum_flat),
+                            'price_cost' => $cost,
+                            'price_sell' => $this->calculateSellPrice($cost, (float) $product->margin_flat),
                         ]);
                         Log::channel('digiflazz')->info("Auto-Recovery: Product ID {$product->id} switch ke Seller: {$cheapest->seller_name} (Rp{$cost})");
                     } else {

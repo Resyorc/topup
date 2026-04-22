@@ -44,3 +44,6 @@ export default function VerifyEmail({ status: statusProp }: { status?: string })
         </AuthLayout>
     );
 }
+
+
+

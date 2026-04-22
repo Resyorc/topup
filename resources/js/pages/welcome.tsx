@@ -50,8 +50,6 @@ interface WelcomeProps {
     games: Game[];
     trendingGames: Game[];
     trendingTotalSold: number;
-    loyaltyMinAmount: number;
-    loyaltyRate: number;
     flashSaleItems?: FlashSaleInfo[];
 }
 
@@ -64,14 +62,14 @@ function FlashSaleCard({ item }: { item: FlashSaleInfo }) {
     return (
         <Link
             href={`/order/${item.game_slug}`}
-            className={`group relative flex w-36 shrink-0 flex-col overflow-hidden rounded-xl border border-[#31334c] bg-[#1a1b26] transition hover:border-orange-500/50 sm:w-44 md:w-48 ${outOfStock ? 'pointer-events-none opacity-50' : ''}`}
+            className={`group relative flex w-36 shrink-0 flex-col overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] transition hover:border-orange-500/50 sm:w-44 md:w-48 ${outOfStock ? 'pointer-events-none opacity-50' : ''}`}
         >
             {item.discount_percent > 0 && (
                 <div className="absolute top-2 left-2 z-10 rounded-md bg-orange-500 px-1.5 py-0.5 text-[10px] font-black text-white">
                     -{item.discount_percent}%
                 </div>
             )}
-            <div className="flex h-20 items-center justify-center bg-[#12121a] sm:h-24">
+            <div className="flex h-20 items-center justify-center bg-[var(--color-bg-main)] sm:h-24">
                 {item.logo_url ? (
                     <img src={item.logo_url} alt={item.clean_name} className="h-12 w-12 object-contain sm:h-14 sm:w-14" />
                 ) : (
@@ -176,7 +174,7 @@ function FlashSaleSection({ items }: { items: FlashSaleInfo[] }) {
                         <div className="flex items-center gap-1">
                             {[countdown.h, countdown.m, countdown.s].map((val, i) => (
                                 <span key={i} className="flex items-center gap-1">
-                                    <span className="min-w-7 rounded bg-[#1e1f29] px-1.5 py-0.5 text-center font-mono text-xs font-bold text-orange-400">{val}</span>
+                                    <span className="min-w-7 rounded bg-[var(--color-bg-card)] px-1.5 py-0.5 text-center font-mono text-xs font-bold text-orange-400">{val}</span>
                                     {i < 2 && <span className="text-orange-400 font-bold">:</span>}
                                 </span>
                             ))}
@@ -220,8 +218,6 @@ export default function Welcome({
     games,
     trendingGames,
     trendingTotalSold,
-    loyaltyMinAmount,
-    loyaltyRate,
     flashSaleItems = [],
 }: WelcomeProps) {
     const { auth, appUrl } = usePage<{
@@ -358,55 +354,6 @@ export default function Welcome({
                     </section>
                 )}
 
-                {/* ===== Loyalty Program Banner ===== */}
-                {auth.user && (
-                    <section className="mb-6 md:mb-10">
-                        <div className="rounded-2xl border border-yellow-500/20 bg-gradient-to-r from-yellow-500/5 via-amber-500/5 to-yellow-500/5 px-4 py-3.5 md:px-6 md:py-4">
-                            <div className="flex flex-col items-start gap-3 sm:flex-row sm:items-center">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-yellow-500/15 md:h-11 md:w-11">
-                                    <img
-                                        src="/coin.png"
-                                        alt="Coin"
-                                        className="h-5 w-5 object-contain md:h-6 md:w-6"
-                                    />
-                                </div>
-                                <div className="flex-1">
-                                    <h3 className="text-sm font-bold text-yellow-400 md:text-[0.9rem]">
-                                        Dapatkan Krysta Coin Setiap Top Up!
-                                    </h3>
-                                    <p className="mt-0.5 text-xs leading-relaxed text-gray-400">
-                                        Setiap top up berhasil via{' '}
-                                        <span className="font-semibold text-gray-300">
-                                            QRIS, E-Wallet, atau Virtual Account
-                                        </span>{' '}
-                                        min.{' '}
-                                        <span className="font-semibold text-gray-300">
-                                            Rp{' '}
-                                            {loyaltyMinAmount.toLocaleString(
-                                                'id-ID',
-                                            )}
-                                        </span>
-                                        , kamu otomatis mendapat{' '}
-                                        <span className="font-semibold text-yellow-400">
-                                            cashback {loyaltyRate}%
-                                        </span>{' '}
-                                        dalam bentuk Krysta Coin — bisa dipakai
-                                        untuk top up berikutnya.
-                                    </p>
-                                </div>
-                                <div className="flex shrink-0 flex-row items-center gap-4 rounded-xl border border-yellow-500/20 bg-yellow-500/8 px-4 py-2.5 sm:flex-col sm:gap-0">
-                                    <p className="text-xl leading-none font-black text-yellow-400">
-                                        {loyaltyRate}%
-                                    </p>
-                                    <p className="text-[10px] text-gray-400 sm:mt-0.5">
-                                        Cashback Coin
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
-                    </section>
-                )}
-
                 {/* ===== Main Catalog Section ===== */}
                 <section className="mb-10 md:mb-16">
                     {/* Category Tabs — horizontally scrollable on mobile with smaller sizing */}
@@ -506,3 +453,7 @@ export default function Welcome({
         </GuestLayout>
     );
 }
+
+
+
+

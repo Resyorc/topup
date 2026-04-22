@@ -19,3 +19,4 @@ export function AppContent({ variant = 'header', children, ...props }: Props) {
         </main>
     );
 }
+

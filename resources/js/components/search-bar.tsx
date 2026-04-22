@@ -160,7 +160,7 @@ export default function SearchBar({
             {open && (
                 <ul
                     role="listbox"
-                    className="absolute top-full left-0 z-[300] mt-1 w-full overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-xl"
+                    className="absolute top-full left-0 z-[300] mt-1 w-full overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] shadow-xl"
                 >
                     {results.map((game, i) => (
                         <li
@@ -178,7 +178,7 @@ export default function SearchBar({
                                     : 'text-gray-200 hover:bg-white/5'
                             }`}
                         >
-                            <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-[#31334c]">
+                            <div className="h-9 w-9 shrink-0 overflow-hidden rounded-lg bg-[var(--color-border-light)]">
                                 {game.thumbnail ? (
                                     <img
                                         src={`/storage/${game.thumbnail}`}
@@ -204,3 +204,6 @@ export default function SearchBar({
         </div>
     );
 }
+
+
+

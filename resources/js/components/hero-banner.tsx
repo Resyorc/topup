@@ -107,3 +107,4 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
         </div>
     );
 }
+

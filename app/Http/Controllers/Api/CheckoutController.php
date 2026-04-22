@@ -53,19 +53,13 @@ class CheckoutController extends Controller
             return response()->json(['error' => 'Produk tidak memiliki SKU provider aktif. Silakan hubungi admin.'], 400);
         }
 
-        // Harga berdasarkan tier user: guest, bronze, silver, gold, platinum
-        $userTier = auth()->check() ? (auth()->user()->tier ?? 'guest') : 'guest';
-        if (! in_array($userTier, ['guest', 'bronze', 'silver', 'gold', 'platinum'])) {
-            $userTier = 'guest';
-        }
-        $tierPriceField = 'price_' . $userTier;
-        $tierPrice = (int) ($product->$tierPriceField ?? $product->price_guest ?? 0);
+        $basePrice = (int) ($product->price_sell ?? 0);
 
-        // Harga efektif: flash_sale_price jika ada flash sale aktif, selain itu harga tier user
+        // Harga efektif: flash_sale_price jika ada flash sale aktif, selain itu harga normal
         $isFlashSale = $product->flash_sale_price !== null
             && $product->flash_sale_ends_at !== null
             && $product->flash_sale_ends_at->gt(now());
-        $effectivePrice = $isFlashSale ? (int) ceil($product->flash_sale_price) : $tierPrice;
+        $effectivePrice = $isFlashSale ? (int) ceil($product->flash_sale_price) : $basePrice;
 
         // Cek stok flash sale
         if ($isFlashSale && $product->flash_sale_stock !== null) {

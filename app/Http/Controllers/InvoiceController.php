@@ -4,7 +4,6 @@ namespace App\Http\Controllers;
 
 use App\Models\CoinTopup;
 use App\Models\GameReview;
-use App\Models\MembershipOrder;
 use App\Models\Transaction;
 use App\Services\TransactionExpiryService;
 use Illuminate\Http\Request;
@@ -94,21 +93,6 @@ class InvoiceController extends Controller
                     }
 
                     $invoiceData = $this->mapCoinTopupToInvoiceData($coinTopup);
-                } else {
-                    $membership = MembershipOrder::with('user')
-                        ->where('invoice_id', $invoiceId)
-                        ->first();
-
-                    if ($membership) {
-                        if ($membership->user_id && $membership->user_id !== auth()->id()) {
-                            abort(403);
-                        }
-                        if ($membership->status === 'pending' && $membership->expired_at?->isPast()) {
-                            $membership->update(['status' => 'expired']);
-                            $membership->refresh();
-                        }
-                        $invoiceData = $this->mapMembershipToInvoiceData($membership);
-                    }
                 }
             }
         }
@@ -272,60 +256,8 @@ class InvoiceController extends Controller
                 : [],
             'price' => (int) $coinTopup->amount,
             'qty' => 1,
-            'fee' => 0,
-            'total' => (int) $coinTopup->amount,
-        ];
-    }
-    private function mapMembershipToInvoiceData(MembershipOrder $order): array
-    {
-        $tierLabel = [
-            'silver'   => '🥈 Silver',
-            'gold'     => '🥇 Gold',
-            'platinum' => '💎 Platinum',
-        ];
-
-        $displayStatus = match ($order->status) {
-            'paid'    => 'success',
-            'expired' => 'failed',
-            default   => $order->status,
-        };
-
-        return [
-            'type'           => 'membership',
-            'invoice_no'     => $order->invoice_id,
-            'whatsapp'       => '-',
-            'status'         => $displayStatus,
-            'payment_status' => $order->status === 'paid' ? 'paid' : $order->status,
-            'method'         => $order->payment_name ?? $order->payment_method ?? 'QRIS',
-            'created_at'     => $order->created_at->format('d M Y H:i:s'),
-            'paid_at'        => ($order->paid_at ?? $order->updated_at)?->format('Y/m/d H:i:s T'),
-            'expired_at'     => $order->expired_at?->format('d M Y H:i:s'),
-            'expired_at_unix'=> $order->expired_at?->timestamp,
-            'game' => [
-                'name'      => 'Upgrade Membership',
-                'publisher' => 'Program Loyalitas',
-                'image'     => '/images/membership-badge.png',
-                'slug'      => '',
-            ],
-            'account' => [
-                'username' => $order->user?->name ?? 'User',
-                'id'       => 'Member ID: ' . $order->user_id,
-                'server'   => '-',
-            ],
-            'product' => [
-                'name'  => 'Upgrade ke Tier ' . ($tierLabel[$order->to_tier] ?? ucfirst($order->to_tier)),
-                'extra' => 'Dari tier ' . ucfirst($order->from_tier),
-            ],
-            'payment_url' => $order->payment_url,
-            'pay_code'    => $order->pay_code,
-            'qr_url'      => $order->qr_url,
-            'pay_url'     => $order->pay_url,
-            'instructions'=> isset($order->api_logs['instructions']) ? $order->api_logs['instructions'] : [],
-            'price'       => (int) $order->amount,
-            'qty'         => 1,
-            'fee'         => 0,
-            'total'       => (int) $order->amount,
-            'loyalty_coins' => 0,
+            'fee' => isset($coinTopup->api_logs['fee_customer']) ? (int) $coinTopup->api_logs['fee_customer'] : 0,
+            'total' => isset($coinTopup->api_logs['amount']) ? (int) $coinTopup->api_logs['amount'] : ((int) $coinTopup->amount + (isset($coinTopup->api_logs['fee_customer']) ? (int) $coinTopup->api_logs['fee_customer'] : 0)),
         ];
     }
 }

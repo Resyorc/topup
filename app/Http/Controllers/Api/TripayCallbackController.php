@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppNotification;
 use App\Models\CoinTopup;
 use App\Models\ErrorLog;
-use App\Models\MembershipOrder;
 use App\Models\Transaction;
 use App\Services\CoinService;
 use App\Services\DigiflazzService;
@@ -73,44 +72,6 @@ class TripayCallbackController extends Controller
                 'success' => false,
                 'message' => 'Open payment is not supported',
             ], 400);
-        }
-
-        // ── Cek MembershipOrder terlebih dahulu ────────────────────────────
-        $membershipOrder = MembershipOrder::where('invoice_id', $data->merchant_ref)->first();
-
-        if ($membershipOrder) {
-            DB::transaction(function () use ($membershipOrder, $data) {
-                $order = MembershipOrder::whereKey($membershipOrder->id)
-                    ->lockForUpdate()->first();
-
-                if (in_array($order->status, ['paid', 'failed', 'expired'], true)) {
-                    return;
-                }
-
-                if ($data->status === 'PAID') {
-                    // Upgrade tier user — hanya jika lebih tinggi
-                    $tierOrder = ['bronze', 'silver', 'gold', 'platinum'];
-                    $currentIdx = array_search($order->user->tier, $tierOrder);
-                    $toIdx = array_search($order->to_tier, $tierOrder);
-
-                    if ($toIdx !== false && ($currentIdx === false || $toIdx > $currentIdx)) {
-                        $order->user->update(['tier' => $order->to_tier]);
-                    }
-
-                    $order->update([
-                        'status'  => 'paid',
-                        'paid_at' => now(),
-                    ]);
-
-                    Log::info("Membership upgraded: user #{$order->user_id} → {$order->to_tier} [{$order->invoice_id}]");
-                } elseif (in_array($data->status, ['EXPIRED', 'FAILED'])) {
-                    $order->update([
-                        'status' => $data->status === 'EXPIRED' ? 'expired' : 'failed',
-                    ]);
-                }
-            });
-
-            return response()->json(['success' => true]);
         }
 
         $coinTopup = CoinTopup::where('invoice_id', $data->merchant_ref)->first();

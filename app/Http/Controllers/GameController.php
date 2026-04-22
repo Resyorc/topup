@@ -20,7 +20,7 @@ class GameController extends Controller
         $game = Game::with(['category', 'products' => function ($query) {
             $query->with('providerProducts')
                 ->where('is_available', true)
-                ->orderBy('price_guest', 'asc');
+                ->orderBy('price_sell', 'asc');
         }])
             ->where('slug', $slug)
             ->where('is_active', true)

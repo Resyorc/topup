@@ -46,7 +46,7 @@ export default function PromoBanner({ activeFlashSale = null }: PromoBannerProps
         return (
             <section className="mx-auto mb-16 max-w-7xl px-4 py-8">
                 <Link href={`/order/${activeFlashSale.game_slug}`}>
-                    <div className="relative overflow-hidden rounded-3xl border border-orange-500/30 bg-linear-to-r from-[#2a1505] via-[#3d1f05] to-[#2a1505] p-1 shadow-xl transition hover:border-orange-500/60">
+                    <div className="relative overflow-hidden rounded-3xl border border-orange-500/30 bg-linear-to-r from-[var(--color-bg-main)] via-[var(--color-bg-secondary)] to-[var(--color-bg-main)] p-1 shadow-xl transition hover:border-orange-500/60">
                         {/* Dots Pattern */}
                         <div
                             className="absolute inset-0 opacity-10"
@@ -113,7 +113,7 @@ export default function PromoBanner({ activeFlashSale = null }: PromoBannerProps
 
     return (
         <section className="mx-auto mb-16 max-w-7xl px-4 py-8">
-            <div className="relative overflow-hidden rounded-3xl border border-border bg-linear-to-r from-[#1E1F2E] via-[#2F1F45] to-[#1E1F2E] p-1 shadow-xl">
+            <div className="relative overflow-hidden rounded-3xl border border-border bg-linear-to-r from-[var(--color-bg-secondary)] via-[var(--color-bg-card)] to-[var(--color-bg-secondary)] p-1 shadow-xl">
                 {/* Dots Pattern */}
                 <div
                     className="absolute inset-0 opacity-10"
@@ -148,3 +148,5 @@ export default function PromoBanner({ activeFlashSale = null }: PromoBannerProps
         </section>
     );
 }
+
+

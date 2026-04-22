@@ -18,3 +18,4 @@ export function AppShell({ children, variant = 'header' }: Props) {
 
     return <SidebarProvider defaultOpen={isOpen}>{children}</SidebarProvider>;
 }
+

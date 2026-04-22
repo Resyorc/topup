@@ -108,3 +108,4 @@ export const useTwoFactorAuth = (): UseTwoFactorAuthReturn => {
         fetchRecoveryCodes,
     };
 };
+

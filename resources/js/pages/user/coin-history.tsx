@@ -13,12 +13,12 @@ interface CoinHistoryItem {
 }
 
 const TOPUP_STATUS: Record<string, { label: string; className: string }> = {
-    pending:  { label: 'Menunggu Bayar', className: 'bg-yellow-500/15 text-yellow-400 border-yellow-500/30' },
-    paid:     { label: 'Dibayar',        className: 'bg-green-500/15 text-green-400 border-green-500/30'   },
-    expired:  { label: 'Kadaluarsa',     className: 'bg-red-500/15 text-red-400 border-red-500/30'         },
-    canceled: { label: 'Dibatalkan',     className: 'bg-gray-500/15 text-gray-400 border-gray-500/30'      },
-    success:  { label: 'Berhasil',       className: 'bg-green-500/15 text-green-400 border-green-500/30'   },
-    failed:   { label: 'Gagal',          className: 'bg-red-500/15 text-red-400 border-red-500/30'         },
+    pending:  { label: 'Menunggu Bayar', className: 'bg-status-pending-bg text-status-pending border-status-pending-border' },
+    paid:     { label: 'Dibayar',        className: 'bg-status-success-bg text-status-success border-status-success-border'   },
+    expired:  { label: 'Kadaluarsa',     className: 'bg-status-failed-bg text-status-failed border-status-failed-border'         },
+    canceled: { label: 'Dibatalkan',     className: 'bg-status-canceled-bg text-status-canceled border-status-canceled-border'      },
+    success:  { label: 'Berhasil',       className: 'bg-status-success-bg text-status-success border-status-success-border'   },
+    failed:   { label: 'Gagal',          className: 'bg-status-failed-bg text-status-failed border-status-failed-border'         },
 };
 
 export default function CoinHistory() {
@@ -44,7 +44,7 @@ export default function CoinHistory() {
                         <h1 className="text-2xl font-bold text-white">Riwayat Coin</h1>
                         <p className="mt-1 text-sm text-gray-400">Histori kredit & debit Krysta Coin kamu.</p>
                     </div>
-                    <div className="rounded-xl border border-[#31334c] bg-[#1e1f29] px-5 py-3 text-right">
+                    <div className="rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] px-5 py-3 text-right">
                         <div className="text-xs tracking-wide text-gray-500 uppercase">Saldo Saat Ini</div>
                         <div className="text-2xl font-black text-yellow-400">
                             {coinBalance.toLocaleString('id-ID')} Coins
@@ -53,7 +53,7 @@ export default function CoinHistory() {
                 </div>
 
                 {/* Table */}
-                <div className="overflow-hidden rounded-2xl border border-[#31334c] bg-[#1e1f29]">
+                <div className="overflow-hidden rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)]">
                     {history.length === 0 ? (
                         <div className="flex flex-col items-center gap-3 py-16 text-center text-gray-500">
                             <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
@@ -66,7 +66,7 @@ export default function CoinHistory() {
                         <div className="overflow-x-auto">
                             <table className="w-full text-sm">
                                 <thead>
-                                    <tr className="border-b border-[#31334c] bg-white/5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">
+                                    <tr className="border-b border-[var(--color-border-light)] bg-white/5 text-left text-xs font-semibold uppercase tracking-wide text-gray-400">
                                         <th className="px-5 py-3">Tanggal</th>
                                         <th className="px-5 py-3">Keterangan</th>
                                         <th className="px-5 py-3">Referensi</th>
@@ -74,7 +74,7 @@ export default function CoinHistory() {
                                         <th className="px-5 py-3 text-right">Jumlah</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-[#31334c]">
+                                <tbody className="divide-y divide-[var(--color-border-light)]">
                                     {history.map((item) => {
                                         const statusInfo = item.status ? TOPUP_STATUS[item.status] : null;
                                         const isSettled = !item.status || ['paid', 'success'].includes(item.status);
@@ -132,3 +132,6 @@ export default function CoinHistory() {
         </UserLayout>
     );
 }
+
+
+

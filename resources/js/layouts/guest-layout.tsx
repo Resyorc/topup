@@ -4,8 +4,54 @@ import { useState, useMemo, lazy, Suspense } from 'react';
 import { Toaster } from 'sonner';
 import NewsTicker from '@/components/news-ticker';
 
-// LiveChat dimuat lazy — tidak memblokir initial render, axios tidak masuk critical path
+// Lazy LiveChat
 const LiveChat = lazy(() => import('@/components/live-chat'));
+
+/** Pilih ikon SVG berdasarkan nama platform */
+function SosmedIcon({ platform }: { platform: string }) {
+    const p = platform?.toLowerCase();
+    if (p === 'instagram') return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="2" y="2" width="20" height="20" rx="5" ry="5" />
+            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
+            <line x1="17.5" y1="6.5" x2="17.51" y2="6.5" />
+        </svg>
+    );
+    if (p === 'tiktok') return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
+        </svg>
+    );
+    if (p === 'youtube') return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M22.54 6.42a2.78 2.78 0 0 0-1.95-1.96C18.88 4 12 4 12 4s-6.88 0-8.59.46A2.78 2.78 0 0 0 1.46 6.42 29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.41 19.6C5.12 20 12 20 12 20s6.88 0 8.59-.46a2.78 2.78 0 0 0 1.95-1.95A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z" />
+            <polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" />
+        </svg>
+    );
+    if (p === 'twitter' || p === 'x') return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M4 4l16 16M4 20L20 4" />
+        </svg>
+    );
+    if (p === 'facebook') return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z" />
+        </svg>
+    );
+    if (p === 'whatsapp') return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+        </svg>
+    );
+    // fallback — link icon
+    return (
+        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71" />
+            <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71" />
+        </svg>
+    );
+}
+
 
 export default function GuestLayout({
     children,
@@ -13,6 +59,7 @@ export default function GuestLayout({
     children: React.ReactNode;
 }) {
     const { auth, broadcastMessages, webSetting } = usePage().props as any;
+    const sosmedLinks: Array<{ platform: string; label: string; url: string }> = (webSetting as any)?.sosmedLinks ?? [];
     const currentUrl = usePage().url;
     const hasBroadcast = broadcastMessages && broadcastMessages.length > 0;
 
@@ -32,6 +79,7 @@ export default function GuestLayout({
     }, [currentUrl]);
 
     const [mobileSearchOpen, setMobileSearchOpen] = useState(false);
+    const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
     // Helper: check if a nav link is currently active
     const isActive = (href: string) => {
@@ -43,7 +91,7 @@ export default function GuestLayout({
         <>
             <div className="flex min-h-screen flex-col pt-[116px] md:pt-[106px]">
                 {/* Header Navbar */}
-                <header className="fixed inset-x-0 top-0 z-50 bg-[#3E3D49CC] text-white shadow-md backdrop-blur-sm">
+                <header className="fixed inset-x-0 top-0 z-50 bg-background/80 text-foreground shadow-md backdrop-blur-sm border-b border-border-light">
                     <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 md:gap-10 md:py-4 lg:px-8">
                         {/* Logo — cropped image with no padding, sits naturally at left */}
                         <Link
@@ -70,6 +118,19 @@ export default function GuestLayout({
 
                         {/* Right Side — Auth / Icons */}
                         <div className="flex items-center gap-2 md:gap-3">
+                            {/* Mobile-only: hamburger menu toggle */}
+                            <button
+                                onClick={() => setMobileMenuOpen(true)}
+                                className="flex h-9 w-9 items-center justify-center rounded-full border border-gray-500/50 bg-white/10 transition hover:bg-white/20 md:hidden"
+                                aria-label="Buka menu navigasi"
+                            >
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-300">
+                                    <line x1="3" y1="12" x2="21" y2="12"></line>
+                                    <line x1="3" y1="6" x2="21" y2="6"></line>
+                                    <line x1="3" y1="18" x2="21" y2="18"></line>
+                                </svg>
+                            </button>
+
                             {/* Mobile-only: search toggle button */}
                             <button
                                 onClick={() =>
@@ -106,35 +167,43 @@ export default function GuestLayout({
                                         className={`hidden h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 transition md:flex ${isActive('/dashboard') ? 'border-primary bg-primary/20 text-white shadow-[0_0_12px_rgba(131,39,216,0.35)]' : 'border-primary/40 bg-white/10 text-gray-300 hover:bg-white/20'}`}
                                         aria-label="Buka dashboard"
                                     >
-                                        <svg
-                                            width="20"
-                                            height="20"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            className="md:[height:24px] md:[width:24px]"
-                                        >
-                                            <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
-                                            <circle cx="12" cy="7" r="4" />
-                                        </svg>
+                                        {auth?.user?.avatar_url ? (
+                                            <img
+                                                src={auth.user.avatar_url}
+                                                alt="Profile"
+                                                className="h-full w-full object-cover"
+                                            />
+                                        ) : (
+                                            <svg
+                                                width="20"
+                                                height="20"
+                                                viewBox="0 0 24 24"
+                                                fill="none"
+                                                stroke="currentColor"
+                                                strokeWidth="2"
+                                                strokeLinecap="round"
+                                                strokeLinejoin="round"
+                                                className="md:[height:24px] md:[width:24px]"
+                                            >
+                                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+                                                <circle cx="12" cy="7" r="4" />
+                                            </svg>
+                                        )}
                                     </Link>
                                 </div>
                             ) : (
                                 <div className="flex items-center gap-2 md:gap-3">
-                                    {/* Masuk button — shown on mobile (next to search) and desktop */}
+                                    {/* Masuk button — desktop only (since it's inside mobile drawer now) */}
                                     <Link
                                         href="/login"
-                                        className="rounded-md border border-white/70 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20 md:px-4 md:py-2 md:text-sm"
+                                        className="hidden rounded-md border border-white/70 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white transition hover:bg-white/20 md:inline-block md:px-4 md:py-2 md:text-sm"
                                     >
                                         Masuk
                                     </Link>
                                     {/* Daftar button — desktop only (unchanged) */}
                                     <Link
                                         href="/register"
-                                        className="hidden rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-[0_0_10px_#8327d8] transition hover:hue-rotate-15 md:inline-block"
+                                        className="hidden rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-[var(--shadow-glow)] transition hover:hue-rotate-15 md:inline-block"
                                     >
                                         Daftar
                                     </Link>
@@ -155,7 +224,7 @@ export default function GuestLayout({
                     )}
 
                     {/* Sub-Header Navigation with Ticker */}
-                    <div className="flex w-full items-center justify-center bg-[#6C3C89E6] text-sm font-medium shadow-inner select-none">
+                    <div className="flex w-full items-center justify-center bg-primary/40 backdrop-blur-lg text-sm font-medium shadow-inner select-none border-t border-b border-primary/30">
                         <div className="mx-auto flex w-full max-w-7xl flex-col-reverse flex-nowrap items-center gap-0 px-4 sm:px-4 md:flex-row md:gap-12 md:px-8">
                             {/* Static Links — hidden on mobile (bottom nav handles navigation), visible on desktop */}
                             <div className="hidden w-full flex-nowrap items-center justify-center gap-x-6 pb-2 sm:flex-nowrap sm:justify-between sm:gap-12 sm:gap-x-8 md:flex md:w-auto md:pb-0">
@@ -238,34 +307,7 @@ export default function GuestLayout({
                                     </div>
                                 </Link>
 
-                                <Link
-                                    href="/price-list"
-                                    className={`group relative flex cursor-pointer items-center py-2 text-nowrap transition md:py-3 ${isActive('/price-list') ? 'text-client-warning' : 'text-white hover:text-gray-200'}`}
-                                >
-                                    <div className="flex items-center justify-between gap-2 md:gap-2.5">
-                                        <svg
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                            className="md:h-4.5 md:w-4.5"
-                                        >
-                                            <line x1="8" y1="6" x2="21" y2="6" />
-                                            <line x1="8" y1="12" x2="21" y2="12" />
-                                            <line x1="8" y1="18" x2="21" y2="18" />
-                                            <line x1="3" y1="6" x2="3.01" y2="6" />
-                                            <line x1="3" y1="12" x2="3.01" y2="12" />
-                                            <line x1="3" y1="18" x2="3.01" y2="18" />
-                                        </svg>
-                                        <span className="text-xs md:text-sm">
-                                            Daftar Harga
-                                        </span>
-                                    </div>
-                                </Link>
+
                             </div>
 
                             {/* Divider — desktop only */}
@@ -303,132 +345,157 @@ export default function GuestLayout({
                     </div>
                 </header>
 
-                {/* Main Content — extra bottom padding on mobile to clear the bottom nav */}
-                <main className="w-full flex-1 bg-background pb-20 md:pb-0">
+                {/* Main Content */}
+                <main className="w-full flex-1 bg-background">
                     {children}
                 </main>
 
-                {/* ===== Mobile Bottom Navigation Bar ===== */}
-                {/* Only visible on screens smaller than md (768px). 
-                Provides thumb-friendly access to: Beranda, Cek Invoice, Akun/Masuk */}
-                <nav
-                    className="fixed inset-x-0 bottom-0 z-50 flex items-center justify-around border-t border-[#31334c] bg-[#1e1f29]/95 px-2 py-2 backdrop-blur-md md:hidden"
-                    style={{
-                        paddingBottom:
-                            'max(0.5rem, env(safe-area-inset-bottom))',
-                    }}
+                {/* ===== Mobile Overlay Menu Drawer ===== */}
+                <div
+                    className={`fixed inset-0 z-[60] bg-black/60 backdrop-blur-sm transition-opacity duration-300 md:hidden ${mobileMenuOpen ? 'opacity-100 pointer-events-auto' : 'opacity-0 pointer-events-none'}`}
+                    onClick={() => setMobileMenuOpen(false)}
                 >
-                    <Link
-                        href="/"
-                        className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition ${isActive('/') ? 'text-primary' : 'text-gray-400 hover:text-gray-200'}`}
+                    <div
+                        className={`absolute right-0 top-0 flex h-full w-3/4 max-w-sm flex-col bg-card shadow-2xl transition-transform duration-300 border-l border-border-light ${mobileMenuOpen ? 'translate-x-0' : 'translate-x-full'}`}
+                        onClick={(e) => e.stopPropagation()}
                     >
-                        {/* Active indicator bar */}
-                        {isActive('/') && (
-                            <span className="absolute -top-2 left-1/2 h-[3px] w-6 -translate-x-1/2 rounded-b bg-primary"></span>
-                        )}
-                        <svg
-                            width="22"
-                            height="22"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
-                            <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                            <polyline points="9 22 9 12 15 12 15 22"></polyline>
-                        </svg>
-                        <span className="text-xs font-semibold">
-                            Beranda
-                        </span>
-                    </Link>
-
-                    <Link
-                        href="/invoice"
-                        className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition ${isActive('/invoice') ? 'text-primary' : 'text-gray-400 hover:text-gray-200'}`}
-                    >
-                        {isActive('/invoice') && (
-                            <span className="absolute -top-2 left-1/2 h-[3px] w-6 -translate-x-1/2 rounded-b bg-primary"></span>
-                        )}
-                        <svg
-                            width="22"
-                            height="22"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
-                            <circle cx="11" cy="11" r="8"></circle>
-                            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-                        </svg>
-                        <span className="text-xs font-medium">
-                            Cek Invoice
-                        </span>
-                    </Link>
-
-                    <Link
-                        href="/price-list"
-                        className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition ${isActive('/price-list') ? 'text-primary' : 'text-gray-400 hover:text-gray-200'}`}
-                    >
-                        {isActive('/price-list') && (
-                            <span className="absolute -top-2 left-1/2 h-0.75 w-6 -translate-x-1/2 rounded-b bg-primary"></span>
-                        )}
-                        <svg
-                            width="22"
-                            height="22"
-                            viewBox="0 0 24 24"
-                            fill="none"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        >
-                            <line x1="8" y1="6" x2="21" y2="6" />
-                            <line x1="8" y1="12" x2="21" y2="12" />
-                            <line x1="8" y1="18" x2="21" y2="18" />
-                            <line x1="3" y1="6" x2="3.01" y2="6" />
-                            <line x1="3" y1="12" x2="3.01" y2="12" />
-                            <line x1="3" y1="18" x2="3.01" y2="18" />
-                        </svg>
-                        <span className="text-xs font-medium">
-                            Harga
-                        </span>
-                    </Link>
-
-                    {/* Akun — only shown when user is logged in. Links to dashboard. */}
-                    {auth?.user && (
-                        <Link
-                            href="/dashboard"
-                            className={`relative flex flex-col items-center gap-0.5 px-3 py-1 transition ${isActive('/dashboard') ? 'text-primary' : 'text-gray-400 hover:text-gray-200'}`}
-                        >
-                            {isActive('/dashboard') && (
-                                <span className="absolute -top-2 left-1/2 h-[3px] w-6 -translate-x-1/2 rounded-b bg-primary"></span>
-                            )}
-                            <svg
-                                width="22"
-                                height="22"
-                                viewBox="0 0 24 24"
-                                fill="none"
-                                stroke="currentColor"
-                                strokeWidth="2"
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
+                        <div className="flex items-center justify-between border-b border-border-light p-4">
+                            <span className="text-lg font-bold text-foreground">Menu Navigasi</span>
+                            <button
+                                onClick={() => setMobileMenuOpen(false)}
+                                className="flex h-8 w-8 items-center justify-center rounded-full bg-white/10 text-gray-300 transition hover:bg-white/20"
+                                aria-label="Tutup menu"
                             >
-                                <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path>
-                                <circle cx="12" cy="7" r="4"></circle>
-                            </svg>
-                            <span className="text-xs font-medium">
-                                Akun
-                            </span>
-                        </Link>
-                    )}
-                </nav>
+                                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <line x1="18" y1="6" x2="6" y2="18"></line>
+                                    <line x1="6" y1="6" x2="18" y2="18"></line>
+                                </svg>
+                            </button>
+                        </div>
+                        
+                        <div className="flex flex-1 flex-col overflow-y-auto p-4 space-y-2">
+                            <Link
+                                href="/"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${isActive('/') ? 'bg-primary/20 text-primary border border-primary/30' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="m3 9 9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                                    <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                                </svg>
+                                Top Up
+                            </Link>
+
+                            <Link
+                                href="/invoice"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${isActive('/invoice') ? 'bg-primary/20 text-primary border border-primary/30' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <circle cx="11" cy="11" r="8"></circle>
+                                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                                </svg>
+                                Cek Invoice
+                            </Link>
+
+                            <Link
+                                href="/blog"
+                                onClick={() => setMobileMenuOpen(false)}
+                                className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${isActive('/blog') ? 'bg-primary/20 text-primary border border-primary/30' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                            >
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M4 22h16a2 2 0 0 0 2-2V4a2 2 0 0 0-2-2H8a2 2 0 0 0-2 2v16a2 2 0 0 1-2 2Zm0 0a2 2 0 0 1-2-2v-9c0-1.1.9-2 2-2h2" />
+                                    <path d="M18 14h-8" /><path d="M15 18h-5" /><path d="M10 6h8v4h-8V6Z" />
+                                </svg>
+                                Blog
+                            </Link>
+
+                            <div className="my-2 h-px w-full bg-border-light"></div>
+
+                            {auth?.user ? (
+                                <>
+                                    <Link
+                                        href="/dashboard"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${currentUrl === '/dashboard' ? 'bg-primary/20 text-primary border border-primary/30' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="7" height="9" x="3" y="3" rx="1" /><rect width="7" height="5" x="14" y="3" rx="1" /><rect width="7" height="9" x="14" y="12" rx="1" /><rect width="7" height="5" x="3" y="16" rx="1" /></svg>
+                                        Dashboard
+                                    </Link>
+
+                                    <Link
+                                        href="/dashboard/transactions"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${currentUrl.includes('/dashboard/transactions') ? 'bg-primary/20 text-primary border border-primary/30' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M6 2 3 6v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2V6l-3-4Z" /><path d="M3 6h18" /><path d="M16 10a4 4 0 0 1-8 0" /></svg>
+                                        Transaksi
+                                    </Link>
+
+                                    <Link
+                                        href="/dashboard/coin-history"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${currentUrl.includes('/dashboard/coin-history') ? 'bg-primary/20 text-primary border border-primary/30' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="8" /><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3" /><path d="M12 17h.01" /></svg>
+                                        Riwayat Coin
+                                    </Link>
+
+                                    <Link
+                                        href="/dashboard/settings"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${currentUrl.includes('/dashboard/settings') ? 'bg-primary/20 text-primary border border-primary/30' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z" /><circle cx="12" cy="12" r="3" /></svg>
+                                        Pengaturan
+                                    </Link>
+
+                                    {auth?.user?.api_access_enabled && (
+                                        <Link
+                                            href="/dashboard/api-credentials"
+                                            onClick={() => setMobileMenuOpen(false)}
+                                            className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${currentUrl.includes('/dashboard/api-credentials') ? 'bg-primary/20 text-primary border border-primary/30' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                        >
+                                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0 3 3L22 7l-3-3m-3.5 3.5L19 4" /></svg>
+                                            API Credentials
+                                        </Link>
+                                    )}
+
+                                    <Link
+                                        href="/logout"
+                                        method="post"
+                                        as="button"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="mt-2 flex w-full items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-red-400 transition hover:bg-red-500/10 hover:text-red-300"
+                                    >
+                                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m16 17 5-5-5-5" /><path d="M21 12H9" /><path d="M12 19H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h7" /></svg>
+                                        Log out
+                                    </Link>
+                                </>
+                            ) : (
+                                <div className="flex flex-col gap-2 mt-2">
+                                    <Link
+                                        href="/login"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="w-full rounded-xl border border-white/70 bg-white/5 px-4 py-3 text-center font-bold text-white transition hover:bg-white/10"
+                                    >
+                                        Masuk
+                                    </Link>
+                                    <Link
+                                        href="/register"
+                                        onClick={() => setMobileMenuOpen(false)}
+                                        className="w-full rounded-xl bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-4 py-3 text-center font-bold text-white shadow-[var(--shadow-glow)] transition hover:opacity-90"
+                                    >
+                                        Daftar Akun Baru
+                                    </Link>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
 
                 {/* Footer — responsive grid: 2 columns on mobile, 4 on desktop */}
-                <footer className="mt-10 border-t border-[#31334c] bg-[#1e1f29] px-4 pt-8 pb-24 md:mt-16 md:pt-12 md:pb-6">
+                <footer className="mt-10 border-t border-border-light bg-card px-4 pt-8 pb-10 md:mt-16 md:pt-12 md:pb-6">
                     <div className="mx-auto mb-8 grid max-w-7xl grid-cols-2 gap-6 px-4 md:grid-cols-4 md:gap-8">
                         {/* Logo & Description — spans full width on mobile */}
                         <div className="col-span-2 md:col-span-1">
@@ -446,7 +513,7 @@ export default function GuestLayout({
                                 )}
                             </Link>
                             <p className="text-xs leading-relaxed text-gray-400 md:text-sm">
-                                <strong className="text-[#c084fc]">Nuvelo</strong>{' '}
+                                <strong className="text-[var(--color-primary-light)]">Nuvelo</strong>{' '}
                                 menyediakan layanan top up game termurah.
                                 Dapatkan voucher untuk berbagai game populer,
                                 termasuk top up ml dan top up ff, dengan proses
@@ -492,14 +559,7 @@ export default function GuestLayout({
                                         Cek Invoice
                                     </Link>
                                 </li>
-                                <li>
-                                    <Link
-                                        href="/price-list"
-                                        className="transition hover:text-primary"
-                                    >
-                                        Daftar Harga
-                                    </Link>
-                                </li>
+
                                 <li>
                                     <Link
                                         href="/blog"
@@ -508,14 +568,7 @@ export default function GuestLayout({
                                         Blog
                                     </Link>
                                 </li>
-                                <li>
-                                    <Link
-                                        href="/api-docs"
-                                        className="transition hover:text-primary"
-                                    >
-                                        API Docs
-                                    </Link>
-                                </li>
+
                             </ul>
                         </div>
 
@@ -536,108 +589,45 @@ export default function GuestLayout({
                                         </a>
                                     </li>
                                 )}
-                                {webSetting?.sosmed?.instagram && (
-                                    <li>
-                                        <a
-                                            href={webSetting.sosmed.instagram}
-                                            target="_blank"
-                                            className="transition hover:text-primary"
-                                        >
-                                            Instagram
-                                        </a>
-                                    </li>
-                                )}
+
                             </ul>
                         </div>
 
                         {/* Sosial Media */}
-                        <div className="col-span-2 md:col-span-1">
-                            <h3 className="mb-3 text-xs font-bold text-primary text-white md:mb-4 md:text-base">
-                                Sosial Media
-                            </h3>
-                            <div className="flex gap-4">
-                                {webSetting?.sosmed?.instagram && (
-                                    <a
-                                        href={webSetting.sosmed.instagram}
-                                        target="_blank"
-                                        aria-label="Ikuti kami di Instagram"
-                                        className="flex h-8 w-8 items-center justify-center rounded-full bg-[#26273b] text-gray-300 transition hover:bg-primary hover:text-white"
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
+                        {sosmedLinks.length > 0 && (
+                            <div className="col-span-2 md:col-span-1">
+                                <h3 className="mb-3 text-xs font-bold text-white md:mb-4 md:text-base">
+                                    Sosial Media
+                                </h3>
+                                <div className="flex flex-wrap gap-3">
+                                    {sosmedLinks.map((item, i) => (
+                                        <a
+                                            key={i}
+                                            href={item.url}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                            aria-label={item.label}
+                                            title={item.label}
+                                            className="flex h-8 w-8 items-center justify-center rounded-full bg-secondary text-gray-300 transition hover:bg-primary hover:text-white"
                                         >
-                                            <rect
-                                                x="2"
-                                                y="2"
-                                                width="20"
-                                                height="20"
-                                                rx="5"
-                                                ry="5"
-                                            />
-                                            <path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z" />
-                                            <line
-                                                x1="17.5"
-                                                y1="6.5"
-                                                x2="17.51"
-                                                y2="6.5"
-                                            />
-                                        </svg>
-                                    </a>
-                                )}
-                                {webSetting?.sosmed?.tiktok && (
-                                    <a
-                                        href={webSetting.sosmed.tiktok}
-                                        target="_blank"
-                                        aria-label="Ikuti kami di TikTok"
-                                        className="flex h-8 w-8 items-center justify-center rounded-full bg-[#26273b] text-gray-300 transition hover:bg-primary hover:text-white"
-                                    >
-                                        <svg
-                                            xmlns="http://www.w3.org/2000/svg"
-                                            width="16"
-                                            height="16"
-                                            viewBox="0 0 24 24"
-                                            fill="none"
-                                            stroke="currentColor"
-                                            strokeWidth="2"
-                                            strokeLinecap="round"
-                                            strokeLinejoin="round"
-                                        >
-                                            <path d="M9 12a4 4 0 1 0 4 4V4a5 5 0 0 0 5 5" />
-                                        </svg>
-                                    </a>
-                                )}
+                                            <SosmedIcon platform={item.platform} />
+                                        </a>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
+                        )}
                     </div>
 
                     {/* Footer Bottom — stacked on mobile, side-by-side on desktop */}
-                    <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 border-t border-[#31334c] px-4 pt-4 text-xs text-gray-300 md:flex-row md:gap-0 md:pt-6">
+                    <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 border-t border-border-light px-4 pt-4 text-xs text-gray-300 md:flex-row md:gap-0 md:pt-6">
                         <p>&copy; 2026 Nuvelo. All rights reserved.</p>
                         <div className="mt-2 flex gap-4 md:mt-0">
-                            {webSetting?.footerLinks && webSetting.footerLinks.length > 0 ? (
-                                webSetting.footerLinks.map((link: any, i: number) => (
-                                    <Link key={i} href={link.url} className="transition hover:text-white">
-                                        {link.label}
-                                    </Link>
-                                ))
-                            ) : (
-                                <>
-                                    <Link href="/kebijakan-privasi" className="transition hover:text-white">
-                                        Kebijakan Privasi
-                                    </Link>
-                                    <Link href="/syarat-ketentuan" className="transition hover:text-white">
-                                        Syarat & Ketentuan
-                                    </Link>
-                                </>
-                            )}
+                            <Link href="/kebijakan-privasi" className="transition hover:text-white">
+                                Kebijakan Privasi
+                            </Link>
+                            <Link href="/syarat-ketentuan" className="transition hover:text-white">
+                                Syarat & Ketentuan
+                            </Link>
                         </div>
                     </div>
                 </footer>
@@ -648,9 +638,9 @@ export default function GuestLayout({
                 theme="dark"
                 toastOptions={{
                     style: {
-                        background: '#1e1f29',
-                        border: '1px solid #31334c',
-                        color: '#e5e7eb',
+                        background: 'var(--color-bg-card)',
+                        border: '1px solid var(--color-border-light)',
+                        color: 'var(--color-text-primary)',
                         zIndex: 9999,
                     },
                 }}
@@ -661,7 +651,7 @@ export default function GuestLayout({
                     href={`https://wa.me/${webSetting.waBubble.number}?text=${encodeURIComponent(webSetting.waBubble.message || '')}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="fixed bottom-[138px] right-4 z-[290] flex h-13 w-13 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_0_20px_rgba(37,211,102,0.4)] transition hover:scale-105 hover:bg-[#20bd5a] md:bottom-[88px] md:right-6"
+                    className="fixed bottom-[88px] right-4 z-[290] flex h-13 w-13 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_0_20px_rgba(37,211,102,0.4)] transition hover:scale-105 hover:bg-[#20bd5a] md:right-6"
                     aria-label="Hubungi kami via WhatsApp"
                 >
                     <svg
@@ -681,3 +671,7 @@ export default function GuestLayout({
         </>
     );
 }
+
+
+
+

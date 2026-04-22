@@ -9,40 +9,21 @@ use Illuminate\Console\Command;
 
 class RecalculateProductMargins extends Command
 {
-    /**
-     * Hitung ulang margin & harga semua produk berdasarkan Global Pricing Rules.
-     * Persentase per tier dibaca dari Setting (bisa dikonfigurasi di Admin Panel).
-     *
-     * Default:
-     *   guest 4% | bronze 3% | silver 2% | gold 1% | platinum 0.5%
-     *
-     * Margin flat = round(price_cost × pct%, kelipatan 50), min Rp 50.
-     */
     protected $signature = 'products:recalculate-margins
                             {--dry-run  : Tampilkan preview tanpa menyimpan ke DB}
                             {--game=    : Batasi ke game_id tertentu}';
 
-    protected $description = 'Recalculate margin & tier prices untuk semua produk berdasarkan Global Pricing Rules';
+    protected $description = 'Recalculate margin & harga jual untuk semua produk berdasarkan Global Pricing Rules';
 
     public function handle(TopupPriceService $priceService): int
     {
         $isDryRun = $this->option('dry-run');
         $gameId   = $this->option('game');
 
-        // Baca persentase tier dari Setting, fallback ke default
-        $tiers = [
-            'guest'    => (float) Setting::get('pricing_pct_guest',    4.0),
-            'bronze'   => (float) Setting::get('pricing_pct_bronze',   3.0),
-            'silver'   => (float) Setting::get('pricing_pct_silver',   2.0),
-            'gold'     => (float) Setting::get('pricing_pct_gold',     1.0),
-            'platinum' => (float) Setting::get('pricing_pct_platinum', 0.5),
-        ];
+        $pct = (float) Setting::get('pricing_pct', 4.0);
 
         $this->info('=== Global Pricing Rules — Recalculate Product Margins ===');
-        $this->table(
-            ['Tier', '%'],
-            collect($tiers)->map(fn ($pct, $tier) => [ucfirst($tier), "{$pct}%"])->values()->toArray()
-        );
+        $this->line("Margin: {$pct}%");
 
         if ($isDryRun) {
             $this->warn('[DRY RUN] Tidak ada perubahan yang disimpan.');
@@ -58,7 +39,7 @@ class RecalculateProductMargins extends Command
         $updated = 0;
 
         $query->chunk(200, function ($products) use (
-            $priceService, $isDryRun, $tiers, &$total, &$skipped, &$updated
+            $priceService, $isDryRun, $pct, &$total, &$skipped, &$updated
         ) {
             foreach ($products as $product) {
                 $total++;
@@ -70,39 +51,22 @@ class RecalculateProductMargins extends Command
                     continue;
                 }
 
-                $margins = [];
-                $prices  = [];
-                foreach ($tiers as $tier => $pct) {
-                    $m              = max(50, $this->roundTo50($cost * $pct / 100));
-                    $margins[$tier] = $m;
-                    $prices[$tier]  = (int) $priceService->calculateSellPrice($cost, $m);
-                }
+                $margin = max(50, $this->roundTo50($cost * $pct / 100));
+                $price  = (int) $priceService->calculateSellPrice($cost, $margin);
 
                 $this->line(sprintf(
-                    '  %-4s #%-4d %-40s | cost %8s | G:%s B:%s S:%s Gold:%s P:%s',
+                    '  %-4s #%-4d %-40s | cost %8s | sell %s',
                     $isDryRun ? 'PRV' : 'UPD',
                     $product->id,
                     substr($product->name, 0, 40),
                     number_format($cost, 0, ',', '.'),
-                    number_format($prices['guest'], 0, ',', '.'),
-                    number_format($prices['bronze'], 0, ',', '.'),
-                    number_format($prices['silver'], 0, ',', '.'),
-                    number_format($prices['gold'], 0, ',', '.'),
-                    number_format($prices['platinum'], 0, ',', '.'),
+                    number_format($price, 0, ',', '.'),
                 ));
 
                 if (! $isDryRun) {
                     $product->update([
-                        'margin_guest_flat'    => $margins['guest'],
-                        'margin_bronze_flat'   => $margins['bronze'],
-                        'margin_silver_flat'   => $margins['silver'],
-                        'margin_gold_flat'     => $margins['gold'],
-                        'margin_platinum_flat' => $margins['platinum'],
-                        'price_guest'          => $prices['guest'],
-                        'price_bronze'         => $prices['bronze'],
-                        'price_silver'         => $prices['silver'],
-                        'price_gold'           => $prices['gold'],
-                        'price_platinum'       => $prices['platinum'],
+                        'margin_flat' => $margin,
+                        'price_sell'  => $price,
                     ]);
                 }
 

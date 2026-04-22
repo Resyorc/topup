@@ -238,3 +238,4 @@ export function AppHeader({ breadcrumbs = [] }: Props) {
         </>
     );
 }
+

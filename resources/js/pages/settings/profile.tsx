@@ -91,6 +91,25 @@ export default function Profile({
                                     />
                                 </div>
 
+                                <div className="grid gap-2">
+                                    <Label htmlFor="phone">Phone number</Label>
+
+                                    <Input
+                                        id="phone"
+                                        type="tel"
+                                        className="mt-1 block w-full"
+                                        defaultValue={(auth.user as any).phone ?? ''}
+                                        name="phone"
+                                        autoComplete="tel"
+                                        placeholder="e.g. 08123456789"
+                                    />
+
+                                    <InputError
+                                        className="mt-2"
+                                        message={errors.phone}
+                                    />
+                                </div>
+
                                 {mustVerifyEmail &&
                                     auth.user.email_verified_at === null && (
                                         <div>
@@ -148,3 +167,6 @@ export default function Profile({
         </AppLayout>
     );
 }
+
+
+

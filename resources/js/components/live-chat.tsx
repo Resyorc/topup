@@ -36,7 +36,7 @@ function ChatBubble({ content, role }: { content: string; role: 'user' | 'assist
             className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-sm leading-relaxed ${
                 role === 'user'
                     ? 'ml-auto rounded-br-sm bg-primary text-white'
-                    : 'mr-auto rounded-bl-sm bg-[#26273b] text-gray-200'
+                    : 'mr-auto rounded-bl-sm bg-[var(--color-bg-secondary)] text-gray-200'
             }`}
         >
             {rendered}
@@ -108,9 +108,9 @@ export default function LiveChat({ context = {} }: LiveChatProps) {
         <>
             {/* Chat Window */}
             {open && (
-                <div className="fixed inset-x-0 bottom-15 z-300 flex flex-col overflow-hidden border-t border-[#31334c] bg-[#1e1f29] shadow-2xl md:inset-x-auto md:bottom-6 md:right-6 md:w-85 md:rounded-2xl md:border">
+                <div className="fixed inset-x-0 bottom-15 z-300 flex flex-col overflow-hidden border-t border-[var(--color-border-light)] bg-[var(--color-bg-card)] shadow-2xl md:inset-x-auto md:bottom-24 md:right-6 md:w-85 md:rounded-2xl md:border">
                     {/* Header */}
-                    <div className="flex items-center justify-between bg-[#26273b] px-4 py-3">
+                    <div className="flex items-center justify-between bg-[var(--color-bg-secondary)] px-4 py-3">
                         <div className="flex items-center gap-2.5">
                             <div className="flex h-8 w-8 items-center justify-center rounded-full bg-primary/20">
                                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-primary">
@@ -147,7 +147,7 @@ export default function LiveChat({ context = {} }: LiveChatProps) {
                         ))}
 
                         {loading && (
-                            <div className="mr-auto flex items-center gap-1 rounded-2xl rounded-bl-sm bg-[#26273b] px-4 py-3">
+                            <div className="mr-auto flex items-center gap-1 rounded-2xl rounded-bl-sm bg-[var(--color-bg-secondary)] px-4 py-3">
                                 <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400 [animation-delay:0ms]" />
                                 <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400 [animation-delay:150ms]" />
                                 <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-gray-400 [animation-delay:300ms]" />
@@ -157,7 +157,7 @@ export default function LiveChat({ context = {} }: LiveChatProps) {
                     </div>
 
                     {/* Input */}
-                    <div className="flex items-center gap-2 border-t border-[#31334c] px-3 py-2.5">
+                    <div className="flex items-center gap-2 border-t border-[var(--color-border-light)] px-3 py-2.5">
                         <input
                             ref={inputRef}
                             type="text"
@@ -167,7 +167,7 @@ export default function LiveChat({ context = {} }: LiveChatProps) {
                             placeholder="Ketik pesan..."
                             maxLength={1000}
                             disabled={loading}
-                            className="flex-1 rounded-lg bg-[#26273b] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-50"
+                            className="flex-1 rounded-lg bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary/50 disabled:opacity-50"
                         />
                         <button
                             onClick={sendMessage}
@@ -196,3 +196,5 @@ export default function LiveChat({ context = {} }: LiveChatProps) {
         </>
     );
 }
+
+

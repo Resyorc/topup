@@ -61,16 +61,10 @@ class WebSettings extends Page implements HasForms
             'wa_bubble_enabled'    => (bool) Setting::get('wa_bubble_enabled', false),
             'wa_bubble_number'     => Setting::get('wa_bubble_number', ''),
             'wa_bubble_message'    => Setting::get('wa_bubble_message', 'Halo CS Nuvelo, saya butuh bantuan.'),
-            'footer_links'         => json_decode(Setting::get('footer_links', '[]'), true),
-            'sosmed_instagram'     => Setting::get('sosmed_instagram', ''),
-            'sosmed_tiktok'        => Setting::get('sosmed_tiktok', ''),
+            'sosmed_links'         => json_decode(Setting::get('sosmed_links', '[]'), true),
 
             // Tab 4 — Global Pricing
-            'pricing_pct_guest'    => (float) Setting::get('pricing_pct_guest',    4.0),
-            'pricing_pct_bronze'   => (float) Setting::get('pricing_pct_bronze',   3.0),
-            'pricing_pct_silver'   => (float) Setting::get('pricing_pct_silver',   2.0),
-            'pricing_pct_gold'     => (float) Setting::get('pricing_pct_gold',     1.0),
-            'pricing_pct_platinum' => (float) Setting::get('pricing_pct_platinum', 0.5),
+            'pricing_pct' => (float) Setting::get('pricing_pct', 4.0),
 
             // Tab 5
             'enable_turnstile'     => (bool) Setting::get('enable_turnstile', false),
@@ -143,76 +137,52 @@ class WebSettings extends Page implements HasForms
                                     ->rows(2)
                                     ->columnSpanFull(),
 
-                                \Filament\Schemas\Components\Fieldset::make('Tautan Sosial Media')
+                                Repeater::make('sosmed_links')
+                                    ->label('Tautan Sosial Media')
+                                    ->helperText('Tambahkan platform sosial media. Platform yang dikenali (instagram, tiktok, youtube, twitter/x, facebook, whatsapp) akan tampil dengan ikon otomatis.')
                                     ->schema([
-                                        TextInput::make('sosmed_instagram')
-                                            ->label('Link Instagram')
+                                        Select::make('platform')
+                                            ->label('Platform')
+                                            ->required()
+                                            ->options([
+                                                'instagram' => 'Instagram',
+                                                'tiktok'    => 'TikTok',
+                                                'youtube'   => 'YouTube',
+                                                'twitter'   => 'Twitter / X',
+                                                'facebook'  => 'Facebook',
+                                                'whatsapp'  => 'WhatsApp',
+                                                'other'     => 'Lainnya',
+                                            ]),
+                                        TextInput::make('label')
+                                            ->label('Label Tampilan')
+                                            ->placeholder('Contoh: TikTok Nuvelo')
+                                            ->required(),
+                                        TextInput::make('url')
+                                            ->label('URL')
                                             ->url()
-                                            ->placeholder('https://instagram.com/...'),
-                                        TextInput::make('sosmed_tiktok')
-                                            ->label('Link TikTok')
-                                            ->url()
-                                            ->placeholder('https://tiktok.com/@...'),
-                                    ])->columns(2),
-
-                                Repeater::make('footer_links')
-                                    ->label('Tautan Bagian Bawah (Footer Links)')
-                                    ->schema([
-                                        TextInput::make('label')->required()->label('Label'),
-                                        TextInput::make('url')->required()->label('Tautan (URL)')->url(),
+                                            ->required()
+                                            ->columnSpan(2),
                                     ])
                                     ->columns(2)
                                     ->columnSpanFull()
-                                    ->addActionLabel('Tambah Tautan'),
+                                    ->addActionLabel('Tambah Sosial Media'),
                             ])->columns(2),
 
                         Tabs\Tab::make('Global Pricing')
                             ->icon('heroicon-o-currency-dollar')
                             ->schema([
-                                \Filament\Schemas\Components\Section::make('Persentase Margin per Tier')
+                                \Filament\Schemas\Components\Section::make('Persentase Margin')
                                     ->description('Margin dihitung otomatis: Margin Flat = price_cost × %. Nilai dibulatkan ke kelipatan Rp 50, minimum Rp 50.')
                                     ->schema([
-                                        TextInput::make('pricing_pct_guest')
-                                            ->label('Guest (%)')
+                                        TextInput::make('pricing_pct')
+                                            ->label('Margin (%)')
                                             ->numeric()
                                             ->minValue(0)
                                             ->maxValue(100)
                                             ->step(0.1)
                                             ->suffix('%')
                                             ->default(4.0),
-                                        TextInput::make('pricing_pct_bronze')
-                                            ->label('Bronze (%)')
-                                            ->numeric()
-                                            ->minValue(0)
-                                            ->maxValue(100)
-                                            ->step(0.1)
-                                            ->suffix('%')
-                                            ->default(3.0),
-                                        TextInput::make('pricing_pct_silver')
-                                            ->label('Silver (%)')
-                                            ->numeric()
-                                            ->minValue(0)
-                                            ->maxValue(100)
-                                            ->step(0.1)
-                                            ->suffix('%')
-                                            ->default(2.0),
-                                        TextInput::make('pricing_pct_gold')
-                                            ->label('Gold (%)')
-                                            ->numeric()
-                                            ->minValue(0)
-                                            ->maxValue(100)
-                                            ->step(0.1)
-                                            ->suffix('%')
-                                            ->default(1.0),
-                                        TextInput::make('pricing_pct_platinum')
-                                            ->label('Platinum (%)')
-                                            ->numeric()
-                                            ->minValue(0)
-                                            ->maxValue(100)
-                                            ->step(0.1)
-                                            ->suffix('%')
-                                            ->default(0.5),
-                                    ])->columns(5),
+                                    ]),
                             ]),
 
                         Tabs\Tab::make('Keamanan & OTP')
@@ -246,7 +216,7 @@ class WebSettings extends Page implements HasForms
         $data = $this->form->getState();
 
         foreach ($data as $key => $value) {
-            if ($key === 'footer_links') {
+            if ($key === 'sosmed_links') {
                 $value = json_encode($value ?? []);
             }
             if (is_bool($value)) {

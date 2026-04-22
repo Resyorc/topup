@@ -57,6 +57,7 @@ interface GameDetailProps {
             type: string;
             placeholder: string;
             is_required?: boolean;
+            half_width?: boolean;
         }> | null;
         guide_image: string | null;
         guide_content: string | null;
@@ -519,7 +520,7 @@ export default function GameDetail({
                     }, 50);
                 }
             }}
-            className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[#1A1A24] transition-all hover:border-[#6a359c] ${data.product_id === product.id ? 'border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)] ring-1 ring-primary' : 'border-[#31334c]'}`}
+            className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[var(--color-bg-secondary)] transition-all hover:border-[var(--color-primary-hover)] ${data.product_id === product.id ? 'border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)] ring-1 ring-primary' : 'border-[var(--color-border-light)]'}`}
         >
             {product.discount_percent > 0 && (
                 product.flash_sale_ends_at ? (
@@ -549,7 +550,7 @@ export default function GameDetail({
             <div className="relative z-10 flex flex-col justify-between p-3 md:p-4">
                 <div className="mb-2 flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
-                        <div className="line-clamp-2 text-xs leading-tight font-bold text-[#FFC107] md:text-sm">
+                        <div className="line-clamp-2 text-xs leading-tight font-bold text-[var(--color-warning)] md:text-sm">
                             {product.clean_name}
                         </div>
                         {product.extra && (
@@ -623,7 +624,7 @@ export default function GameDetail({
     };
 
     const submitOrder = async () => {
-        if (isSubmitting) return;
+        if (isSubmitting || isCalculatingFee) return;
         if (!validatedUsername || validatedUsername.startsWith('❌')) {
             swalWarning('ID belum valid. Pastikan data akun benar.');
             return;
@@ -749,7 +750,7 @@ export default function GameDetail({
                         <div className="ml-auto hidden md:block">
                             <button
                                 onClick={() => setShowGuideModal(true)}
-                                className="flex items-center gap-2 rounded-full border border-[#31334c] px-4 py-1.5 text-xs text-gray-300 transition hover:bg-white/5 hover:text-white"
+                                className="flex items-center gap-2 rounded-full border border-[var(--color-border-light)] px-4 py-1.5 text-xs text-gray-300 transition hover:bg-white/5 hover:text-white"
                             >
                                 Cara Pembelian{' '}
                                 <svg
@@ -800,7 +801,7 @@ export default function GameDetail({
                                 <h3 className="mb-0.5 text-lg font-semibold text-white md:mb-1 md:text-2xl">
                                     {game.name}
                                 </h3>
-                                <h4 className="mb-2 text-sm text-[#FFC107] text-client-warning md:mb-2.5 md:text-lg">
+                                <h4 className="mb-2 text-sm text-[var(--color-warning)] text-client-warning md:mb-2.5 md:text-lg">
                                     {game.publisher}
                                 </h4>
 
@@ -809,7 +810,7 @@ export default function GameDetail({
                                     id="client-product-detail-badges"
                                     className="item-center flex flex-wrap gap-1.5 md:gap-2"
                                 >
-                                    <div className="flex cursor-pointer items-center gap-1 rounded-full border border-[#3b82f6]/30 bg-[#1e6fdb]/20 px-2.5 py-0.5 text-[0.65rem] font-semibold whitespace-nowrap text-[#3b82f6] md:gap-1.5 md:px-3 md:py-1 md:text-[0.7rem]">
+                                    <div className="flex cursor-pointer items-center gap-1 rounded-full border border-[var(--color-status-success)]/30 bg-[color-mix(in_srgb,var(--color-status-success)_20%,transparent)] px-2.5 py-0.5 text-[0.65rem] font-semibold whitespace-nowrap text-[var(--color-status-success)] md:gap-1.5 md:px-3 md:py-1 md:text-[0.7rem]">
                                         <svg
                                             width="12"
                                             height="12"
@@ -820,7 +821,7 @@ export default function GameDetail({
                                         </svg>
                                         Proses Cepat
                                     </div>
-                                    <div className="flex cursor-pointer items-center gap-1 rounded-full border border-[#3b82f6]/30 bg-[#1e6fdb]/20 px-2.5 py-0.5 text-[0.65rem] font-semibold whitespace-nowrap text-[#3b82f6] md:gap-1.5 md:px-3 md:py-1 md:text-[0.7rem]">
+                                    <div className="flex cursor-pointer items-center gap-1 rounded-full border border-[var(--color-status-success)]/30 bg-[color-mix(in_srgb,var(--color-status-success)_20%,transparent)] px-2.5 py-0.5 text-[0.65rem] font-semibold whitespace-nowrap text-[var(--color-status-success)] md:gap-1.5 md:px-3 md:py-1 md:text-[0.7rem]">
                                         <svg
                                             width="12"
                                             height="12"
@@ -868,7 +869,7 @@ export default function GameDetail({
                                     <p className="text-2xl font-bold text-white md:text-[1.26rem]">
                                         {game.rating}
                                     </p>
-                                    <div className="flex text-[#FFC107] md:mt-1 md:mb-1">
+                                    <div className="flex text-[var(--color-warning)] md:mt-1 md:mb-1">
                                         {[1, 2, 3, 4, 5].map((star) => (
                                             <svg
                                                 key={star}
@@ -889,8 +890,8 @@ export default function GameDetail({
                         </div>
 
                         {/* Background Card Effect (Bunder2 di mobile) */}
-                        <div className="absolute top-1/3 right-0 bottom-0 left-0 z-0 overflow-hidden rounded-2xl bg-[#242533] p-20 lg:top-[30%]">
-                            <div className="absolute -right-42 -bottom-62 h-[150%] w-[150%] rotate-45 bg-[radial-gradient(#c26eff_2px,transparent_2px)] [background-size:16px_16px] opacity-10 md:hidden"></div>
+                        <div className="absolute top-1/3 right-0 bottom-0 left-0 z-0 overflow-hidden rounded-2xl bg-[var(--color-bg-card)] p-20 lg:top-[30%]">
+                            <div className="absolute -right-42 -bottom-62 h-[150%] w-[150%] rotate-45 bg-[radial-gradient(var(--color-accent)_2px,transparent_2px)] [background-size:16px_16px] opacity-10 md:hidden"></div>
                         </div>
                     </div>
 
@@ -899,25 +900,23 @@ export default function GameDetail({
                         {/* Left Column (Inputs) */}
                         <div className="flex flex-col gap-4 md:gap-6 lg:col-span-2">
                             {/* SECTION 1: Informasi Akun */}
-                            <div className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg">
+                            <div className="mt-0 overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] shadow-lg">
                                 {/* Header (Refactored from StepAccountInfo) */}
-                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
-                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
+                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[var(--color-border-light)]">
+                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[var(--color-accent)] text-lg font-bold text-white">
                                         1
                                     </div>
-                                    <div className="flex flex-1 items-center bg-[#31334c] px-4">
+                                    <div className="flex flex-1 items-center bg-[var(--color-border-light)] px-4">
                                         <h4 className="text-sm font-semibold text-white">
                                             Informasi Akun
                                         </h4>
                                     </div>
                                 </div>
                                 <div className="space-y-4 p-5">
-                                    <div
-                                        className={`grid grid-cols-1 gap-4 ${(game.input_fields?.length ?? 0) > 1 || (!game.input_fields && game.need_zone) ? 'md:grid-cols-2' : ''}`}
-                                    >
+                                    <div className="grid grid-cols-2 gap-4">
                                         {game.input_fields && game.input_fields.length > 0 ? (
                                             game.input_fields.map((field) => (
-                                                <div key={field.name}>
+                                                <div key={field.name} className={field.half_width ? 'col-span-1' : 'col-span-2'}>
                                                     <label className="mb-1 block text-xs text-white/70">
                                                         {field.label} {field.is_required && <span className="text-red-500">*</span>}
                                                     </label>
@@ -926,13 +925,13 @@ export default function GameDetail({
                                                         placeholder={field.placeholder || `Masukkan ${field.label}`}
                                                         value={data[field.name as keyof typeof data] || ''}
                                                         onChange={(e) => setData(field.name as any, e.target.value)}
-                                                        className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
+                                                        className="w-full rounded-md border-none bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
                                                     />
                                                 </div>
                                             ))
                                         ) : (
                                             <>
-                                                <div>
+                                                <div className={game.need_zone ? 'col-span-1' : 'col-span-2'}>
                                                     <label className="mb-1 block text-xs text-white/70">
                                                         User ID
                                                     </label>
@@ -946,11 +945,11 @@ export default function GameDetail({
                                                                 e.target.value,
                                                             )
                                                         }
-                                                        className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
+                                                        className="w-full rounded-md border-none bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
                                                     />
                                                 </div>
                                                 {game.need_zone && (
-                                                    <div>
+                                                    <div className="col-span-1">
                                                         <label className="mb-1 block text-xs text-white/70">
                                                             Server
                                                         </label>
@@ -976,7 +975,7 @@ export default function GameDetail({
                                                                     e.target.value,
                                                                 )
                                                             }
-                                                            className="w-full rounded-md border-none bg-[#2b2834] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary disabled:bg-[#1a1a24] disabled:text-white/60"
+                                                            className="w-full rounded-md border-none bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary disabled:bg-[var(--color-bg-secondary)] disabled:text-white/60"
                                                         />
                                                     </div>
                                                 )}
@@ -1048,13 +1047,13 @@ export default function GameDetail({
                             </div>
 
                             {/* SECTION 2: Detail Kontak */}
-                            <div className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg md:mt-6">
+                            <div className="mt-0 overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] shadow-lg md:mt-6">
                                 {/* Header */}
-                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
-                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
+                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[var(--color-border-light)]">
+                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[var(--color-accent)] text-lg font-bold text-white">
                                         2
                                     </div>
-                                    <div className="flex flex-1 items-center bg-[#31334c] px-4">
+                                    <div className="flex flex-1 items-center bg-[var(--color-border-light)] px-4">
                                         <h4 className="text-sm font-semibold text-white">
                                             Detail Kontak
                                         </h4>
@@ -1078,7 +1077,7 @@ export default function GameDetail({
                                             value={formattedWa}
                                             onChange={handleWaChange}
                                             readOnly={phoneFromProfile}
-                                            className={`w-full rounded-md border-none px-3 py-2 text-sm text-white placeholder-gray-500 outline-none ${phoneFromProfile ? 'cursor-default bg-[#1e1f29] opacity-70' : 'bg-[#2b2834] focus:ring-1 focus:ring-primary'}`}
+                                            className={`w-full rounded-md border-none px-3 py-2 text-sm text-white placeholder-gray-500 outline-none ${phoneFromProfile ? 'cursor-default bg-[var(--color-bg-card)] opacity-70' : 'bg-[var(--color-bg-secondary)] focus:ring-1 focus:ring-primary'}`}
                                         />
                                         {!phoneFromProfile && (
                                             <p className="mt-2 text-xs text-white/50">
@@ -1086,7 +1085,7 @@ export default function GameDetail({
                                             </p>
                                         )}
                                     </div>
-                                    <div className="rounded-md bg-client-warning/15 px-4 py-2 text-xs text-[#FFC107]">
+                                    <div className="rounded-md bg-client-warning/15 px-4 py-2 text-xs text-[var(--color-warning)]">
                                         Nomor ini akan kami hubungi jika terjadi
                                         masalah
                                     </div>
@@ -1094,13 +1093,13 @@ export default function GameDetail({
                             </div>
 
                             {/* SECTION 3: Pilih Nominal */}
-                            <div className="relative mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg md:mt-6">
+                            <div className="relative mt-0 overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] shadow-lg md:mt-6">
                                 {/* Header */}
-                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
-                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
+                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[var(--color-border-light)]">
+                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[var(--color-accent)] text-lg font-bold text-white">
                                         3
                                     </div>
-                                    <div className="flex flex-1 items-center bg-[#31334c] px-4">
+                                    <div className="flex flex-1 items-center bg-[var(--color-border-light)] px-4">
                                         <h4 className="text-sm font-semibold text-white">
                                             Pilih Nominal
                                         </h4>
@@ -1109,7 +1108,7 @@ export default function GameDetail({
                                 <div className="space-y-6 p-4">
                                     {/* ===== Flash Sale Block ===== */}
                                     {hasFlashSale && (
-                                        <div className="overflow-hidden rounded-xl border-2 border-orange-500/60 bg-[#1a1505]">
+                                        <div className="overflow-hidden rounded-xl border-2 border-orange-500/60 bg-[var(--color-bg-main)]">
                                             {/* Flash Sale Header */}
                                             <div className="flex items-center justify-between bg-orange-500/15 px-4 py-2.5">
                                                 <div className="flex items-center gap-2">
@@ -1146,7 +1145,7 @@ export default function GameDetail({
                                                                 }
                                                                 handleProductSelect(product.id);
                                                             }}
-                                                            className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[#1A1A24] transition-all ${outOfStock ? 'cursor-not-allowed opacity-50' : 'hover:border-orange-500/60'} ${data.product_id === product.id ? 'border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.25)] ring-1 ring-orange-500' : 'border-orange-500/30'}`}
+                                                            className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[var(--color-bg-secondary)] transition-all ${outOfStock ? 'cursor-not-allowed opacity-50' : 'hover:border-orange-500/60'} ${data.product_id === product.id ? 'border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.25)] ring-1 ring-orange-500' : 'border-orange-500/30'}`}
                                                         >
                                                             <div className="flex items-center justify-between bg-orange-600 px-2.5 py-1">
                                                                 <span className="text-[10px] font-bold text-white">
@@ -1161,7 +1160,7 @@ export default function GameDetail({
                                                             <div className="p-3">
                                                                 <div className="mb-2 flex items-start justify-between gap-2">
                                                                     <div className="min-w-0 flex-1">
-                                                                        <div className="line-clamp-2 text-xs font-bold leading-tight text-[#FFC107]">{product.clean_name}</div>
+                                                                        <div className="line-clamp-2 text-xs font-bold leading-tight text-[var(--color-warning)]">{product.clean_name}</div>
                                                                         {product.extra && <div className="mt-0.5 truncate text-[9px] text-gray-400">{product.extra}</div>}
                                                                     </div>
                                                                     {(() => {
@@ -1236,7 +1235,7 @@ export default function GameDetail({
                                                                   </span>
                                                               </div>
                                                           ) : (
-                                                              <div className="mb-3 flex items-center gap-2 border-b border-[#31334c] pb-2">
+                                                              <div className="mb-3 flex items-center gap-2 border-b border-[var(--color-border-light)] pb-2">
                                                                   <span className="text-xs font-semibold text-gray-500">
                                                                       {getRegionLabel(
                                                                           region,
@@ -1327,14 +1326,14 @@ export default function GameDetail({
                             {/* SECTION 4: Detail Pembelian */}
                             <div
                                 ref={promoSectionRef}
-                                className="mt-0 overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg md:mt-6"
+                                className="mt-0 overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] shadow-lg md:mt-6"
                             >
                                 {/* Header */}
-                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
-                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
+                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[var(--color-border-light)]">
+                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[var(--color-accent)] text-lg font-bold text-white">
                                         4
                                     </div>
-                                    <div className="flex flex-1 items-center bg-[#31334c] px-4">
+                                    <div className="flex flex-1 items-center bg-[var(--color-border-light)] px-4">
                                         <h4 className="text-sm font-semibold text-white">
                                             Detail Pembelian
                                         </h4>
@@ -1362,7 +1361,7 @@ export default function GameDetail({
                                                     e.key === 'Enter' &&
                                                     handleApplyVoucher()
                                                 }
-                                                className="w-full min-w-0 flex-1 rounded-lg border-none bg-[#2f2a3a] px-3 py-2 text-sm tracking-widest text-white uppercase placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
+                                                className="w-full min-w-0 flex-1 rounded-lg border-none bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary disabled:cursor-not-allowed disabled:opacity-60"
                                             />
                                             {appliedVoucher ? (
                                                 <button
@@ -1417,13 +1416,13 @@ export default function GameDetail({
                         {/* Right Column (Details & Payments) */}
                         <div className="flex flex-col gap-4 md:sticky md:top-[150px] md:self-start">
                             {/* SECTION 5: Metode Pembayaran */}
-                            <div className="mt-0 flex flex-col overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg md:max-h-[calc(100vh-230px)]">
+                            <div className="mt-0 flex flex-col overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] shadow-lg md:max-h-[calc(100vh-230px)]">
                                 {/* Header */}
-                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[#31334c]">
-                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[#c26eff] text-lg font-bold text-white">
+                                <div className="flex h-12 overflow-hidden rounded-t-xl border-b border-[var(--color-border-light)]">
+                                    <div className="flex w-12 shrink-0 items-center justify-center bg-[var(--color-accent)] text-lg font-bold text-white">
                                         5
                                     </div>
-                                    <div className="flex flex-1 items-center bg-[#31334c] px-4">
+                                    <div className="flex flex-1 items-center bg-[var(--color-border-light)] px-4">
                                         <h4 className="text-sm font-semibold text-white">
                                             Metode Pembayaran
                                         </h4>
@@ -1442,7 +1441,7 @@ export default function GameDetail({
                                             return (
                                                 <div
                                                     key={category}
-                                                    className="overflow-hidden rounded-lg bg-[#3a3545]"
+                                                    className="overflow-hidden rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-card)]"
                                                 >
                                                     {/* ===== GROUP HEADER ===== */}
                                                     <button
@@ -1484,7 +1483,7 @@ export default function GameDetail({
                                                                 methods[0]
                                                                     ?.disabled ===
                                                                     false && (
-                                                                    <span className="rounded-full bg-[#2f2a3a] px-2 py-0.5 text-[10px] font-semibold text-[#c26eff]">
+                                                                    <span className="rounded-full bg-[var(--color-bg-secondary)] px-2 py-0.5 text-[10px] font-semibold text-[var(--color-accent)]">
                                                                         {methods[0]?.coin_balance?.toLocaleString(
                                                                             'id-ID',
                                                                         ) ??
@@ -1544,7 +1543,7 @@ export default function GameDetail({
 
                                                     {/* ===== CONTENT ===== */}
                                                     {(isOpen || isCoin) && (
-                                                        <div className="space-y-2 bg-[#2f2a3a] p-3">
+                                                        <div className="space-y-2 bg-[var(--color-bg-secondary)] p-3">
                                                             {methods.map(
                                                                 (method) => {
                                                                     const subtotal =
@@ -1614,7 +1613,7 @@ export default function GameDetail({
                                                                                 key={
                                                                                     method.id
                                                                                 }
-                                                                                className="flex w-full items-center justify-between rounded-lg bg-[#3a3545] p-3 opacity-70"
+                                                                                className="flex w-full items-center justify-between rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-3 opacity-70"
                                                                             >
                                                                                 <div className="flex items-center gap-3">
                                                                                     <div className="flex h-6 w-12 shrink-0 items-center justify-center overflow-hidden rounded">
@@ -1673,7 +1672,7 @@ export default function GameDetail({
                                                                                 key={
                                                                                     method.id
                                                                                 }
-                                                                                className="flex w-full items-center justify-between rounded-lg bg-[#3a3545] p-3 opacity-60"
+                                                                                className="flex w-full items-center justify-between rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-3 opacity-60"
                                                                             >
                                                                                 <div className="flex items-center gap-3">
                                                                                     <div className="flex h-6 w-12 shrink-0 items-center justify-center overflow-hidden rounded">
@@ -1737,7 +1736,7 @@ export default function GameDetail({
                                                                                     method.id,
                                                                                 )
                                                                             }
-                                                                            className={`flex w-full cursor-pointer items-center justify-between rounded-lg p-3 transition ${isChecked ? 'ring-2 ring-primary' : 'bg-[#3a3545]'} ${!valid && 'cursor-not-allowed opacity-50'}`}
+                                                                            className={`flex w-full cursor-pointer items-center justify-between rounded-lg border p-3 transition ${isChecked ? 'border-primary bg-[var(--color-bg-card)] ring-1 ring-primary' : 'border-[var(--color-border-light)] bg-[var(--color-bg-card)] hover:border-gray-500'} ${!valid && 'cursor-not-allowed opacity-50'}`}
                                                                         >
                                                                             <div className="flex items-center gap-3">
                                                                                 <div
@@ -1844,115 +1843,104 @@ export default function GameDetail({
             </div>
 
             {/* Floating Action Menu (Bottom Docked) — positioned above bottom nav on mobile */}
-            <div className="fixed bottom-[60px] left-0 z-[45] w-full border-t border-[#31334c] bg-[#1e1f29] shadow-[0_-10px_30px_rgba(0,0,0,0.5)] md:bottom-0">
+            <div className="fixed bottom-[60px] left-0 z-[45] w-full border-t border-[var(--color-border-light)] bg-[var(--color-bg-card)] shadow-[0_-10px_30px_rgba(0,0,0,0.5)] md:bottom-0">
                 <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-3 py-3 sm:flex-row sm:px-6 md:flex-row md:gap-4 md:px-4 md:py-4 lg:px-8">
-                    {/* Payment Breakdown */}
-                    {selectedProduct && selectedPayment && (
-                        <div className="w-full space-y-1 border-b border-[#31334c] pb-2 sm:space-y-1.5 sm:pb-3">
-                            <div className="flex items-center justify-between gap-2 text-xs">
-                                <span className="shrink-0 text-gray-400">
-                                    Harga Produk
-                                </span>
-                                <span className="font-medium text-white">
-                                    Rp{' '}
-                                    {selectedProduct.price.toLocaleString(
-                                        'id-ID',
-                                    )}
-                                </span>
-                            </div>
-                            <div className="flex items-center justify-between gap-2 text-xs">
-                                <span className="min-w-0 truncate text-gray-400">
-                                    Biaya Admin ({selectedPayment.name})
-                                </span>
-                                {isCalculatingFee ? (
-                                    <span className="inline-block h-3 w-20 animate-pulse rounded bg-white/10" />
-                                ) : (
+                    {/* Payment Breakdown & Total */}
+                    <div className="w-full sm:flex-1 sm:pr-4 md:pr-8">
+                        {selectedProduct && selectedPayment ? (
+                            <div className="flex w-full flex-col space-y-1 pb-1 sm:space-y-1.5">
+                                <div className="flex items-center justify-between gap-2 text-xs">
+                                    <span className="shrink-0 text-gray-400">
+                                        Harga Produk
+                                    </span>
                                     <span className="font-medium text-white">
                                         Rp{' '}
-                                        {(calculatedFees?.[
-                                            selectedPayment.id
-                                        ] !== undefined
-                                            ? calculatedFees[selectedPayment.id]
-                                            : Math.ceil(
-                                                  selectedPayment.fee_flat +
-                                                      (selectedProduct.price *
-                                                          selectedPayment.fee_percent) /
-                                                          100,
-                                              )
-                                        ).toLocaleString('id-ID')}
-                                    </span>
-                                )}
-                            </div>
-                            {appliedVoucher && appliedVoucher.discount > 0 && (
-                                <div className="flex items-center justify-between gap-2 text-xs">
-                                    <span className="flex shrink-0 items-center gap-1 text-green-400">
-                                        🏷️ Diskon Voucher
-                                    </span>
-                                    <span className="font-semibold text-green-400">
-                                        − Rp{' '}
-                                        {appliedVoucher.discount.toLocaleString(
+                                        {selectedProduct.price.toLocaleString(
                                             'id-ID',
                                         )}
                                     </span>
                                 </div>
-                            )}
-                            {auth.user &&
-                                !selectedPayment.is_coin &&
-                                selectedProduct.price >= loyaltyMinAmount &&
-                                Math.floor(
-                                    (selectedProduct.price * loyaltyRate) / 100,
-                                ) > 0 && (
-                                    <div className="flex items-center justify-between gap-2 text-xs">
-                                        <span className="flex shrink-0 items-center gap-1 text-yellow-400/90">
-                                            <img
-                                                src="/coin.png"
-                                                alt="Coin"
-                                                className="h-3.5 w-3.5 object-contain"
-                                            />{' '}
-                                            Reward
+                                <div className="flex items-center justify-between gap-2 text-xs">
+                                    <span className="min-w-0 truncate text-gray-400">
+                                        Biaya Admin ({selectedPayment.name})
+                                    </span>
+                                    {isCalculatingFee ? (
+                                        <span className="inline-block h-3 w-20 animate-pulse rounded bg-white/10" />
+                                    ) : (
+                                        <span className="font-medium text-white">
+                                            Rp{' '}
+                                            {(calculatedFees?.[
+                                                selectedPayment.id
+                                            ] !== undefined
+                                                ? calculatedFees[selectedPayment.id]
+                                                : Math.ceil(
+                                                      selectedPayment.fee_flat +
+                                                          (selectedProduct.price *
+                                                              selectedPayment.fee_percent) /
+                                                              100,
+                                                  )
+                                            ).toLocaleString('id-ID')}
                                         </span>
-                                        <span className="font-semibold text-yellow-400">
-                                            +
-                                            {Math.floor(
-                                                (selectedProduct.price *
-                                                    loyaltyRate) /
-                                                    100,
-                                            ).toLocaleString('id-ID')}{' '}
-                                            Coins
+                                    )}
+                                </div>
+                                {appliedVoucher && appliedVoucher.discount > 0 && (
+                                    <div className="flex items-center justify-between gap-2 text-xs">
+                                        <span className="flex shrink-0 items-center gap-1 text-green-400">
+                                            🏷️ Diskon Voucher
+                                        </span>
+                                        <span className="font-semibold text-green-400">
+                                            − Rp{' '}
+                                            {appliedVoucher.discount.toLocaleString(
+                                                'id-ID',
+                                            )}
                                         </span>
                                     </div>
                                 )}
-                        </div>
-                    )}
-                    <div className="w-full text-left text-white sm:w-auto">
-                        <div className="text-xs text-gray-400 sm:text-sm">
-                            Total Pembayaran
-                        </div>
-                        <div className="text-base font-black text-[#FFC107] sm:text-lg md:text-xl">
-                            {selectedProduct && selectedPayment
-                                ? `Rp ${(
-                                      selectedProduct.price -
-                                      (appliedVoucher?.discount ?? 0) +
-                                      (calculatedFees?.[selectedPayment.id] !==
-                                      undefined
-                                          ? calculatedFees[selectedPayment.id]
-                                          : Math.ceil(
-                                                selectedPayment.fee_flat +
-                                                    ((selectedProduct.price -
-                                                        (appliedVoucher?.discount ??
-                                                            0)) *
-                                                        selectedPayment.fee_percent) /
-                                                        100,
-                                            ))
-                                  ).toLocaleString('id-ID')}`
-                                : 'Rp 0'}
-                        </div>
+
+                                
+                                {/* Total Pembayaran (Stacked) */}
+                                <div className="mt-1.5 flex items-center justify-between gap-2 border-t border-[var(--color-border-light)] pt-2 sm:mt-2 sm:pt-2.5">
+                                    <span className="text-sm font-bold text-gray-300">
+                                        Total Pembayaran
+                                    </span>
+                                    <div className="text-base font-black text-[var(--color-warning)] sm:text-lg">
+                                        {isCalculatingFee && !selectedPayment?.is_coin ? (
+                                            <span className="inline-block h-5 w-24 animate-pulse rounded bg-white/10 sm:h-6" />
+                                        ) : (
+                                            `Rp ${(
+                                                selectedProduct.price -
+                                                (appliedVoucher?.discount ?? 0) +
+                                                (calculatedFees?.[selectedPayment.id] !== undefined
+                                                    ? calculatedFees[selectedPayment.id]
+                                                    : Math.ceil(
+                                                          selectedPayment.fee_flat +
+                                                              ((selectedProduct.price -
+                                                                  (appliedVoucher?.discount ?? 0)) *
+                                                                  selectedPayment.fee_percent) /
+                                                                  100,
+                                                      ))
+                                            ).toLocaleString('id-ID')}`
+                                        )}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex w-full flex-col text-left">
+                                <span className="text-sm font-bold text-gray-400">
+                                    Total Pembayaran
+                                </span>
+                                <span className="text-base font-black text-[var(--color-warning)] sm:text-lg">
+                                    Rp 0
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Animated Button */}
                     <button
                         onClick={handlePurchase}
-                        className="group relative flex w-full shrink-0 items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-primary to-[#9b4dec] px-6 py-2.5 text-sm font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] md:w-auto md:px-12 md:py-3 md:text-lg"
+                        disabled={isCalculatingFee}
+                        className={`group relative flex w-full shrink-0 items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-6 py-2.5 text-sm font-bold text-white shadow-[var(--shadow-glow)] transition hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] md:w-auto md:px-12 md:py-3 md:text-lg ${isCalculatingFee ? 'cursor-not-allowed opacity-60 hover:shadow-[var(--shadow-glow)]' : ''}`}
                     >
                         {/* Particles effect (simulated CSS) */}
                         <div className="absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100">
@@ -1997,18 +1985,18 @@ export default function GameDetail({
             {/* Modal Konfirmasi Pesanan */}
             {showModal && (
                 <div className="animate-fade-in fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-3 py-4 backdrop-blur-sm sm:px-4 md:px-4">
-                    <div className="animate-slide-up max-h-[85vh] w-full max-w-md overflow-x-hidden overflow-y-auto rounded-3xl border border-[#31334c] bg-[#242533] shadow-2xl">
+                    <div className="animate-slide-up max-h-[85vh] w-full max-w-md overflow-x-hidden overflow-y-auto rounded-3xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] shadow-2xl">
                         {/* Modal Header & Graphic */}
-                        <div className="sticky top-0 z-10 flex flex-col items-center bg-[#242533] p-4 pb-2 text-center sm:p-5 sm:pb-3 md:p-8 md:pb-4">
+                        <div className="sticky top-0 z-10 flex flex-col items-center bg-[var(--color-bg-card)] p-4 pb-2 text-center sm:p-5 sm:pb-3 md:p-8 md:pb-4">
                             <div className="pointer-events-none relative mb-3 h-16 w-16 sm:mb-4 sm:h-20 sm:w-20 md:mb-6 md:h-32 md:w-32">
                                 {/* Success Circle Check - Replicating mockup graphic */}
-                                <div className="absolute inset-0 flex items-center justify-center rounded-full border-4 border-[#242533] bg-gradient-to-tr from-[#1e1f29] to-[#31334c] shadow-[0_0_30px_rgba(74,222,128,0.2)]">
+                                <div className="absolute inset-0 flex items-center justify-center rounded-full border-4 border-[var(--color-bg-card)] bg-gradient-to-tr from-[var(--color-bg-card)] to-[var(--color-border-light)] shadow-[0_0_30px_rgba(74,222,128,0.2)]">
                                     <svg
                                         width="40"
                                         height="40"
                                         viewBox="0 0 24 24"
                                         fill="none"
-                                        stroke="#4ade80"
+                                        stroke="var(--color-success)"
                                         strokeWidth="3"
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
@@ -2018,13 +2006,13 @@ export default function GameDetail({
                                     </svg>
                                 </div>
                                 {/* Small bag badge */}
-                                <div className="absolute -right-2 -bottom-2 rounded-full border-4 border-[#242533] bg-white p-2 shadow-lg">
+                                <div className="absolute -right-2 -bottom-2 rounded-full border-4 border-[var(--color-bg-card)] bg-white p-2 shadow-lg">
                                     <svg
                                         width="18"
                                         height="18"
                                         viewBox="0 0 24 24"
                                         fill="none"
-                                        stroke="#a855f7"
+                                        stroke="var(--color-accent)"
                                         strokeWidth="2"
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
@@ -2089,7 +2077,7 @@ export default function GameDetail({
 
                         {/* Order Summary Form */}
                         <div className="p-3 pt-1 sm:p-4 sm:pt-1 md:p-6 md:pt-2">
-                            <div className="mb-3 rounded-2xl border border-[#31334c] bg-[#1a1a24] p-2.5 shadow-inner sm:mb-4 sm:p-3 md:mb-6 md:p-5">
+                            <div className="mb-3 rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-2.5 shadow-inner sm:mb-4 sm:p-3 md:mb-6 md:p-5">
                                 <div className="flex flex-col gap-2 text-xs sm:gap-3 sm:text-sm">
                                     <div className="flex flex-col gap-1">
                                         <span className="font-bold text-white">
@@ -2143,7 +2131,7 @@ export default function GameDetail({
                                             {data.user_id || '-'}
                                         </span>
                                     </div>
-                                    <div className="mt-2 border-t border-[#31334c] pt-2">
+                                    <div className="mt-2 border-t border-[var(--color-border-light)] pt-2">
                                         <div className="flex flex-col gap-1">
                                             <span className="font-bold text-white">
                                                 Product
@@ -2189,8 +2177,8 @@ export default function GameDetail({
                                 </button>
                                 <button
                                     onClick={submitOrder}
-                                    disabled={isSubmitting || isValidating}
-                                    className={`rounded-xl px-4 py-3.5 font-bold text-white shadow-[0_0_15px_rgba(168,85,247,0.4)] transition ${isSubmitting || isValidating ? 'cursor-not-allowed bg-gray-500 shadow-none' : 'bg-primary hover:bg-primary/90'}`}
+                                    disabled={isSubmitting || isValidating || isCalculatingFee}
+                                    className={`rounded-xl px-4 py-3.5 font-bold text-white shadow-[var(--shadow-glow)] transition ${isSubmitting || isValidating || isCalculatingFee ? 'cursor-not-allowed bg-gray-500 shadow-none' : 'bg-primary hover:bg-primary/90'}`}
                                 >
                                     {isSubmitting
                                         ? 'Memproses...'
@@ -2205,8 +2193,8 @@ export default function GameDetail({
             {/* Guide Modal (Cara Pembelian) */}
             {showGuideModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
-                    <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-[#1e1f29] shadow-2xl ring-1 ring-white/10">
-                        <div className="flex items-center justify-between border-b border-[#31334c] bg-[#242533] px-5 py-4">
+                    <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-[var(--color-bg-card)] shadow-2xl ring-1 ring-white/10">
+                        <div className="flex items-center justify-between border-b border-[var(--color-border-light)] bg-[var(--color-bg-card)] px-5 py-4">
                             <h3 className="text-lg font-bold text-white">Cara Pembelian</h3>
                             <button
                                 onClick={() => setShowGuideModal(false)}
@@ -2222,7 +2210,7 @@ export default function GameDetail({
                                 <img
                                     src={'/storage/' + game.guide_image}
                                     alt="Panduan"
-                                    className="mb-4 w-full rounded-xl border border-[#31334c] object-contain"
+                                    className="mb-4 w-full rounded-xl border border-[var(--color-border-light)] object-contain"
                                 />
                             )}
                             {game.guide_content ? (
@@ -2238,7 +2226,7 @@ export default function GameDetail({
                                 )
                             )}
                         </div>
-                        <div className="border-t border-[#31334c] p-4">
+                        <div className="border-t border-[var(--color-border-light)] p-4">
                             <button
                                 onClick={() => setShowGuideModal(false)}
                                 className="w-full rounded-xl bg-white/10 py-3 font-bold text-white transition hover:bg-white/20"
@@ -2252,3 +2240,9 @@ export default function GameDetail({
         </GuestLayout>
     );
 }
+
+
+
+
+
+

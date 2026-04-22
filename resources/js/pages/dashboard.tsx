@@ -38,75 +38,16 @@ export default function Dashboard() {
         max_discount: number | null;
         min_amount: number;
         valid_until: string | null;
-        min_tier: string | null;
         used: boolean;
     }> = pageProps.promoVouchers ?? [];
     const [copiedCode, setCopiedCode] = useState<string | null>(null);
-    const tierInfo = pageProps.tierInfo as
-        | {
-              current: string;
-              multiplier: number;
-              total_spending: number;
-              next_threshold: number | null;
-          }
-        | undefined;
     const user = auth?.user;
-
-    const tierBadgeClass: Record<string, string> = {
-        platinum: 'bg-purple-500/20 text-purple-300',
-        gold: 'bg-yellow-500/20 text-yellow-300',
-        silver: 'bg-blue-500/20 text-blue-300',
-        bronze: 'bg-orange-500/20 text-orange-300',
-    };
-    const tierIcon: Record<string, string> = {
-        platinum: '💎',
-        gold: '🥇',
-        silver: '🥈',
-        bronze: '🥉',
-    };
 
     const handleCopy = (code: string) => {
         navigator.clipboard.writeText(code);
         setCopiedCode(code);
         setTimeout(() => setCopiedCode(null), 2000);
     };
-
-    const tierColor = (tier: string) =>
-        ({
-            platinum: {
-                border: 'border-purple-500/40',
-                bg: 'from-purple-900/30 to-purple-800/10',
-                badge: 'bg-purple-500/20 text-purple-300',
-                bar: 'bg-purple-400',
-            },
-            gold: {
-                border: 'border-yellow-500/40',
-                bg: 'from-yellow-900/30 to-yellow-800/10',
-                badge: 'bg-yellow-500/20 text-yellow-300',
-                bar: 'bg-yellow-400',
-            },
-            silver: {
-                border: 'border-blue-500/40',
-                bg: 'from-blue-900/30 to-blue-800/10',
-                badge: 'bg-blue-500/20 text-blue-300',
-                bar: 'bg-blue-400',
-            },
-            bronze: {
-                border: 'border-orange-500/40',
-                bg: 'from-orange-900/20 to-orange-800/10',
-                badge: 'bg-orange-500/20 text-orange-300',
-                bar: 'bg-orange-400',
-            },
-        })[tier] ?? {
-            border: 'border-orange-500/40',
-            bg: 'from-orange-900/20 to-orange-800/10',
-            badge: 'bg-orange-500/20 text-orange-300',
-            bar: 'bg-orange-400',
-        };
-
-    const currentTier = tierInfo?.current ?? 'bronze';
-    const tc = tierColor(currentTier);
-    const isTopTier = currentTier === 'platinum';
 
     return (
         <UserLayout title="Dashboard">
@@ -120,7 +61,7 @@ export default function Dashboard() {
                         {/* The border / background wrapper */}
                         <div className="absolute inset-0 bg-primary [clip-path:polygon(0_20px,20px_0,100%_0,100%_calc(100%-20px),calc(100%-20px)_100%,0_100%)]"></div>
                         {/* Inner dark container */}
-                        <div className="relative flex h-full flex-col items-center justify-center bg-[#1A1A24] p-6 [clip-path:polygon(0_20px,20px_0,100%_0,100%_calc(100%-20px),calc(100%-20px)_100%,0_100%)] md:p-8">
+                        <div className="relative flex h-full flex-col items-center justify-center bg-[var(--color-bg-secondary)] p-6 [clip-path:polygon(0_20px,20px_0,100%_0,100%_calc(100%-20px),calc(100%-20px)_100%,0_100%)] md:p-8">
                             <div className="mb-4 flex h-20 w-20 items-center justify-center overflow-hidden rounded-full border-4 border-gray-400 bg-white shadow-lg">
                                 {user?.avatar_url ? (
                                     <img
@@ -141,24 +82,6 @@ export default function Dashboard() {
                             <h3 className="text-lg font-bold text-white">
                                 {user?.name || 'Ferry Oktariansyah'}
                             </h3>
-                            <div
-                                className={`mt-1 mb-6 rounded-full border px-4 py-0.5 text-xs font-bold ${
-                                    user?.tier === 'platinum'
-                                        ? 'border-purple-400 text-purple-400'
-                                        : user?.tier === 'gold'
-                                          ? 'border-yellow-400 text-yellow-400'
-                                          : user?.tier === 'silver'
-                                            ? 'border-blue-400 text-blue-400'
-                                            : 'border-primary text-primary'
-                                }`}
-                            >
-                                {user?.tier
-                                    ? user.tier.charAt(0).toUpperCase() +
-                                      user.tier.slice(1)
-                                    : 'Bronze'}{' '}
-                                Member
-                            </div>
-
                             <div className="mb-4 h-px w-full bg-white/10"></div>
 
                             <div className="flex w-full flex-col gap-3 text-sm text-gray-300">
@@ -204,7 +127,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Krysta Coins Card */}
-                    <div className="relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[#1b1c2a] via-[#212338] to-[#12101e] p-6 shadow-2xl md:p-8">
+                    <div className="relative flex h-full flex-col justify-between overflow-hidden rounded-2xl border border-white/5 bg-gradient-to-br from-[var(--color-bg-secondary)] via-[var(--color-bg-card)] to-[var(--color-bg-main)] p-6 shadow-2xl md:p-8">
                         {/* Dotted texture background simulate */}
                         <div className="absolute top-0 right-0 h-40 w-40 bg-[radial-gradient(#fff_1px,transparent_1px)] [mask-image:radial-gradient(ellipse_at_top_right,black,transparent_70%)] [background-size:10px_10px] opacity-10"></div>
 
@@ -257,7 +180,7 @@ export default function Dashboard() {
 
                             <Link
                                 href="/dashboard/topup-saldo"
-                                className="w-full rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-6 py-2.5 text-center text-sm font-bold text-white shadow-lg transition hover:opacity-90 md:w-auto"
+                                className="w-full rounded-lg bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-6 py-2.5 text-center text-sm font-bold text-white shadow-lg transition hover:opacity-90 md:w-auto"
                             >
                                 Top Up
                             </Link>
@@ -266,81 +189,7 @@ export default function Dashboard() {
                 </div>
             </section>
 
-            {/* 2. Nuvelo Member Club */}
-            <section>
-                <div className="mb-6 flex items-center justify-between">
-                    <h2 className="text-2xl font-bold text-white">
-                        Nuvelo Member Club
-                    </h2>
-                    <Link
-                        href="/dashboard/member-club"
-                        className="text-sm text-primary hover:underline"
-                    >
-                        Info selengkapnya →
-                    </Link>
-                </div>
-
-                <div
-                    className={`rounded-2xl border bg-gradient-to-br ${tc.border} ${tc.bg} p-6 md:p-8`}
-                >
-                    <div className="flex flex-col gap-6 md:flex-row md:items-center md:justify-between">
-                        {/* Tier & multiplier */}
-                        <div className="flex items-center gap-4">
-                            <div
-                                className={`flex h-14 w-14 items-center justify-center rounded-full ${tc.badge} text-2xl font-black`}
-                            >
-                                {currentTier === 'platinum'
-                                    ? '💎'
-                                    : currentTier === 'gold'
-                                      ? '🥇'
-                                      : currentTier === 'silver'
-                                        ? '🥈'
-                                        : '🥉'}
-                            </div>
-                            <div>
-                                <div
-                                    className={`inline-flex items-center rounded-full px-3 py-0.5 text-xs font-bold ${tc.badge}`}
-                                >
-                                    {currentTier.charAt(0).toUpperCase() +
-                                        currentTier.slice(1)}{' '}
-                                    Member
-                                </div>
-                                <p className="mt-1 text-sm text-gray-400">
-                                    Multiplier coins:{' '}
-                                    <span className="font-bold text-white">
-                                        {tierInfo?.multiplier ?? 1}x
-                                    </span>
-                                </p>
-                            </div>
-                        </div>
-
-                        {/* Upgrade CTA */}
-                        <div className="flex-1 md:max-w-xs">
-                            {isTopTier ? (
-                                <div
-                                    className={`rounded-xl px-4 py-3 text-center text-sm font-semibold ${tc.badge}`}
-                                >
-                                    Tier tertinggi telah dicapai! 🎉
-                                </div>
-                            ) : (
-                                <div className="flex flex-col gap-2">
-                                    <p className="text-xs text-gray-400">
-                                        Upgrade ke tier lebih tinggi untuk mendapatkan harga lebih murah &amp; multiplier coin lebih besar.
-                                    </p>
-                                    <Link
-                                        href="/membership"
-                                        className="w-full rounded-xl bg-gradient-to-r from-primary to-[#9b4dec] py-2.5 text-center text-sm font-bold text-white shadow transition hover:opacity-90"
-                                    >
-                                        Upgrade Membership →
-                                    </Link>
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            {/* 3. Promo & Voucher */}
+            {/* 2. Promo & Voucher */}
             {promoVouchers.length > 0 && (
                 <section>
                     <h2 className="mb-6 text-2xl font-bold text-white">
@@ -356,10 +205,10 @@ export default function Dashboard() {
                             return (
                                 <div
                                     key={v.code}
-                                    className={`relative overflow-hidden rounded-2xl border p-5 transition ${v.used ? 'border-[#31334c] bg-[#16171f] opacity-60' : 'border-[#31334c] bg-[#1e1f29]'}`}
+                                    className={`relative overflow-hidden rounded-2xl border p-5 transition ${v.used ? 'border-[var(--color-border-light)] bg-[var(--color-bg-main)] opacity-60' : 'border-[var(--color-border-light)] bg-[var(--color-bg-card)]'}`}
                                 >
                                     {/* Decorative stripe */}
-                                    <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-primary to-[#9b4dec]" />
+                                    <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-primary to-[var(--color-primary-light)]" />
 
                                     <div className="pl-3">
                                         {/* Header row */}
@@ -368,18 +217,6 @@ export default function Dashboard() {
                                                 <code className="rounded-lg bg-white/5 px-3 py-1 font-mono text-sm font-bold tracking-widest text-white">
                                                     {v.code}
                                                 </code>
-                                                {v.min_tier && (
-                                                    <span
-                                                        className={`rounded-full px-2 py-0.5 text-xs font-semibold ${tierBadgeClass[v.min_tier] ?? 'bg-gray-500/20 text-gray-300'}`}
-                                                    >
-                                                        {tierIcon[v.min_tier]}{' '}
-                                                        {v.min_tier
-                                                            .charAt(0)
-                                                            .toUpperCase() +
-                                                            v.min_tier.slice(1)}
-                                                        +
-                                                    </span>
-                                                )}
                                             </div>
                                             {v.used ? (
                                                 <span className="shrink-0 rounded-full bg-gray-600/30 px-3 py-1 text-xs font-semibold text-gray-400">
@@ -437,7 +274,7 @@ export default function Dashboard() {
 
                 <div className="grid grid-cols-2 gap-4 md:gap-6 lg:grid-cols-4">
                     {/* Menunggu */}
-                    <div className="flex min-h-[120px] flex-col justify-between rounded-xl border border-[#31334c] bg-[#1e1f29]/80 p-5">
+                    <div className="flex min-h-[120px] flex-col justify-between rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)]/80 p-5">
                         <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-yellow-600/20 text-yellow-500">
                             <svg
                                 width="20"
@@ -464,7 +301,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Proses */}
-                    <div className="flex min-h-[120px] flex-col justify-between rounded-xl border border-[#31334c] bg-[#1e1f29]/80 p-5">
+                    <div className="flex min-h-[120px] flex-col justify-between rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)]/80 p-5">
                         <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-blue-600/20 text-blue-500">
                             <svg
                                 width="20"
@@ -504,7 +341,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Selesai */}
-                    <div className="flex min-h-[120px] flex-col justify-between rounded-xl border border-[#31334c] bg-[#1e1f29]/80 p-5">
+                    <div className="flex min-h-[120px] flex-col justify-between rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)]/80 p-5">
                         <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-green-600/20 text-green-500">
                             <svg
                                 width="20"
@@ -530,7 +367,7 @@ export default function Dashboard() {
                     </div>
 
                     {/* Gagal */}
-                    <div className="flex min-h-[120px] flex-col justify-between rounded-xl border border-[#31334c] bg-[#1e1f29]/80 p-5">
+                    <div className="flex min-h-[120px] flex-col justify-between rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)]/80 p-5">
                         <div className="mb-4 flex h-10 w-10 items-center justify-center rounded-lg bg-red-600/20 text-red-500">
                             <svg
                                 width="20"
@@ -565,10 +402,10 @@ export default function Dashboard() {
                     List Transaksi Terbaru
                 </h2>
 
-                <div className="overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29]">
+                <div className="overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)]">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
-                            <thead className="border-b border-[#31334c] bg-white/10 text-xs font-bold text-gray-300 uppercase">
+                            <thead className="border-b border-[var(--color-border-light)] bg-white/10 text-xs font-bold text-gray-300 uppercase">
                                 <tr>
                                     <th scope="col" className="px-6 py-4">
                                         Nomor Invoice
@@ -610,7 +447,7 @@ export default function Dashboard() {
                                     return (
                                         <tr
                                             key={transaction.invoice_id}
-                                            className="border-b border-[#31334c] transition hover:bg-white/5"
+                                            className="border-b border-[var(--color-border-light)] transition hover:bg-white/5"
                                         >
                                             <td className="px-6 py-4 font-medium text-white">
                                                 {transaction.invoice_id}
@@ -651,3 +488,7 @@ export default function Dashboard() {
         </UserLayout>
     );
 }
+
+
+
+

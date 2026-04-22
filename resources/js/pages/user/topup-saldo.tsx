@@ -67,7 +67,7 @@ export default function TopupSaldo() {
                             biaya admin.
                         </p>
                     </div>
-                    <div className="rounded-xl border border-[#31334c] bg-[#1e1f29] px-5 py-3 text-right">
+                    <div className="rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] px-5 py-3 text-right">
                         <div className="text-xs tracking-wide text-gray-500 uppercase">
                             Saldo Saat Ini
                         </div>
@@ -78,7 +78,7 @@ export default function TopupSaldo() {
                 </div>
 
                 <div className="grid gap-6 lg:grid-cols-[1.15fr,0.85fr]">
-                    <div className="rounded-2xl border border-[#31334c] bg-[#1e1f29] p-6">
+                    <div className="rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-6">
                         <h2 className="text-lg font-semibold text-white">
                             Buat Top Up Baru
                         </h2>
@@ -87,6 +87,7 @@ export default function TopupSaldo() {
                             className="mt-6 space-y-6"
                             onSubmit={(event) => {
                                 event.preventDefault();
+                                if (isCalculatingFee) return;
                                 post('/dashboard/topup-saldo');
                             }}
                         >
@@ -102,7 +103,7 @@ export default function TopupSaldo() {
                                             onClick={() =>
                                                 setData('amount', amount)
                                             }
-                                            className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${data.amount === amount ? 'border-primary bg-primary/15 text-white' : 'border-[#31334c] bg-[#252834] text-gray-300 hover:border-primary/50 hover:text-white'}`}
+                                            className={`rounded-xl border px-4 py-3 text-sm font-semibold transition ${data.amount === amount ? 'border-primary bg-primary/15 text-white' : 'border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] text-gray-300 hover:border-primary/50 hover:text-white'}`}
                                         >
                                             Rp {amount.toLocaleString('id-ID')}
                                         </button>
@@ -126,7 +127,7 @@ export default function TopupSaldo() {
                                             parseInt(event.target.value) || 0,
                                         )
                                     }
-                                    className="w-full rounded-xl border border-[#31334c] bg-[#252834] px-4 py-3 text-white transition outline-none focus:border-primary"
+                                    className="w-full rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] px-4 py-3 text-white transition outline-none focus:border-primary"
                                 />
                                 {errors.amount && (
                                     <p className="mt-2 text-sm text-red-400">
@@ -148,7 +149,7 @@ export default function TopupSaldo() {
                                             event.target.value,
                                         )
                                     }
-                                    className="w-full rounded-xl border border-[#31334c] bg-[#252834] px-4 py-3 text-white transition outline-none focus:border-primary"
+                                    className="w-full rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] px-4 py-3 text-white transition outline-none focus:border-primary"
                                     placeholder="08xxxxxxxxxx"
                                 />
                                 {errors.customer_whatsapp && (
@@ -158,7 +159,7 @@ export default function TopupSaldo() {
                                 )}
                             </div>
 
-                            <div className="rounded-2xl border border-[#31334c] bg-[#252834] p-5">
+                            <div className="rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-5">
                                 <div className="flex items-center gap-3">
                                     <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white p-2">
                                         <img
@@ -184,7 +185,7 @@ export default function TopupSaldo() {
                             </div>
 
                             {/* Rincian Pembayaran */}
-                            <div className="rounded-xl border border-[#31334c] bg-[#252834] p-3 sm:p-4 space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
+                            <div className="rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-3 sm:p-4 space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
                                 <div className="flex items-center justify-between gap-2">
                                     <span className="shrink-0 text-gray-400">Nominal Top Up</span>
                                     <span className="font-medium text-white">
@@ -201,12 +202,12 @@ export default function TopupSaldo() {
                                         </span>
                                     )}
                                 </div>
-                                <div className="flex items-center justify-between gap-2 border-t border-[#31334c] pt-1.5 sm:pt-2">
+                                <div className="flex items-center justify-between gap-2 border-t border-[var(--color-border-light)] pt-1.5 sm:pt-2">
                                     <span className="shrink-0 font-semibold text-white">Total Bayar</span>
                                     {isCalculatingFee ? (
                                         <span className="inline-block h-4 w-20 shrink-0 animate-pulse rounded bg-white/10" />
                                     ) : (
-                                        <span className="shrink-0 font-bold text-[#FFC107]">
+                                        <span className="shrink-0 font-bold text-[var(--color-warning)]">
                                             Rp {(data.amount + (displayFee ?? 0)).toLocaleString('id-ID')}
                                         </span>
                                     )}
@@ -215,8 +216,8 @@ export default function TopupSaldo() {
 
                             <button
                                 type="submit"
-                                disabled={processing}
-                                className="w-full rounded-xl bg-linear-to-r from-primary to-[#9b4dec] px-5 py-3 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                                disabled={processing || isCalculatingFee}
+                                className="w-full rounded-xl bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-5 py-3 text-sm font-bold text-white transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
                             >
                                 {processing
                                     ? 'Membuat Invoice...'
@@ -225,7 +226,7 @@ export default function TopupSaldo() {
                         </form>
                     </div>
                     <div className="space-y-6">
-                        <div className="rounded-2xl border border-[#31334c] bg-[#1e1f29] p-6">
+                        <div className="rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-6">
                             <h2 className="text-lg font-semibold text-white">
                                 Informasi
                             </h2>
@@ -247,3 +248,7 @@ export default function TopupSaldo() {
         </UserLayout>
     );
 }
+
+
+
+

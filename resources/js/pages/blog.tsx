@@ -41,10 +41,10 @@ export default function Blog({ articles }: BlogProps) {
                             <Link
                                 key={article.id}
                                 href={`/blog/${article.slug}`}
-                                className="group flex flex-col overflow-hidden rounded-2xl border border-[#31334c] bg-[#1e1f29] transition hover:border-primary/50"
+                                className="group flex flex-col overflow-hidden rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] transition hover:border-primary/50"
                             >
                                 {/* Thumbnail */}
-                                <div className="aspect-video w-full overflow-hidden bg-[#12121a]">
+                                <div className="aspect-video w-full overflow-hidden bg-[var(--color-bg-main)]">
                                     {article.thumbnail ? (
                                         <img
                                             src={article.thumbnail}
@@ -87,3 +87,6 @@ export default function Blog({ articles }: BlogProps) {
         </GuestLayout>
     );
 }
+
+
+

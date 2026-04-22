@@ -18,3 +18,4 @@ export function PlaceholderPattern({ className }: PlaceholderPatternProps) {
         </svg>
     );
 }
+

@@ -47,35 +47,11 @@ class ProductsTable
                     ->money('IDR', locale: 'id')
                     ->sortable(),
 
-                TextColumn::make('price_guest')
-                    ->label('Guest')
-                    ->money('IDR', locale: 'id')
-                    ->sortable()
-                    ->color('gray'),
-
-                TextColumn::make('price_bronze')
-                    ->label('Bronze')
-                    ->money('IDR', locale: 'id')
-                    ->sortable()
-                    ->color('warning'),
-
-                TextColumn::make('price_silver')
-                    ->label('Silver')
-                    ->money('IDR', locale: 'id')
-                    ->sortable()
-                    ->color('gray'),
-
-                TextColumn::make('price_gold')
-                    ->label('Gold')
+                TextColumn::make('price_sell')
+                    ->label('Harga Jual')
                     ->money('IDR', locale: 'id')
                     ->sortable()
                     ->color('success'),
-
-                TextColumn::make('price_platinum')
-                    ->label('Platinum')
-                    ->money('IDR', locale: 'id')
-                    ->sortable()
-                    ->color('info'),
 
                 TextColumn::make('flash_sale_price')
                     ->label('Flash Sale')

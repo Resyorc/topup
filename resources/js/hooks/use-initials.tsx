@@ -15,3 +15,4 @@ export function useInitials(): GetInitialsFn {
         return `${firstInitial}${lastInitial}`.toUpperCase();
     }, []);
 }
+

@@ -63,7 +63,7 @@ export default function ErrorPage({ status }: ErrorPageProps) {
         <>
             <Head title={`${status} – ${error.title}`} />
 
-            <div className="min-h-screen bg-[#0f0f1a] flex items-center justify-center px-4 overflow-hidden relative">
+            <div className="min-h-screen bg-[var(--color-bg-main)] flex items-center justify-center px-4 overflow-hidden relative">
 
                 {/* Background glow blobs */}
                 <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-purple-700/20 blur-3xl animate-pulse" />
@@ -93,7 +93,7 @@ export default function ErrorPage({ status }: ErrorPageProps) {
                         style={{
                             fontSize: 'clamp(6rem, 20vw, 12rem)',
                             lineHeight: 1,
-                            backgroundImage: 'linear-gradient(135deg, #b058ff 0%, #7c3aed 50%, #a855f7 100%)',
+                            backgroundImage: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 50%, #A855F7 100%)',
                             transform: `translateY(${floatY}px)`,
                             transition: 'transform 0.05s linear',
                             textShadow: '0 0 80px rgba(176,88,255,0.4)',
@@ -104,7 +104,7 @@ export default function ErrorPage({ status }: ErrorPageProps) {
                     </div>
 
                     {/* Divider line */}
-                    <div className="mx-auto my-4 sm:my-6 h-px w-32 sm:w-48 bg-gradient-to-r from-transparent via-purple-500 to-transparent" />
+                    <div className="mx-auto my-4 sm:my-6 h-px w-32 sm:w-48 bg-gradient-to-r from-transparent via-primary to-transparent" />
 
                     {/* Title */}
                     <h1 className="text-2xl md:text-3xl font-semibold text-white mb-3">
@@ -120,7 +120,7 @@ export default function ErrorPage({ status }: ErrorPageProps) {
                     <Link
                         href="/"
                         className="inline-flex items-center gap-2 px-6 py-3 rounded-full text-sm font-medium text-white
-                                   bg-gradient-to-r from-purple-600 to-violet-600
+                                   bg-gradient-to-r from-primary to-[var(--color-primary-light)]
                                    hover:from-purple-500 hover:to-violet-500
                                    transition-all duration-300 hover:scale-105 hover:shadow-lg hover:shadow-purple-500/30
                                    active:scale-95"
@@ -149,3 +149,8 @@ export default function ErrorPage({ status }: ErrorPageProps) {
         </>
     );
 }
+
+
+
+
+

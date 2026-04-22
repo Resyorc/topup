@@ -179,6 +179,13 @@ class GameForm
                                                 ->label('Placeholder')
                                                 ->nullable()
                                                 ->placeholder('contoh: Masukkan User ID Anda'),
+                                            Toggle::make('is_required')
+                                                ->label('Wajib Diisi')
+                                                ->default(true),
+                                            Toggle::make('half_width')
+                                                ->label('Setengah Lebar (2 kolom)')
+                                                ->helperText('Aktifkan agar field tampil berdampingan dengan field lain.')
+                                                ->default(false),
                                         ])
                                         ->columns(2)
                                         ->addActionLabel('Tambah Field Input')

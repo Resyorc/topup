@@ -69,7 +69,7 @@ export default function BlogDetail({ article }: BlogDetailProps) {
                 />
 
                 {/* Back Link */}
-                <div className="mt-12 border-t border-[#31334c] pt-8">
+                <div className="mt-12 border-t border-[var(--color-border-light)] pt-8">
                     <Link
                         href="/blog"
                         className="inline-flex items-center gap-2 text-sm font-semibold text-primary transition hover:opacity-80"
@@ -84,3 +84,6 @@ export default function BlogDetail({ article }: BlogDetailProps) {
         </GuestLayout>
     );
 }
+
+
+

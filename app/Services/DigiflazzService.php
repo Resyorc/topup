@@ -133,8 +133,8 @@ class DigiflazzService
      */
     public function checkTransactionStatus(string $sku, string $customerNo, string $refId): array
     {
+        // Digiflazz prepaid: re-send payload topup dengan ref_id sama → idempotent, mengembalikan status existing
         $payload = [
-            'commands'       => 'top-up',
             'username'       => $this->username,
             'buyer_sku_code' => $sku,
             'customer_no'    => $customerNo,

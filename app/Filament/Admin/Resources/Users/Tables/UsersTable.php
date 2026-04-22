@@ -50,17 +50,6 @@ class UsersTable
                     ->trueColor('success')
                     ->falseColor('gray'),
 
-                TextColumn::make('tier')
-                    ->label('Tier')
-                    ->badge()
-                    ->color(fn (string $state): string => match ($state) {
-                        'silver'   => 'info',
-                        'gold'     => 'warning',
-                        'platinum' => 'danger',
-                        default    => 'gray',
-                    })
-                    ->formatStateUsing(fn (string $state): string => ucfirst($state)),
-
                 TextColumn::make('coin_balance')
                     ->label('Saldo Coin')
                     ->numeric(thousandsSeparator: '.')

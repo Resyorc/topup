@@ -88,12 +88,7 @@ class ProductGroupingService
 
     private function mapProduct($product): array
     {
-        $tier = auth()->check() ? (auth()->user()->tier ?? 'guest') : 'guest';
-        if (!in_array($tier, ['guest', 'bronze', 'silver', 'gold', 'platinum'])) {
-            $tier = 'guest';
-        }
-        $priceField = "price_{$tier}";
-        $basePrice = $product->$priceField ?? $product->price_guest ?? 0;
+        $basePrice = $product->price_sell ?? 0;
 
         $isFlashSale = $product->flash_sale_price !== null
             && $product->flash_sale_ends_at !== null

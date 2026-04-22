@@ -59,7 +59,7 @@ export default function InvoiceSearch({
     const [phoneSearching, setPhoneSearching] = useState(false);
     const [phoneError, setPhoneError] = useState<string | null>(null);
 
-    const searchByPhone = async (e: React.FormEvent) => {
+    const searchByPhone = async (e: React.SyntheticEvent) => {
         e.preventDefault();
         if (!phoneInput.trim()) return;
         setPhoneSearching(true);
@@ -119,12 +119,12 @@ export default function InvoiceSearch({
             showCancelButton: true,
             confirmButtonText: 'Ya, Batalkan',
             cancelButtonText: 'Kembali',
-            confirmButtonColor: '#ef4444',
-            cancelButtonColor: '#374151',
-            background: '#1e1f29',
-            color: '#e5e7eb',
+            confirmButtonColor: 'var(--color-danger)',
+            cancelButtonColor: 'var(--color-border-light)',
+            background: 'var(--color-bg-card)',
+            color: 'var(--color-text-primary)',
             customClass: {
-                popup: 'rounded-2xl border border-[#31334c]',
+                popup: 'rounded-2xl border border-[var(--color-border-light)]',
                 confirmButton: 'rounded-xl px-5 py-2.5 font-bold text-sm',
                 cancelButton: 'rounded-xl px-5 py-2.5 font-bold text-sm',
             },
@@ -197,7 +197,7 @@ export default function InvoiceSearch({
         [],
     );
 
-    const submit = (e: React.FormEvent) => {
+    const submit = (e: React.SyntheticEvent) => {
         e.preventDefault();
 
         get('/invoice', {
@@ -466,7 +466,7 @@ export default function InvoiceSearch({
                             <div className="mb-6 text-center md:mb-10">
                                 <h1 className="mb-3 text-2xl font-bold text-white md:mb-4 md:text-4xl">
                                     Periksa Invoice Anda dengan{' '}
-                                    <span className="text-[#FFC107]">
+                                    <span className="text-[var(--color-warning)]">
                                         Mudah dan Cepat
                                     </span>
                                 </h1>
@@ -477,9 +477,9 @@ export default function InvoiceSearch({
                             </div>
 
                             {/* Search Box */}
-                            <div className="w-full max-w-5xl overflow-hidden rounded-2xl border border-[#31334c] bg-[#1e1f29] shadow-2xl">
+                            <div className="w-full max-w-5xl overflow-hidden rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] shadow-2xl">
                                 {/* Tabs */}
-                                <div className="flex border-b border-[#31334c]">
+                                <div className="flex border-b border-[var(--color-border-light)]">
                                     <button
                                         onClick={() => setSearchMode('invoice')}
                                         className={`flex-1 px-6 py-4 text-sm font-bold transition ${searchMode === 'invoice' ? 'border-b-2 border-primary bg-white/5 text-white' : 'text-gray-400 hover:text-white'}`}
@@ -503,10 +503,13 @@ export default function InvoiceSearch({
                                                     type="text"
                                                     value={data.invoice_id}
                                                     onChange={(e) => setData('invoice_id', e.target.value)}
-                                                    placeholder="Masukkan Nomor Invoice"
-                                                    className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-4 text-white placeholder-gray-500 transition outline-none focus:border-primary focus:ring-primary"
+                                                    placeholder="Contoh: INV-1234567890"
+                                                    className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-4 text-white placeholder-gray-500 transition outline-none focus:border-primary focus:ring-primary"
                                                     required
                                                 />
+                                                <p className="mt-2 text-xs text-gray-500">
+                                                    Masukkan nomor Invoice yang didapatkan saat transaksi.
+                                                </p>
                                                 {errors.invoice_id && (
                                                     <p className="mt-2 text-sm text-red-500">{errors.invoice_id}</p>
                                                 )}
@@ -514,7 +517,7 @@ export default function InvoiceSearch({
                                             <button
                                                 type="submit"
                                                 disabled={processing}
-                                                className="w-full rounded-lg bg-linear-to-r from-primary to-[#9b4dec] px-6 py-4 text-lg font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:opacity-90 disabled:opacity-50"
+                                                className="w-full rounded-lg bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-6 py-4 text-lg font-bold text-white shadow-[var(--shadow-glow)] transition hover:opacity-90 disabled:opacity-50"
                                             >
                                                 Cari Pesanan
                                             </button>
@@ -527,7 +530,7 @@ export default function InvoiceSearch({
                                                     value={phoneInput}
                                                     onChange={(e) => { setPhoneInput(e.target.value); setPhoneResults(null); setPhoneError(null); }}
                                                     placeholder="Contoh: 08123456789"
-                                                    className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-4 text-white placeholder-gray-500 transition outline-none focus:border-primary"
+                                                    className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-4 text-white placeholder-gray-500 transition outline-none focus:border-primary"
                                                     required
                                                 />
                                                 <p className="mt-2 text-xs text-gray-500">
@@ -541,7 +544,7 @@ export default function InvoiceSearch({
                                             <button
                                                 type="submit"
                                                 disabled={phoneSearching}
-                                                className="w-full rounded-lg bg-linear-to-r from-primary to-[#9b4dec] px-6 py-4 text-lg font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:opacity-90 disabled:opacity-50"
+                                                className="w-full rounded-lg bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-6 py-4 text-lg font-bold text-white shadow-[var(--shadow-glow)] transition hover:opacity-90 disabled:opacity-50"
                                             >
                                                 {phoneSearching ? 'Mencari...' : 'Cari Transaksi'}
                                             </button>
@@ -556,7 +559,7 @@ export default function InvoiceSearch({
                                                         <Link
                                                             key={r.invoice_id}
                                                             href={`/invoice?invoice_id=${r.invoice_id}`}
-                                                            className="flex items-center justify-between rounded-xl border border-[#31334c] bg-[#1A1A24] px-4 py-3 transition hover:border-primary"
+                                                            className="flex items-center justify-between rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] px-4 py-3 transition hover:border-primary"
                                                         >
                                                             <div>
                                                                 <div className="text-xs font-bold text-white">{r.invoice_id}</div>
@@ -567,10 +570,12 @@ export default function InvoiceSearch({
                                                                     Rp {r.amount.toLocaleString('id-ID')}
                                                                 </div>
                                                                 <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${
-                                                                    r.status === 'success' ? 'bg-green-500/20 text-green-400' :
-                                                                    r.status === 'failed' || r.status === 'expired' ? 'bg-red-500/20 text-red-400' :
-                                                                    r.status === 'pending' ? 'bg-yellow-500/20 text-yellow-400' :
-                                                                    'bg-blue-500/20 text-blue-400'
+                                                                    r.status === 'success' ? 'bg-status-success-bg text-status-success' :
+                                                                    r.status === 'canceled' ? 'bg-status-canceled-bg text-status-canceled' :
+                                                                    r.status === 'refunded' ? 'bg-status-refunded-bg text-status-refunded' :
+                                                                    r.status === 'failed' || r.status === 'expired' ? 'bg-status-failed-bg text-status-failed' :
+                                                                    r.status === 'pending' ? 'bg-status-pending-bg text-status-pending' :
+                                                                    'bg-status-processing-bg text-status-processing'
                                                                 }`}>
                                                                     {r.status}
                                                                 </span>
@@ -590,17 +595,17 @@ export default function InvoiceSearch({
                     {invoiceData && (
                         <div className="animate-fade-in-up mt-6 flex w-full max-w-5xl flex-col gap-4 md:mt-10 md:gap-6">
                             {/* Status Bar Card */}
-                            <div className="relative overflow-hidden rounded-2xl border border-[#31334c] bg-[#1e1f29] p-4 shadow-lg md:p-10">
+                            <div className="relative overflow-hidden rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-4 shadow-lg md:p-10">
                                 <h2 className="mb-8 text-center text-lg font-bold text-white md:mb-12 md:text-2xl">
                                     Detail Invoice
                                 </h2>
 
                                 <div className="relative mx-auto max-w-3xl px-4 pt-4 pb-16 md:px-12 md:pt-6 md:pb-20">
                                     {/* The Line Container itself is the anchor */}
-                                    <div className="relative z-0 h-1.5 w-full rounded-full bg-[#31334c]">
+                                    <div className="relative z-0 h-1.5 w-full rounded-full bg-[var(--color-border-light)]">
                                         {/* Animated Progress Line Foreground */}
                                         <div
-                                            className="absolute top-0 left-0 z-0 h-full rounded-full bg-[#4ade80] transition-all duration-700 ease-in-out"
+                                            className="absolute top-0 left-0 z-0 h-full rounded-full bg-[var(--color-success)] transition-all duration-700 ease-in-out"
                                             style={{
                                                 width: `${Math.max(0, ((animatedStatus - 1) / 3) * 100)}%`,
                                             }}
@@ -609,7 +614,7 @@ export default function InvoiceSearch({
                                         {/* Step 1: Transaksi Dibuat */}
                                         <div className="absolute top-1/2 left-[0%] z-10 flex w-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center md:w-32">
                                             <div
-                                                className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all delay-100 duration-500 ${animatedStatus >= 1 ? 'bg-[#4ade80] text-[#1e1f29]' : 'bg-[#31334c] text-gray-400'}`}
+                                                className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all delay-100 duration-500 ${animatedStatus >= 1 ? 'bg-[var(--color-success)] text-[var(--color-bg-card)]' : 'bg-[var(--color-border-light)] text-gray-400'}`}
                                             >
                                                 <svg
                                                     width="20"
@@ -636,7 +641,7 @@ export default function InvoiceSearch({
                                         {/* Step 2: Pembayaran */}
                                         <div className="absolute top-1/2 left-[33.333%] z-10 flex w-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center md:w-32">
                                             <div
-                                                className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all delay-100 duration-500 ${animatedStatus >= 2 ? 'bg-[#4ade80] text-[#1e1f29]' : 'bg-[#31334c] text-gray-400'}`}
+                                                className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all delay-100 duration-500 ${animatedStatus >= 2 ? 'bg-[var(--color-success)] text-[var(--color-bg-card)]' : 'bg-[var(--color-border-light)] text-gray-400'}`}
                                             >
                                                 <svg
                                                     width="20"
@@ -673,7 +678,7 @@ export default function InvoiceSearch({
                                         {/* Step 3: Sedang di Proses */}
                                         <div className="absolute top-1/2 left-[66.666%] z-10 flex w-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center md:w-32">
                                             <div
-                                                className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all delay-100 duration-500 ${animatedStatus >= 3 ? 'bg-[#4ade80] text-[#1e1f29]' : 'bg-[#31334c] text-gray-400'}`}
+                                                className={`flex h-10 w-10 items-center justify-center rounded-xl transition-all delay-100 duration-500 ${animatedStatus >= 3 ? 'bg-[var(--color-success)] text-[var(--color-bg-card)]' : 'bg-[var(--color-border-light)] text-gray-400'}`}
                                             >
                                                 <svg
                                                     width="20"
@@ -703,7 +708,7 @@ export default function InvoiceSearch({
                                         {/* Step 4: Transaksi Selesai */}
                                         <div className="absolute top-1/2 left-[100%] z-10 flex w-16 -translate-x-1/2 -translate-y-1/2 flex-col items-center md:w-32">
                                             <div
-                                                className={`flex h-10 w-10 items-center justify-center rounded-xl shadow-[0_0_15px_rgba(74,222,128,0.3)] transition-all delay-100 duration-500 ${animatedStatus >= 4 ? 'bg-[#4ade80] text-[#1e1f29]' : 'bg-[#31334c] text-gray-400'}`}
+                                                className={`flex h-10 w-10 items-center justify-center rounded-xl shadow-[0_0_15px_rgba(74,222,128,0.3)] transition-all delay-100 duration-500 ${animatedStatus >= 4 ? 'bg-[var(--color-success)] text-[var(--color-bg-card)]' : 'bg-[var(--color-border-light)] text-gray-400'}`}
                                             >
                                                 <svg
                                                     width="24"
@@ -719,7 +724,7 @@ export default function InvoiceSearch({
                                                 </svg>
                                             </div>
                                             <span
-                                                className={`absolute top-12 w-full text-center text-[10px] font-semibold transition-colors duration-500 md:top-14 md:text-sm ${animatedStatus >= 4 ? 'text-[#4ade80]' : 'text-gray-400'}`}
+                                                className={`absolute top-12 w-full text-center text-[10px] font-semibold transition-colors duration-500 md:top-14 md:text-sm ${animatedStatus >= 4 ? 'text-[var(--color-success)]' : 'text-gray-400'}`}
                                             >
                                                 Transaksi Selesai
                                             </span>
@@ -732,27 +737,23 @@ export default function InvoiceSearch({
                                 const statusLower = String(
                                     invoiceData.status,
                                 ).toLowerCase();
-                                const paymentStatusLower = String(
-                                    invoiceData.payment_status,
-                                ).toLowerCase();
 
-                                const showTimerBadge =
+                                const showTimer =
                                     ['pending', 'expired'].includes(
                                         statusLower,
-                                    ) && remainingSeconds !== null;
-                                const showPaidBadge =
-                                    statusLower === 'success' ||
-                                    paymentStatusLower === 'paid';
+                                    ) &&
+                                    remainingSeconds !== null &&
+                                    remainingSeconds > 0;
 
-                                if (!showTimerBadge && !showPaidBadge) {
-                                    return null;
+                                if (!showTimer) {
+                                    return (
+                                        <div className="mt-8 h-7 md:mt-10 md:h-9" />
+                                    );
                                 }
 
                                 return (
                                     <div className="mt-8 flex w-full justify-end md:mt-10">
-                                        <span
-                                            className={`inline-flex max-w-full items-center gap-1 rounded-full border px-2.5 py-1 text-[10px] font-semibold whitespace-nowrap md:gap-1.5 md:px-4.5 md:py-2 md:text-sm ${showPaidBadge ? 'border-[#4ade80]/40 bg-[#4ade80]/15 text-[#7ff7b1]' : remainingSeconds! > 0 ? 'border-[#ef4b9a]/40 bg-[#ef4b9a]/15 text-[#ffb3d7]' : 'border-red-500/40 bg-red-500/15 text-red-300'}`}
-                                        >
+                                        <span className="text-[#ffb3d7] inline-flex max-w-full items-center gap-1 whitespace-nowrap rounded-full border border-[#ef4b9a]/40 bg-[#ef4b9a]/15 px-2.5 py-1 text-[10px] font-semibold md:gap-1.5 md:px-4.5 md:py-2 md:text-sm">
                                             <svg
                                                 width="12"
                                                 height="12"
@@ -764,44 +765,30 @@ export default function InvoiceSearch({
                                                 strokeLinejoin="round"
                                                 className="md:h-[14px] md:w-[14px]"
                                             >
-                                                {showPaidBadge ? (
-                                                    <polyline points="20 6 9 17 4 12" />
-                                                ) : (
-                                                    <>
-                                                        <circle
-                                                            cx="12"
-                                                            cy="12"
-                                                            r="10"
-                                                        />
-                                                        <path d="M12 6v6l4 2" />
-                                                    </>
-                                                )}
+                                                <circle
+                                                    cx="12"
+                                                    cy="12"
+                                                    r="10"
+                                                />
+                                                <path d="M12 6v6l4 2" />
                                             </svg>
-                                            {showPaidBadge ? (
-                                                'Sudah Lunas'
-                                            ) : remainingSeconds! > 0 ? (
-                                                <>
-                                                    <span className="md:hidden">
-                                                        {formatCountdownCompact(
-                                                            remainingSeconds!,
-                                                        )}
-                                                    </span>
-                                                    <span className="hidden md:inline">
-                                                        {formatCountdown(
-                                                            remainingSeconds!,
-                                                        )}
-                                                    </span>
-                                                </>
-                                            ) : (
-                                                'Waktu Habis'
-                                            )}
+                                            <span className="md:hidden">
+                                                {formatCountdownCompact(
+                                                    remainingSeconds!,
+                                                )}
+                                            </span>
+                                            <span className="hidden md:inline">
+                                                {formatCountdown(
+                                                    remainingSeconds!,
+                                                )}
+                                            </span>
                                         </span>
                                     </div>
                                 );
                             })()}
 
                             {/* Account Info Card */}
-                            <div className="relative z-10 mt-3 flex min-h-[140px] flex-col items-center gap-4 overflow-visible rounded-2xl border border-[#31334c] bg-[#242533] p-4 shadow-lg md:mt-5 md:flex-row md:items-stretch md:gap-8 md:p-6">
+                            <div className="relative z-10 mt-3 flex min-h-[140px] flex-col items-center gap-4 overflow-visible rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-4 shadow-lg md:mt-5 md:flex-row md:items-stretch md:gap-8 md:p-6">
                                 {/* Game Card Component - Overlapping Top */}
                                 <div className="relative -mt-16 flex shrink-0 justify-center md:-mt-32 md:mb-0 md:w-40">
                                     <GameCard
@@ -824,12 +811,18 @@ export default function InvoiceSearch({
 
                                 {/* Content Grid */}
                                 <div className="relative grid w-full flex-1 grid-cols-1 gap-6 md:grid-cols-2">
-                                    {/* Success Badge (Top Right) */}
-                                    {invoiceData.status.toLowerCase() ===
-                                        'success' && (
+                                    {/* Status Badge (Top Right) */}
+                                    {invoiceData.status.toLowerCase() === 'success' && (
                                         <div className="absolute top-0 right-0 z-20">
-                                            <span className="rounded-full border border-[#4ade80]/50 bg-[#2e603a] px-4 py-1.5 text-xs font-bold text-[#4ade80] shadow-[0_0_10px_rgba(74,222,128,0.2)]">
+                                            <span className="rounded-full border border-[var(--color-success)]/50 bg-bg-[color-mix(in_srgb,var(--color-success)_20%,transparent)] px-4 py-1.5 text-xs font-bold text-[var(--color-success)] shadow-[0_0_10px_rgba(74,222,128,0.2)]">
                                                 Pesanan telah selesai.
+                                            </span>
+                                        </div>
+                                    )}
+                                    {['failed', 'canceled', 'expired'].includes(invoiceData.status.toLowerCase()) && (
+                                        <div className="absolute top-0 right-0 z-20">
+                                            <span className="rounded-full border border-red-500/50 bg-red-950/60 px-4 py-1.5 text-xs font-bold text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.2)]">
+                                                {invoiceData.status.toLowerCase() === 'expired' ? 'Pesanan kadaluarsa.' : 'Pesanan dibatalkan.'}
                                             </span>
                                         </div>
                                     )}
@@ -874,7 +867,7 @@ export default function InvoiceSearch({
                                     </div>
 
                                     {/* Jenis Pembelian */}
-                                    <div className="relative flex flex-col border-[#31334c] pt-2 md:border-l md:pl-6">
+                                    <div className="relative flex flex-col border-[var(--color-border-light)] pt-2 md:border-l md:pl-6">
                                         <p className="mb-4 text-sm text-gray-400">
                                             {invoiceData.created_at}
                                         </p>
@@ -884,7 +877,7 @@ export default function InvoiceSearch({
                                         </h3>
                                         <div className="flex items-center gap-2">
                                             <div>
-                                                <p className="text-base leading-tight font-bold text-[#FFC107]">
+                                                <p className="text-base leading-tight font-bold text-[var(--color-warning)]">
                                                     {invoiceData.product.name}
                                                 </p>
                                                 <p className="text-xs text-gray-400">
@@ -911,10 +904,10 @@ export default function InvoiceSearch({
 
                             {/* Rincian Pembayaran (Sembunyikan jika status success / Selesai) */}
                             {invoiceData.status.toLowerCase() !== 'success' && (
-                                <div className="overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] shadow-lg">
+                                <div className="overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] shadow-lg">
                                     {/* Accordion Header */}
                                     <div
-                                        className="flex cursor-pointer items-center justify-between border-b border-[#31334c] bg-white/5 px-6 py-4"
+                                        className="flex cursor-pointer items-center justify-between border-b border-[var(--color-border-light)] bg-white/5 px-6 py-4"
                                         onClick={() =>
                                             setIsPaymentOpen((prev) => !prev)
                                         }
@@ -939,7 +932,7 @@ export default function InvoiceSearch({
 
                                     {isPaymentOpen && (
                                         <div className="flex flex-col gap-4 p-4 text-sm md:gap-6 md:p-8">
-                                            <div className="grid grid-cols-1 gap-x-4 gap-y-4 border-b border-[#31334c] pb-6 sm:grid-cols-2">
+                                            <div className="grid grid-cols-1 gap-x-4 gap-y-4 border-b border-[var(--color-border-light)] pb-6 sm:grid-cols-2">
                                                 <div className="flex items-center gap-2 font-semibold text-white">
                                                     Nomor Invoice
                                                 </div>
@@ -991,7 +984,7 @@ export default function InvoiceSearch({
                                                     Status Pembayaran
                                                 </div>
                                                 <div className="sm:text-right">
-                                                    {/* <span className="bg-[#4ade80] text-[#1e1f29] font-bold text-[10px] px-2 py-0.5 rounded uppercase">{invoiceData.status.toLowerCase() === 'success' ? 'PAID' : invoiceData.status}</span> */}
+                                                    {/* <span className="bg-[var(--color-success)] text-[var(--color-bg-card)] font-bold text-[10px] px-2 py-0.5 rounded uppercase">{invoiceData.status.toLowerCase() === 'success' ? 'PAID' : invoiceData.status}</span> */}
                                                     <span
                                                         className={`${paymentBadge.className} rounded px-2 py-0.5 text-[10px] font-bold uppercase`}
                                                     >
@@ -1003,7 +996,7 @@ export default function InvoiceSearch({
                                                     Status Transaksi
                                                 </div>
                                                 <div className="sm:text-right">
-                                                    {/* <span className="bg-[#4ade80] text-[#1e1f29] font-bold text-[10px] px-2 py-0.5 rounded uppercase">{invoiceData.status}</span> */}
+                                                    {/* <span className="bg-[var(--color-success)] text-[var(--color-bg-card)] font-bold text-[10px] px-2 py-0.5 rounded uppercase">{invoiceData.status}</span> */}
                                                     <span
                                                         className={`${transactionBadge.className} rounded px-2 py-0.5 text-[10px] font-bold uppercase`}
                                                     >
@@ -1020,7 +1013,7 @@ export default function InvoiceSearch({
                                                 </div>
                                             </div>
 
-                                            <div className="mt-2 grid grid-cols-2 gap-y-4 border-b border-[#31334c] pb-6">
+                                            <div className="mt-2 grid grid-cols-2 gap-y-4 border-b border-[var(--color-border-light)] pb-6">
                                                 <div className="font-semibold text-white">
                                                     Harga
                                                 </div>
@@ -1067,12 +1060,12 @@ export default function InvoiceSearch({
                             )}
 
                             {/* Total Pembayaran Box */}
-                            <div className="flex flex-col gap-2 rounded-xl border border-[#31334c] bg-[#1e1f29] px-4 py-3 shadow-lg sm:flex-row sm:items-center sm:justify-between md:px-6 md:py-4">
+                            <div className="flex flex-col gap-2 rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] px-4 py-3 shadow-lg sm:flex-row sm:items-center sm:justify-between md:px-6 md:py-4">
                                 <span className="text-sm font-bold text-white md:text-base">
                                     Total Pembayaran
                                 </span>
                                 <div className="flex items-center gap-3">
-                                    <span className="text-lg font-black text-[#FFC107] md:text-xl">
+                                    <span className="text-lg font-black text-[var(--color-warning)] md:text-xl">
                                         Rp.{' '}
                                         {invoiceData.total.toLocaleString(
                                             'id-ID',
@@ -1118,9 +1111,9 @@ export default function InvoiceSearch({
                                         {/* ===== QRIS ===== */}
                                         {!invoiceData.pay_url &&
                                             invoiceData.qr_url && (
-                                                <div className="overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29]">
+                                                <div className="overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)]">
                                                     {/* Header */}
-                                                    <div className="border-b border-[#31334c] bg-white/5 px-4 py-3 md:px-6">
+                                                    <div className="border-b border-[var(--color-border-light)] bg-white/5 px-4 py-3 md:px-6">
                                                         <p className="font-bold text-gray-300">
                                                             Cara Pembayaran
                                                         </p>
@@ -1158,7 +1151,7 @@ export default function InvoiceSearch({
                                                                                             }
                                                                                             className="flex items-start gap-2 text-xs text-gray-400"
                                                                                         >
-                                                                                            <span className="mt-0.5 shrink-0 text-[#a855f7]">
+                                                                                            <span className="mt-0.5 shrink-0 text-[var(--color-accent)]">
                                                                                                 •
                                                                                             </span>
                                                                                             <span
@@ -1192,7 +1185,7 @@ export default function InvoiceSearch({
                                                                     invoiceData.qr_url
                                                                 }
                                                                 download="qrcode-pembayaran.png"
-                                                                className="w-full rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-4 py-2.5 text-center text-sm font-bold text-white transition hover:opacity-90"
+                                                                className="w-full rounded-lg bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-4 py-2.5 text-center text-sm font-bold text-white transition hover:opacity-90"
                                                             >
                                                                 Unduh Kode QR
                                                             </a>
@@ -1203,8 +1196,8 @@ export default function InvoiceSearch({
 
                                         {/* ===== eWallet — ada pay_url ===== */}
                                         {invoiceData.pay_url && (
-                                            <div className="overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29]">
-                                                <div className="border-b border-[#31334c] bg-white/5 px-4 py-3 md:px-6">
+                                            <div className="overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)]">
+                                                <div className="border-b border-[var(--color-border-light)] bg-white/5 px-4 py-3 md:px-6">
                                                     <p className="font-bold text-gray-300">
                                                         Cara Pembayaran
                                                     </p>
@@ -1239,7 +1232,7 @@ export default function InvoiceSearch({
                                                                                         }
                                                                                         className="flex items-start gap-2 text-xs text-gray-400"
                                                                                     >
-                                                                                        <span className="mt-0.5 shrink-0 text-[#a855f7]">
+                                                                                        <span className="mt-0.5 shrink-0 text-[var(--color-accent)]">
                                                                                             •
                                                                                         </span>
                                                                                         <span
@@ -1265,7 +1258,7 @@ export default function InvoiceSearch({
                                                             }
                                                             target="_blank"
                                                             rel="noopener noreferrer"
-                                                            className="w-full rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-4 py-3 text-center font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:opacity-90"
+                                                            className="w-full rounded-lg bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-4 py-3 text-center font-bold text-white shadow-[var(--shadow-glow)] transition hover:opacity-90"
                                                         >
                                                             Buka Aplikasi
                                                             Pembayaran
@@ -1279,8 +1272,8 @@ export default function InvoiceSearch({
                                         {!invoiceData.pay_url &&
                                             !invoiceData.qr_url &&
                                             invoiceData.pay_code && (
-                                                <div className="overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29]">
-                                                    <div className="border-b border-[#31334c] bg-white/5 px-4 py-3 md:px-6">
+                                                <div className="overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)]">
+                                                    <div className="border-b border-[var(--color-border-light)] bg-white/5 px-4 py-3 md:px-6">
                                                         <p className="font-bold text-gray-300">
                                                             Cara Pembayaran
                                                         </p>
@@ -1313,7 +1306,7 @@ export default function InvoiceSearch({
                                                                                         }
                                                                                         className="flex items-start gap-2 text-xs text-gray-400"
                                                                                     >
-                                                                                        <span className="mt-0.5 shrink-0 text-[#a855f7]">
+                                                                                        <span className="mt-0.5 shrink-0 text-[var(--color-accent)]">
                                                                                             •
                                                                                         </span>
                                                                                         <span
@@ -1338,7 +1331,7 @@ export default function InvoiceSearch({
                                         {!invoiceData.pay_url &&
                                             !invoiceData.qr_url &&
                                             !invoiceData.pay_code && (
-                                                <div className="overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29] p-4 md:p-6">
+                                                <div className="overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-4 md:p-6">
                                                     <p className="mb-3 text-sm text-gray-400">
                                                         Lanjutkan pembayaran
                                                         melalui halaman Tripay.
@@ -1349,7 +1342,7 @@ export default function InvoiceSearch({
                                                         }
                                                         target="_blank"
                                                         rel="noopener noreferrer"
-                                                        className="block w-full rounded-lg bg-[#4ade80] px-4 py-3 text-center font-bold text-[#1e1f29] transition hover:bg-[#34d399]"
+                                                        className="block w-full rounded-lg bg-[var(--color-success)] px-4 py-3 text-center font-bold text-[var(--color-bg-card)] transition hover:bg-[var(--color-success)]"
                                                     >
                                                         Buka Halaman Pembayaran
                                                     </a>
@@ -1360,13 +1353,13 @@ export default function InvoiceSearch({
                                         {!invoiceData.pay_url &&
                                             !invoiceData.qr_url &&
                                             invoiceData.pay_code && (
-                                                <div className="flex flex-col gap-2 rounded-xl border border-[#31334c] bg-[#1e1f29] px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-6 md:py-4">
+                                                <div className="flex flex-col gap-2 rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-6 md:py-4">
                                                     <span className="text-sm font-semibold text-gray-300">
                                                         Nomor Pembayaran —{' '}
                                                         {invoiceData.method}
                                                     </span>
                                                     <div className="flex items-center gap-3">
-                                                        <span className="font-mono font-bold break-all text-[#FFC107]">
+                                                        <span className="font-mono font-bold break-all text-[var(--color-warning)]">
                                                             {
                                                                 invoiceData.pay_code
                                                             }
@@ -1479,7 +1472,7 @@ export default function InvoiceSearch({
                                     )}
 
                                     <Link href="/">
-                                        <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[#9b4dec] px-4 py-3 font-bold text-white shadow-[0_0_20px_rgba(168,85,247,0.3)] transition hover:opacity-90 md:px-6 md:py-4">
+                                        <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-4 py-3 font-bold text-white shadow-[var(--shadow-glow)] transition hover:opacity-90 md:px-6 md:py-4">
                                             <svg
                                                 width="20"
                                                 height="20"
@@ -1531,18 +1524,18 @@ export default function InvoiceSearch({
             {/* Review Modal */}
             {showReviewModal && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 px-4 backdrop-blur-sm">
-                    <div className="w-full max-w-sm rounded-3xl border border-[#31334c] bg-[#242533] shadow-2xl">
+                    <div className="w-full max-w-sm rounded-3xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] shadow-2xl">
                         {/* Header */}
                         <div className="flex flex-col items-center p-6 pb-4 text-center">
                             {/* Icon */}
                             <div className="relative mb-4 h-20 w-20">
-                                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-gradient-to-tr from-[#1e1f29] to-[#31334c] shadow-[0_0_30px_rgba(74,222,128,0.2)]">
+                                <div className="absolute inset-0 flex items-center justify-center rounded-full bg-gradient-to-tr from-[var(--color-bg-card)] to-[var(--color-border-light)] shadow-[0_0_30px_rgba(74,222,128,0.2)]">
                                     <svg
                                         width="40"
                                         height="40"
                                         viewBox="0 0 24 24"
                                         fill="none"
-                                        stroke="#4ade80"
+                                        stroke="var(--color-success)"
                                         strokeWidth="3"
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
@@ -1550,13 +1543,13 @@ export default function InvoiceSearch({
                                         <polyline points="20 6 9 17 4 12" />
                                     </svg>
                                 </div>
-                                <div className="absolute -right-1 -bottom-1 rounded-full border-4 border-[#242533] bg-white p-1.5">
+                                <div className="absolute -right-1 -bottom-1 rounded-full border-4 border-[var(--color-bg-card)] bg-white p-1.5">
                                     <svg
                                         width="14"
                                         height="14"
                                         viewBox="0 0 24 24"
                                         fill="none"
-                                        stroke="#a855f7"
+                                        stroke="var(--color-accent)"
                                         strokeWidth="2"
                                         strokeLinecap="round"
                                         strokeLinejoin="round"
@@ -1607,7 +1600,7 @@ export default function InvoiceSearch({
                                                     <span
                                                         className={
                                                             star <= reviewRating
-                                                                ? 'text-[#FFC107]'
+                                                                ? 'text-[var(--color-warning)]'
                                                                 : 'text-gray-600'
                                                         }
                                                     >
@@ -1633,7 +1626,7 @@ export default function InvoiceSearch({
                                                     className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                                                         reviewTags.includes(tag)
                                                             ? 'border-primary bg-primary/20 text-primary'
-                                                            : 'border-[#31334c] text-gray-400 hover:border-gray-500'
+                                                            : 'border-[var(--color-border-light)] text-gray-400 hover:border-gray-500'
                                                     }`}
                                                 >
                                                     {tag}
@@ -1648,7 +1641,7 @@ export default function InvoiceSearch({
                             <div className="mt-5 grid grid-cols-2 gap-3">
                                 <button
                                     onClick={() => setShowReviewModal(false)}
-                                    className="rounded-xl border border-[#31334c] bg-transparent px-4 py-3 font-bold text-gray-300 transition hover:bg-white/5"
+                                    className="rounded-xl border border-[var(--color-border-light)] bg-transparent px-4 py-3 font-bold text-gray-300 transition hover:bg-white/5"
                                 >
                                     Tutup
                                 </button>
@@ -1663,7 +1656,7 @@ export default function InvoiceSearch({
                                             reviewRating === 0 ||
                                             isSubmittingReview
                                                 ? 'cursor-not-allowed bg-gray-600'
-                                                : 'bg-gradient-to-r from-primary to-[#9b4dec] hover:opacity-90'
+                                                : 'bg-gradient-to-r from-primary to-[var(--color-primary-light)] hover:opacity-90'
                                         }`}
                                     >
                                         {isSubmittingReview
@@ -1685,3 +1678,8 @@ export default function InvoiceSearch({
         </GuestLayout>
     );
 }
+
+
+
+
+

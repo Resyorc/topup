@@ -17,12 +17,12 @@ function CodeBlock({ children }: { children: string }) {
     };
     return (
         <div className="group relative">
-            <pre className="overflow-x-auto rounded-xl border border-[#31334c] bg-[#0d0d14] px-4 py-3 text-xs text-green-400">
+            <pre className="overflow-x-auto rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-main)] px-4 py-3 text-xs text-green-400">
                 <code>{children}</code>
             </pre>
             <button
                 onClick={copy}
-                className="absolute right-2 top-2 rounded-lg border border-[#31334c] bg-[#1e1f29] px-2 py-1 text-[10px] font-semibold text-gray-400 opacity-0 transition group-hover:opacity-100 hover:text-white"
+                className="absolute right-2 top-2 rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-card)] px-2 py-1 text-[10px] font-semibold text-gray-400 opacity-0 transition group-hover:opacity-100 hover:text-white"
             >
                 {copied ? 'Tersalin!' : 'Salin'}
             </button>
@@ -32,8 +32,8 @@ function CodeBlock({ children }: { children: string }) {
 
 function LockedState({ emailVerified }: { emailVerified: boolean }) {
     return (
-        <div className="overflow-hidden rounded-2xl border border-[#31334c] bg-[#1e1f29]">
-            <div className="border-b border-[#31334c] bg-white/5 px-6 py-4">
+        <div className="overflow-hidden rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)]">
+            <div className="border-b border-[var(--color-border-light)] bg-white/5 px-6 py-4">
                 <h2 className="text-sm font-bold text-white">API Access Belum Diaktifkan</h2>
             </div>
             <div className="flex flex-col items-center gap-5 p-8 text-center">
@@ -49,7 +49,7 @@ function LockedState({ emailVerified }: { emailVerified: boolean }) {
                         Untuk menggunakan Reseller API, akun kamu perlu diverifikasi dan disetujui oleh admin terlebih dahulu.
                     </p>
                 </div>
-                <div className="w-full max-w-sm space-y-3 rounded-xl border border-[#31334c] bg-[#12121a] p-4 text-left">
+                <div className="w-full max-w-sm space-y-3 rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-main)] p-4 text-left">
                     <p className="text-xs font-semibold uppercase tracking-wider text-gray-500">Syarat Aktivasi</p>
                     <div className="flex items-center gap-3">
                         {emailVerified ? (
@@ -114,14 +114,14 @@ export default function ApiCredentials({ apiKey, apiAccessEnabled, emailVerified
                 ) : (
                     <>
                         {/* API Key Card */}
-                        <div className="overflow-hidden rounded-2xl border border-[#31334c] bg-[#1e1f29]">
-                            <div className="border-b border-[#31334c] bg-white/5 px-6 py-4">
+                        <div className="overflow-hidden rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)]">
+                            <div className="border-b border-[var(--color-border-light)] bg-white/5 px-6 py-4">
                                 <h2 className="text-sm font-bold text-white">API Key Kamu</h2>
                             </div>
                             <div className="p-6">
                                 {apiKey ? (
                                     <div className="flex flex-col gap-4">
-                                        <div className="flex items-center gap-3 rounded-xl border border-[#31334c] bg-[#12121a] px-4 py-3">
+                                        <div className="flex items-center gap-3 rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-main)] px-4 py-3">
                                             <code className="flex-1 overflow-x-auto text-xs font-mono text-green-400 select-all">
                                                 {visible ? apiKey : '•'.repeat(apiKey.length)}
                                             </code>
@@ -133,7 +133,7 @@ export default function ApiCredentials({ apiKey, apiAccessEnabled, emailVerified
                                             </button>
                                             <button
                                                 onClick={() => navigator.clipboard.writeText(apiKey)}
-                                                className="shrink-0 rounded-lg border border-[#31334c] px-3 py-1.5 text-xs font-semibold text-gray-300 transition hover:border-primary hover:text-white"
+                                                className="shrink-0 rounded-lg border border-[var(--color-border-light)] px-3 py-1.5 text-xs font-semibold text-gray-300 transition hover:border-primary hover:text-white"
                                             >
                                                 Salin
                                             </button>
@@ -164,8 +164,8 @@ export default function ApiCredentials({ apiKey, apiAccessEnabled, emailVerified
                         </div>
 
                         {/* Usage Examples */}
-                        <div className="overflow-hidden rounded-2xl border border-[#31334c] bg-[#1e1f29]">
-                            <div className="border-b border-[#31334c] bg-white/5 px-6 py-4">
+                        <div className="overflow-hidden rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)]">
+                            <div className="border-b border-[var(--color-border-light)] bg-white/5 px-6 py-4">
                                 <h2 className="text-sm font-bold text-white">Cara Penggunaan</h2>
                             </div>
                             <div className="flex flex-col gap-5 p-6">
@@ -196,3 +196,7 @@ export default function ApiCredentials({ apiKey, apiAccessEnabled, emailVerified
         </UserLayout>
     );
 }
+
+
+
+

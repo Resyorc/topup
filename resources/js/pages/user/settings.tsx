@@ -4,18 +4,9 @@ import DOMPurify from 'dompurify';
 import React, { useRef, useState } from 'react';
 import UserLayout from '@/layouts/user-layout';
 
-const TIER_CONFIG: Record<string, { icon: string; label: string; ring: string }> = {
-    platinum: { icon: '💎', label: 'Platinum', ring: 'ring-purple-400' },
-    gold:     { icon: '🥇', label: 'Gold',     ring: 'ring-yellow-400' },
-    silver:   { icon: '🥈', label: 'Silver',   ring: 'ring-blue-400'   },
-    bronze:   { icon: '🥉', label: 'Bronze',   ring: 'ring-orange-400' },
-};
-
 export default function Settings() {
     const { auth } = usePage().props as any;
     const user = auth?.user;
-    const tier = user?.tier ?? 'bronze';
-    const tc = TIER_CONFIG[tier] ?? TIER_CONFIG.bronze;
     const initials = user?.name
         ? user.name.split(' ').map((w: string) => w[0]).slice(0, 2).join('').toUpperCase()
         : '?';
@@ -139,7 +130,8 @@ export default function Settings() {
     const [twoFaLoading, setTwoFaLoading] = useState(false);
     const [twoFaError, setTwoFaError] = useState('');
     const twoFactorEnabled = !!user?.two_factor_confirmed_at;
-    const appName = ((usePage().props as any).name ?? 'Krysta').replace(/[<>&"]/g, c => ({'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'}[c] ?? c));
+    const escapeMap: Record<string, string> = {'<':'&lt;','>':'&gt;','&':'&amp;','"':'&quot;'};
+    const appName = ((usePage().props as any).name ?? 'Krysta').replace(/[<>&"]/g, (c: string) => escapeMap[c] ?? c);
 
     const enableTwoFactor = async () => {
         setTwoFaLoading(true);
@@ -272,13 +264,12 @@ export default function Settings() {
         <UserLayout title="Pengaturan">
             <h2 className="mb-6 text-2xl font-bold text-white">Profil</h2>
 
-            {/* Avatar Section */}
-            <div className="mb-6 rounded-xl border border-[#31334c] bg-[#1e1f29] p-6 md:p-8">
-                <p className="mb-4 text-sm font-semibold text-gray-400 uppercase tracking-wide">Foto Profil</p>
-                <div className="flex flex-col items-start gap-5 sm:flex-row sm:items-center">
-                    {/* Avatar preview */}
+            {/* Avatar + Data Diri — satu card */}
+            <div className="mb-8 rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-6 md:p-8">
+                {/* Avatar row */}
+                <div className="mb-6 flex flex-col items-start gap-5 sm:flex-row sm:items-center">
                     <div className="relative shrink-0">
-                        <div className={`flex h-20 w-20 items-center justify-center overflow-hidden rounded-full ring-2 ${tc.ring} bg-white/10`}>
+                        <div className="flex h-20 w-20 items-center justify-center overflow-hidden rounded-full ring-2 ring-primary/40 bg-white/10">
                             {avatarPreview ? (
                                 <img src={avatarPreview} alt="Preview" className="h-full w-full object-cover" />
                             ) : user?.avatar_url ? (
@@ -287,17 +278,14 @@ export default function Settings() {
                                 <span className="text-xl font-bold text-white">{initials}</span>
                             )}
                         </div>
-                        {/* Tier badge */}
-                        <span className="absolute -bottom-1 -right-1 text-base leading-none">{tc.icon}</span>
                     </div>
 
-                    {/* Controls */}
                     <div className="flex flex-col gap-2">
                         <div className="flex flex-wrap gap-2">
                             <button
                                 type="button"
                                 onClick={() => avatarInputRef.current?.click()}
-                                className="rounded-lg border border-[#31334c] bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
+                                className="rounded-lg border border-[var(--color-border-light)] bg-white/5 px-4 py-2 text-sm font-medium text-white transition hover:bg-white/10"
                             >
                                 {user?.avatar_url || avatarPreview ? 'Ganti Foto' : 'Unggah Foto'}
                             </button>
@@ -316,7 +304,7 @@ export default function Settings() {
                                     type="button"
                                     onClick={submitAvatar}
                                     disabled={avatarUploading}
-                                    className="rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-4 py-2 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+                                    className="rounded-lg bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-4 py-2 text-sm font-bold text-white transition hover:opacity-90 disabled:opacity-50"
                                 >
                                     {avatarUploading ? 'Mengunggah...' : 'Simpan Foto'}
                                 </button>
@@ -344,10 +332,10 @@ export default function Settings() {
                         onChange={handleAvatarChange}
                     />
                 </div>
-            </div>
 
-            {/* Profil Form Section */}
-            <div className="mb-8 rounded-xl border border-[#31334c] bg-[#1e1f29] p-6 md:p-8">
+                <div className="mb-6 h-px w-full bg-white/5" />
+
+                {/* Data Diri Form */}
                 <form onSubmit={submitProfile} className="flex flex-col gap-6">
                     <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         {/* Nama */}
@@ -365,7 +353,7 @@ export default function Settings() {
                                 onChange={(e) =>
                                     setProfileData('name', e.target.value)
                                 }
-                                className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
+                                className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
                                 placeholder="Ferry Oktariansyah"
                             />
                             {profileErrors.name && (
@@ -390,7 +378,7 @@ export default function Settings() {
                                 onChange={(e) =>
                                     setProfileData('username', e.target.value)
                                 }
-                                className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
+                                className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
                                 placeholder="Budi"
                             />
                             {profileErrors.username && (
@@ -415,7 +403,7 @@ export default function Settings() {
                                 onChange={(e) =>
                                     setProfileData('email', e.target.value)
                                 }
-                                className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
+                                className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
                                 placeholder="blaskishare@gmail.com"
                             />
                             {profileErrors.email && (
@@ -440,7 +428,7 @@ export default function Settings() {
                                 onChange={(e) =>
                                     setProfileData('phone', e.target.value)
                                 }
-                                className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
+                                className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
                                 placeholder="08xxxxxxxxxx"
                             />
                             {profileErrors.phone && (
@@ -460,7 +448,7 @@ export default function Settings() {
                         <button
                             type="submit"
                             disabled={profileProcessing}
-                            className="min-w-[140px] rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-6 py-2.5 font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+                            className="min-w-[140px] rounded-lg bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-6 py-2.5 font-bold text-white transition hover:opacity-90 disabled:opacity-50"
                         >
                             {profileProcessing ? 'Menyimpan...' : 'Ubah Profil'}
                         </button>
@@ -469,7 +457,7 @@ export default function Settings() {
             </div>
 
             {user?.google_id ? (
-                <div className="mb-8 rounded-xl border border-[#31334c] bg-[#1e1f29] p-6 md:p-8">
+                <div className="mb-8 rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-6 md:p-8">
                     <div className="flex items-center gap-3">
                         <svg
                             viewBox="0 0 24 24"
@@ -506,7 +494,7 @@ export default function Settings() {
                     </h2>
 
                     {/* Ubah Kata Sandi Form Section */}
-                    <div className="mb-8 rounded-xl border border-[#31334c] bg-[#1e1f29] p-6 md:p-8">
+                    <div className="mb-8 rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-6 md:p-8">
                         <form
                             onSubmit={submitPassword}
                             className="flex flex-col gap-6"
@@ -530,7 +518,7 @@ export default function Settings() {
                                             e.target.value,
                                         )
                                     }
-                                    className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
+                                    className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
                                     placeholder="Masukkan kata sandi saat ini"
                                 />
                                 {pwdErrors.current_password && (
@@ -560,7 +548,7 @@ export default function Settings() {
                                                 e.target.value,
                                             )
                                         }
-                                        className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
+                                        className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
                                         placeholder="Masukkan kata sandi baru"
                                     />
                                     {pwdErrors.password && (
@@ -588,7 +576,7 @@ export default function Settings() {
                                                 e.target.value,
                                             )
                                         }
-                                        className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
+                                        className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
                                         placeholder="Masukkan konfirmasi kata sandi baru"
                                     />
                                     {pwdErrors.password_confirmation && (
@@ -608,7 +596,7 @@ export default function Settings() {
                                 <button
                                     type="submit"
                                     disabled={pwdProcessing}
-                                    className="min-w-[140px] rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-6 py-2.5 font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+                                    className="min-w-[140px] rounded-lg bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-6 py-2.5 font-bold text-white transition hover:opacity-90 disabled:opacity-50"
                                 >
                                     {pwdProcessing
                                         ? 'Menyimpan...'
@@ -622,7 +610,7 @@ export default function Settings() {
                         Autentikasi Dua Faktor (2FA)
                     </h2>
 
-                    <div className="mb-8 rounded-xl border border-[#31334c] bg-[#1e1f29] p-6 md:p-8">
+                    <div className="mb-8 rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-6 md:p-8">
                         {/* Status badge */}
                         <div className="mb-6 flex items-center gap-3">
                             <span
@@ -647,7 +635,7 @@ export default function Settings() {
                                     setTwoFaError('');
                                     setTwoFaStep('enabling-confirm');
                                 }}
-                                className="rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-6 py-2.5 font-bold text-white transition hover:opacity-90"
+                                className="rounded-lg bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-6 py-2.5 font-bold text-white transition hover:opacity-90"
                             >
                                 Aktifkan 2FA
                             </button>
@@ -682,7 +670,7 @@ export default function Settings() {
                                         e.key === 'Enter' && enableTwoFactor()
                                     }
                                     placeholder="Kata sandi"
-                                    className="w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
+                                    className="w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
                                 />
                                 {twoFaError && (
                                     <p className="text-sm text-red-500">
@@ -695,7 +683,7 @@ export default function Settings() {
                                         disabled={
                                             twoFaLoading || !twoFaPassword
                                         }
-                                        className="rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-6 py-2.5 font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+                                        className="rounded-lg bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-6 py-2.5 font-bold text-white transition hover:opacity-90 disabled:opacity-50"
                                     >
                                         {twoFaLoading
                                             ? 'Memproses...'
@@ -732,7 +720,7 @@ export default function Settings() {
                                         <p className="mb-1 text-xs text-zinc-500">
                                             Atau masukkan kode manual:
                                         </p>
-                                        <code className="block rounded-lg border border-[#31334c] bg-[#1A1A24] px-3 py-2 text-sm tracking-widest text-zinc-300">
+                                        <code className="block rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] px-3 py-2 text-sm tracking-widest text-zinc-300">
                                             {secretKey}
                                         </code>
                                     </div>
@@ -759,7 +747,7 @@ export default function Settings() {
                                             confirmTwoFactor()
                                         }
                                         placeholder="000000"
-                                        className="w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-3 text-sm tracking-widest text-white transition outline-none focus:border-primary focus:ring-primary"
+                                        className="w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-3 text-sm tracking-widest text-white transition outline-none focus:border-primary focus:ring-primary"
                                     />
                                     {twoFaError && (
                                         <p className="text-sm text-red-500">
@@ -771,7 +759,7 @@ export default function Settings() {
                                         disabled={
                                             twoFaLoading || otpCode.length !== 6
                                         }
-                                        className="w-fit rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-6 py-2.5 font-bold text-white transition hover:opacity-90 disabled:opacity-50"
+                                        className="w-fit rounded-lg bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-6 py-2.5 font-bold text-white transition hover:opacity-90 disabled:opacity-50"
                                     >
                                         {twoFaLoading
                                             ? 'Memverifikasi...'
@@ -798,7 +786,7 @@ export default function Settings() {
                                     {recoveryCodes.map((code) => (
                                         <code
                                             key={code}
-                                            className="rounded-lg border border-[#31334c] bg-[#1A1A24] px-3 py-2 text-center text-sm tracking-widest text-zinc-300"
+                                            className="rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] px-3 py-2 text-center text-sm tracking-widest text-zinc-300"
                                         >
                                             {code}
                                         </code>
@@ -813,7 +801,7 @@ export default function Settings() {
                                     </button>
                                     <button
                                         onClick={() => setTwoFaStep('idle')}
-                                        className="w-fit rounded-lg bg-gradient-to-r from-primary to-[#9b4dec] px-6 py-2.5 font-bold text-white transition hover:opacity-90"
+                                        className="w-fit rounded-lg bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-6 py-2.5 font-bold text-white transition hover:opacity-90"
                                     >
                                         Selesai
                                     </button>
@@ -838,7 +826,7 @@ export default function Settings() {
                                         e.key === 'Enter' && disableTwoFactor()
                                     }
                                     placeholder="Kata sandi"
-                                    className="w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
+                                    className="w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-3 text-sm text-white transition outline-none focus:border-primary focus:ring-primary"
                                 />
                                 {twoFaError && (
                                     <p className="text-sm text-red-500">
@@ -876,3 +864,7 @@ export default function Settings() {
         </UserLayout>
     );
 }
+
+
+
+

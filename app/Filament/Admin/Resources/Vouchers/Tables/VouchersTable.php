@@ -60,24 +60,6 @@ class VouchersTable
                     ->dateTime('d M Y, H:i')
                     ->placeholder('—'),
 
-                TextColumn::make('min_tier')
-                    ->label('Min. Tier')
-                    ->badge()
-                    ->color(fn ($state): string => match ($state) {
-                        'silver'   => 'info',
-                        'gold'     => 'warning',
-                        'platinum' => 'danger',
-                        default    => 'gray',
-                    })
-                    ->formatStateUsing(fn ($state): string => match ($state) {
-                        'silver'   => '🥈 Silver',
-                        'gold'     => '🥇 Gold',
-                        'platinum' => '💎 Platinum',
-                        'bronze'   => '🥉 Bronze',
-                        default    => '—',
-                    })
-                    ->placeholder('—'),
-
                 IconColumn::make('is_active')
                     ->label('Aktif')
                     ->boolean(),

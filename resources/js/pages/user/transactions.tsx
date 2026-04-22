@@ -64,7 +64,7 @@ export default function Transactions() {
             {/* Filter Section */}
             <form
                 onSubmit={onApplyFilters}
-                className="mb-6 rounded-xl border border-[#31334c] bg-[#1e1f29] p-6"
+                className="mb-6 rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-6"
             >
                 <div className="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <div>
@@ -74,7 +74,7 @@ export default function Transactions() {
                         <select
                             value={data.status}
                             onChange={(e) => setData('status', e.target.value)}
-                            className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-2.5 text-sm text-gray-300 transition outline-none focus:border-primary focus:ring-primary"
+                            className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-2.5 text-sm text-gray-300 transition outline-none focus:border-primary focus:ring-primary"
                         >
                             <option value="">Semua</option>
                             <option value="pending">Menunggu</option>
@@ -94,7 +94,7 @@ export default function Transactions() {
                             onChange={(e) =>
                                 setData('payment_status', e.target.value)
                             }
-                            className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-2.5 text-sm text-gray-300 transition outline-none focus:border-primary focus:ring-primary"
+                            className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-2.5 text-sm text-gray-300 transition outline-none focus:border-primary focus:ring-primary"
                         >
                             <option value="">Semua</option>
                             <option value="paid">Paid</option>
@@ -114,7 +114,7 @@ export default function Transactions() {
                                 onChange={(e) =>
                                     setData('start_date', e.target.value)
                                 }
-                                className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-2.5 text-sm text-gray-300 transition outline-none focus:border-primary focus:ring-primary [&::-webkit-calendar-picker-indicator]:invert-[0.6]"
+                                className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-2.5 text-sm text-gray-300 transition outline-none focus:border-primary focus:ring-primary [&::-webkit-calendar-picker-indicator]:invert-[0.6]"
                             />
                         </div>
                     </div>
@@ -130,7 +130,7 @@ export default function Transactions() {
                                 onChange={(e) =>
                                     setData('end_date', e.target.value)
                                 }
-                                className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-2.5 text-sm text-gray-300 transition outline-none focus:border-primary focus:ring-primary [&::-webkit-calendar-picker-indicator]:invert-[0.6]"
+                                className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-2.5 text-sm text-gray-300 transition outline-none focus:border-primary focus:ring-primary [&::-webkit-calendar-picker-indicator]:invert-[0.6]"
                             />
                         </div>
                     </div>
@@ -147,7 +147,7 @@ export default function Transactions() {
                             value={data.search}
                             onChange={(e) => setData('search', e.target.value)}
                             placeholder="Masukkan nomor invoice, produk, atau game"
-                            className="block w-full rounded-lg border border-[#31334c] bg-[#1A1A24] p-2.5 pr-10 text-sm text-gray-300 transition outline-none focus:border-primary focus:ring-primary"
+                            className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-2.5 pr-10 text-sm text-gray-300 transition outline-none focus:border-primary focus:ring-primary"
                         />
                         <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400">
                             <svg
@@ -191,7 +191,7 @@ export default function Transactions() {
                                 replace: true,
                             });
                         }}
-                        className="rounded-lg border border-[#31334c] px-4 py-2 text-sm font-bold text-gray-300 transition hover:bg-white/5"
+                        className="rounded-lg border border-[var(--color-border-light)] px-4 py-2 text-sm font-bold text-gray-300 transition hover:bg-white/5"
                     >
                         Reset
                     </button>
@@ -199,10 +199,10 @@ export default function Transactions() {
             </form>
 
             {/* Table Section */}
-            <div className="overflow-hidden rounded-xl border border-[#31334c] bg-[#1e1f29]">
+            <div className="overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)]">
                 <div className="overflow-x-auto">
                     <table className="w-full text-left text-sm">
-                        <thead className="border-b border-[#31334c] bg-white/10 text-xs font-bold text-white uppercase">
+                        <thead className="border-b border-[var(--color-border-light)] bg-white/10 text-xs font-bold text-white uppercase">
                             <tr>
                                 <th scope="col" className="px-6 py-4">
                                     Nomor Invoice
@@ -247,7 +247,7 @@ export default function Transactions() {
                                 return (
                                     <tr
                                         key={transaction.id}
-                                        className="border-b border-[#31334c] transition hover:bg-white/5"
+                                        className="border-b border-[var(--color-border-light)] transition hover:bg-white/5"
                                     >
                                         <td className="px-6 py-4 font-medium text-white">
                                             {transaction.invoice_id}
@@ -292,3 +292,7 @@ export default function Transactions() {
         </UserLayout>
     );
 }
+
+
+
+

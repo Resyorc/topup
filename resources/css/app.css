@@ -60,34 +60,78 @@
     --color-sidebar-border: var(--sidebar-border);
     --color-sidebar-ring: var(--sidebar-ring);
 
+    /* ===== STATUS COLOR TOKENS (usable as text-status-*, bg-status-*, etc.) ===== */
+    --color-status-success: var(--color-success);
+    --color-status-success-bg: var(--color-success-bg);
+    --color-status-success-border: var(--color-success-border);
+
+    --color-status-pending: var(--color-pending);
+    --color-status-pending-bg: var(--color-pending-bg);
+    --color-status-pending-border: var(--color-pending-border);
+
+    --color-status-processing: var(--color-processing);
+    --color-status-processing-bg: var(--color-processing-bg);
+    --color-status-processing-border: var(--color-processing-border);
+
+    --color-status-canceled: var(--color-canceled);
+    --color-status-canceled-bg: var(--color-canceled-bg);
+    --color-status-canceled-border: var(--color-canceled-border);
+
+    --color-status-failed: var(--color-failed);
+    --color-status-failed-bg: var(--color-failed-bg);
+    --color-status-failed-border: var(--color-failed-border);
+
+    --color-status-refunded: var(--color-refunded);
+    --color-status-refunded-bg: var(--color-refunded-bg);
+    --color-status-refunded-border: var(--color-refunded-border);
+
     /* ====================================================================== */
 
-    --color-client-primary: #b058ff;
-    --color-client-secondary: #99a1af;
-    --color-client-warning: #ffc800;
-    --color-client-danger: #ff4545;
-    --color-client-success: #29af0b;
-    --color-client-info: #136dff;
-    --color-client-light: #f5f5f5;
-    --color-client-dark: #2c2c2c;
+    --color-client-primary: #7C3AED;
+    --color-client-secondary: #9CA3AF;
+    --color-client-warning: #F59E0B;
+    --color-client-danger: #EF4444;
+    --color-client-success: #22C55E;
+    --color-client-info: #3B82F6;
+    --color-client-light: #E5E7EB;
+    --color-client-dark: #1F2937;
 
-    --color-client-primary-gradient: linear-gradient(to bottom right, #b058ff, #581197);
-    --color-client-secondary-gradient: linear-gradient(to bottom right, #ffffff40, #ffffff10);
-    --color-client-warning-gradient: linear-gradient(to bottom right, #ffc800, #ff9900);
-    --color-client-danger-gradient: linear-gradient(to bottom right, #ff4545, #b00000);
-    --color-client-success-gradient: linear-gradient(to bottom right, #29af0b, #007f00);
-    --color-client-info-gradient: linear-gradient(to bottom right, #136dff, #0047b3);
-    --color-client-light-gradient: linear-gradient(to bottom right, #f5f5f5, #e0e0e0);
-    --color-client-dark-gradient: linear-gradient(to bottom right, #2c2c2c, #000000);
+    --color-client-primary-gradient: linear-gradient(135deg, #7C3AED, #A855F7);
+    --color-client-secondary-gradient: linear-gradient(to bottom right, #9CA3AF40, #9CA3AF10);
+    --color-client-warning-gradient: linear-gradient(to bottom right, #F59E0B, #D97706);
+    --color-client-danger-gradient: linear-gradient(to bottom right, #EF4444, #B91C1C);
+    --color-client-success-gradient: linear-gradient(to bottom right, #22C55E, #15803D);
+    --color-client-info-gradient: linear-gradient(to bottom right, #3B82F6, #1D4ED8);
+    --color-client-light-gradient: linear-gradient(to bottom right, #E5E7EB, #9CA3AF);
+    --color-client-dark-gradient: linear-gradient(to bottom right, #1F2937, #111827);
 
-    --color-client-header: #3e3d4980; /* 50% opacity */
-    --color-client-navbar: #6c3c8980; /* 50% opacity */
-    --color-client-ground: #1f1e25;
-    --color-client-card: #2f2e38;
-    --color-client-card-header: #68606f;
-    --color-client-card-accent: #43384c;
-    --color-client-card-note: #ffc8001a; /* 10% opacity */
-    --color-client-card-gradient: linear-gradient(to bottom, #715f81, #000000);
+    --color-client-header: #11182780; /* 50% opacity */
+    --color-client-navbar: #0B0F1A80; /* 50% opacity */
+    --color-client-ground: #0B0F1A;
+    --color-client-card: #1F2937;
+    --color-client-card-header: #374151;
+    --color-client-card-accent: #111827;
+    --color-client-card-note: #F59E0B1a; /* 10% opacity */
+    --color-client-card-gradient: linear-gradient(to bottom, #374151, #0B0F1A);
+
+    /* ===== TAILWIND STATUS COLOR OVERRIDES ===== */
+    /* Maps Tailwind's red/green/yellow/amber to our theme status vars */
+    /* Danger (#EF4444) → red */
+    --color-red-400: #f87171;
+    --color-red-500: #EF4444;
+    --color-red-600: #dc2626;
+    --color-red-700: #b91c1c;
+    /* Success (#22C55E) → green */
+    --color-green-400: #4ade80;
+    --color-green-500: #22C55E;
+    --color-green-600: #16a34a;
+    /* Warning (#F59E0B) → yellow/amber/orange */
+    --color-yellow-400: #fbbf24;
+    --color-yellow-500: #F59E0B;
+    --color-amber-400: #fbbf24;
+    --color-amber-500: #F59E0B;
+    --color-orange-400: #fb923c;
+    --color-orange-500: #F59E0B;
 
     @keyframes ticker {
         0% { transform: translateX(0%); }
@@ -114,38 +158,96 @@
 }
 
 :root {
-    --background: oklch(0.145 0 0);
-    --foreground: oklch(0.985 0 0);
-    --card: oklch(0.145 0 0);
-    --card-foreground: oklch(0.985 0 0);
-    --popover: oklch(0.145 0 0);
-    --popover-foreground: oklch(0.985 0 0);
-    --primary: #8327d8;
-    --primary-foreground: oklch(0.205 0 0);
-    --secondary: oklch(0.269 0 0);
-    --secondary-foreground: oklch(0.985 0 0);
-    --muted: oklch(0.269 0 0);
-    --muted-foreground: oklch(0.708 0 0);
-    --accent: oklch(0.269 0 0);
-    --accent-foreground: oklch(0.985 0 0);
-    --destructive: oklch(0.396 0.141 25.723);
-    --destructive-foreground: oklch(0.637 0.237 25.331);
-    --border: oklch(0.269 0 0);
-    --input: oklch(0.269 0 0);
-    --ring: #8327d8;
+    /* ===== PRIMARY BRAND ===== */
+    --color-primary: #7C3AED;
+    --color-primary-hover: #6D28D9;
+    --color-primary-light: #A855F7;
+
+    /* ===== BACKGROUND ===== */
+    --color-bg-main: #0B0F1A;
+    --color-bg-secondary: #111827;
+    --color-bg-card: #1F2937;
+
+    /* ===== TEXT ===== */
+    --color-text-primary: #E5E7EB;
+    --color-text-secondary: #9CA3AF;
+    --color-text-muted: #6B7280;
+
+    /* ===== BORDER & DIVIDER ===== */
+    --color-border: #1F2937;
+    --color-border-light: #374151;
+
+    /* ===== ACCENT ===== */
+    --color-accent: #A855F7;
+
+    /* ===== STATUS ===== */
+    --color-success: #22C55E;
+    --color-success-bg: rgba(34, 197, 94, 0.12);
+    --color-success-border: rgba(34, 197, 94, 0.28);
+
+    --color-pending: #F59E0B;
+    --color-pending-bg: rgba(245, 158, 11, 0.12);
+    --color-pending-border: rgba(245, 158, 11, 0.28);
+
+    --color-processing: #38BDF8;
+    --color-processing-bg: rgba(56, 189, 248, 0.12);
+    --color-processing-border: rgba(56, 189, 248, 0.28);
+
+    --color-canceled: #F87171;
+    --color-canceled-bg: rgba(248, 113, 113, 0.12);
+    --color-canceled-border: rgba(248, 113, 113, 0.28);
+
+    --color-failed: #EF4444;
+    --color-failed-bg: rgba(239, 68, 68, 0.12);
+    --color-failed-border: rgba(239, 68, 68, 0.28);
+
+    --color-refunded: #94A3B8;
+    --color-refunded-bg: rgba(148, 163, 184, 0.12);
+    --color-refunded-border: rgba(148, 163, 184, 0.28);
+
+    /* ===== GRADIENT ===== */
+    --gradient-primary: linear-gradient(135deg, #7C3AED, #A855F7);
+
+    /* ===== EFFECT ===== */
+    --shadow-glow: 0 0 20px rgba(124, 58, 237, 0.35);
+    --shadow-card: 0 10px 25px rgba(0, 0, 0, 0.4);
+
+    /* ===== SHADCN MAPPINGS ===== */
+    --background: var(--color-bg-main);
+    --foreground: var(--color-text-primary);
+    --card: var(--color-bg-card);
+    --card-foreground: var(--color-text-primary);
+    --popover: var(--color-bg-secondary);
+    --popover-foreground: var(--color-text-primary);
+    --primary: var(--color-primary);
+    --primary-foreground: #ffffff;
+    --secondary: var(--color-bg-secondary);
+    --secondary-foreground: var(--color-text-secondary);
+    --muted: var(--color-bg-secondary);
+    --muted-foreground: var(--color-text-muted);
+    --accent: var(--color-accent);
+    --accent-foreground: #ffffff;
+    --destructive: var(--color-danger);
+    --destructive-foreground: #ffffff;
+    --border: var(--color-border);
+    --input: var(--color-border-light);
+    --ring: var(--color-primary);
+    
     --chart-1: oklch(0.488 0.243 264.376);
     --chart-2: oklch(0.696 0.17 162.48);
     --chart-3: oklch(0.769 0.188 70.08);
     --chart-4: oklch(0.627 0.265 303.9);
     --chart-5: oklch(0.645 0.246 16.439);
-    --sidebar: oklch(0.205 0 0);
-    --sidebar-foreground: oklch(0.985 0 0);
-    --sidebar-primary: oklch(0.985 0 0);
-    --sidebar-primary-foreground: oklch(0.985 0 0);
-    --sidebar-accent: oklch(0.269 0 0);
-    --sidebar-accent-foreground: oklch(0.985 0 0);
-    --sidebar-border: oklch(0.269 0 0);
-    --sidebar-ring: oklch(0.439 0 0);
+    
+    --sidebar: var(--color-bg-secondary);
+    --sidebar-foreground: var(--color-text-primary);
+    --sidebar-primary: var(--color-primary);
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: var(--color-bg-secondary);
+    --sidebar-accent-foreground: var(--color-text-primary);
+    --sidebar-border: var(--color-border);
+    --sidebar-ring: var(--color-primary);
+    
     --radius: 0.625rem;
 }
 
@@ -163,7 +265,7 @@
 
 @layer utilities {
     .glass-effect {
-        @apply bg-[#26273b]/80 backdrop-blur-[3px] border border-[#31334c];
+        @apply bg-secondary/80 backdrop-blur-[3px] border border-[var(--color-border-light)];
     }
     .scrollbar-hide::-webkit-scrollbar {
         display: none;
@@ -187,4 +289,20 @@
         text-box-trim: trim-start !important;
         text-box-edge: text !important;
     }
+
+    /* ===== STATUS COLOR UTILITIES ===== */
+    /* Success */
+    .status-success { color: var(--color-success); }
+    .status-success-bg { background-color: color-mix(in srgb, var(--color-success) 15%, transparent); }
+    .status-success-border { border-color: color-mix(in srgb, var(--color-success) 30%, transparent); }
+
+    /* Warning */
+    .status-warning { color: var(--color-warning); }
+    .status-warning-bg { background-color: color-mix(in srgb, var(--color-warning) 15%, transparent); }
+    .status-warning-border { border-color: color-mix(in srgb, var(--color-warning) 30%, transparent); }
+
+    /* Danger */
+    .status-danger { color: var(--color-danger); }
+    .status-danger-bg { background-color: color-mix(in srgb, var(--color-danger) 15%, transparent); }
+    .status-danger-border { border-color: color-mix(in srgb, var(--color-danger) 30%, transparent); }
 }

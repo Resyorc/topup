@@ -38,7 +38,7 @@ export default function Maintenance({ estimatedEnd, message, waNumber, logo }: P
         <>
             <Head title="Maintenance – Nuvelo" />
 
-            <div className="min-h-screen bg-[#0f0f1a] flex items-center justify-center px-4 overflow-hidden relative">
+            <div className="min-h-screen bg-[var(--color-bg-main)] flex items-center justify-center px-4 overflow-hidden relative">
 
                 {/* Background glow blobs */}
                 <div className="absolute top-1/4 left-1/4 w-72 h-72 rounded-full bg-purple-700/20 blur-3xl animate-pulse" />
@@ -100,7 +100,7 @@ export default function Maintenance({ estimatedEnd, message, waNumber, logo }: P
                         <div
                             className="text-4xl font-bold text-transparent bg-clip-text mb-2 select-none"
                             style={{
-                                backgroundImage: 'linear-gradient(135deg, #b058ff 0%, #7c3aed 50%, #a855f7 100%)',
+                                backgroundImage: 'linear-gradient(135deg, #7C3AED 0%, #6D28D9 50%, #A855F7 100%)',
                                 fontFamily: 'Orbitron, monospace',
                             }}
                         >
@@ -185,3 +185,7 @@ export default function Maintenance({ estimatedEnd, message, waNumber, logo }: P
         </>
     );
 }
+
+
+
+

@@ -8,3 +8,4 @@ export function useMobileNavigation(): CleanupFn {
         document.body.style.removeProperty('pointer-events');
     }, []);
 }
+

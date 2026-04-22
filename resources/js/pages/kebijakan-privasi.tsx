@@ -15,7 +15,7 @@ const tocItems = [
 ];
 
 const sectionBase =
-    'rounded-2xl border border-white/10 bg-[#201f2c] p-5 sm:p-7 md:p-8';
+    'rounded-2xl border border-white/10 bg-[var(--color-bg-card)] p-5 sm:p-7 md:p-8';
 const sectionHeader = 'mb-5 flex items-start gap-4';
 const sectionNum =
     'flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-primary/40 bg-primary/15 text-sm font-black text-primary';
@@ -32,7 +32,7 @@ export default function KebijakanPrivasiPage() {
         <GuestLayout>
             <Head title="Kebijakan Privasi" />
 
-            <section className="relative overflow-hidden border-b border-white/10 bg-[#241f38]">
+            <section className="relative overflow-hidden border-b border-white/10 bg-[var(--color-bg-secondary)]">
                 <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_20%,rgba(131,39,216,0.25),transparent_45%),radial-gradient(circle_at_80%_0%,rgba(76,201,240,0.15),transparent_35%)]" />
                 <div className="relative mx-auto max-w-5xl px-4 py-12 text-center sm:px-6 sm:py-16 lg:px-8">
                     <span className="inline-flex rounded-full border border-primary/50 bg-primary/15 px-4 py-1 text-[11px] font-semibold tracking-[0.2em] text-primary uppercase">
@@ -48,7 +48,7 @@ export default function KebijakanPrivasiPage() {
             </section>
 
             <section className="mx-auto max-w-5xl px-4 py-8 sm:px-6 sm:py-10 lg:px-8">
-                <div className="mb-8 rounded-2xl border border-primary/30 bg-[#211c34] p-5 sm:p-7">
+                <div className="mb-8 rounded-2xl border border-primary/30 bg-[var(--color-bg-card)] p-5 sm:p-7">
                     <p className={sectionText}>
                         Nuvelo berkomitmen untuk melindungi privasi pengguna. Dokumen ini menjelaskan
                         data apa yang kami kumpulkan, bagaimana kami menggunakannya, dan hak-hak
@@ -375,3 +375,6 @@ export default function KebijakanPrivasiPage() {
         </GuestLayout>
     );
 }
+
+
+

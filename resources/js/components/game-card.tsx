@@ -129,8 +129,8 @@ export default function GameCard({
             <div
                 className={
                     active
-                        ? 'drop-shadow-[0_0_15px_#8327d8]'
-                        : 'group-hover:drop-shadow-[0_0_15px_#8327d8]'
+                        ? 'drop-shadow-[0_0_15px_var(--color-primary)]'
+                        : 'group-hover:drop-shadow-[0_0_15px_var(--color-primary)]'
                 }
             >
                 {' '}
@@ -138,8 +138,8 @@ export default function GameCard({
                 <div
                     className={
                         active
-                            ? 'drop-shadow-[0_-2px_0_#8327d8]'
-                            : 'group-hover:drop-shadow-[0_-2px_0_#8327d8]'
+                            ? 'drop-shadow-[0_-2px_0_var(--color-primary)]'
+                            : 'group-hover:drop-shadow-[0_-2px_0_var(--color-primary)]'
                     }
                 >
                     {' '}
@@ -147,8 +147,8 @@ export default function GameCard({
                     <div
                         className={
                             active
-                                ? 'drop-shadow-[2.5px_0_0_#8327d8]'
-                                : 'group-hover:drop-shadow-[2.5px_0_0_#8327d8]'
+                                ? 'drop-shadow-[2.5px_0_0_var(--color-primary)]'
+                                : 'group-hover:drop-shadow-[2.5px_0_0_var(--color-primary)]'
                         }
                     >
                         {' '}
@@ -156,8 +156,8 @@ export default function GameCard({
                         <div
                             className={
                                 active
-                                    ? 'drop-shadow-[0_2.5px_0_#8327d8]'
-                                    : 'group-hover:drop-shadow-[0_2.5px_0_#8327d8]'
+                                    ? 'drop-shadow-[0_2.5px_0_var(--color-primary)]'
+                                    : 'group-hover:drop-shadow-[0_2.5px_0_var(--color-primary)]'
                             }
                         >
                             {' '}
@@ -165,8 +165,8 @@ export default function GameCard({
                             <div
                                 className={
                                     active
-                                        ? 'drop-shadow-[-2px_0_0_#8327d8]'
-                                        : 'group-hover:drop-shadow-[-2px_0_0_#8327d8]'
+                                        ? 'drop-shadow-[-2px_0_0_var(--color-primary)]'
+                                        : 'group-hover:drop-shadow-[-2px_0_0_var(--color-primary)]'
                                 }
                             >
                                 {' '}
@@ -229,7 +229,7 @@ export default function GameCard({
                         so the title fits neatly inside the smaller card without overflowing.
                       - Desktop: original sizing (px-3 pb-4 pt-16, text-base) preserved.
                     */}
-                                    <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-[#111218] via-[#111218]/80 to-transparent px-2 pt-10 pb-2 lg:px-3 lg:pt-16 lg:pb-4">
+                                    <div className="absolute right-0 bottom-0 left-0 bg-gradient-to-t from-[var(--color-bg-main)] via-[var(--color-bg-main)]/80 to-transparent px-2 pt-10 pb-2 lg:px-3 lg:pt-16 lg:pb-4">
                                         <p className="truncate text-[11px] font-bold text-white drop-shadow-md lg:text-base">
                                             {title}
                                         </p>
@@ -246,3 +246,5 @@ export default function GameCard({
         </Link>
     );
 }
+
+

@@ -8,8 +8,6 @@ use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
-use App\Services\TierService;
-
 class LoyaltyService
 {
     /**
@@ -47,10 +45,7 @@ class LoyaltyService
             return 0;
         }
 
-        $user = User::find($transaction->user_id);
-        $multiplier = $user ? app(TierService::class)->getMultiplier($user->tier ?? 'bronze') : 1.0;
-
-        $coins = (int) floor($transaction->amount * $rate / 100 * $multiplier);
+        $coins = (int) floor($transaction->amount * $rate / 100);
 
         if ($coins <= 0) {
             return 0;

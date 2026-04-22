@@ -6,3 +6,4 @@ export default ({ children, breadcrumbs, ...props }: AppLayoutProps) => (
         {children}
     </AppLayoutTemplate>
 );
+

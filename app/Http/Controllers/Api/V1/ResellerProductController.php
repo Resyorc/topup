@@ -30,7 +30,7 @@ class ResellerProductController extends Controller
 
         $game = Game::where('slug', $validated['game_slug'])
             ->where('is_active', true)
-            ->with(['products' => fn ($q) => $q->where('is_available', true)->orderBy('price_guest')])
+            ->with(['products' => fn ($q) => $q->where('is_available', true)->orderBy('price_sell')])
             ->firstOrFail();
 
         $grouped = $groupingService->groupByGame($game->products, $game);

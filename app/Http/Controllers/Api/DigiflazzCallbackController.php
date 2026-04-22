@@ -11,7 +11,6 @@ use App\Models\Transaction;
 use App\Models\User;
 use App\Services\CoinService;
 use App\Services\LoyaltyService;
-use App\Services\TierService;
 use App\Services\TopupPriceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -31,13 +30,12 @@ class DigiflazzCallbackController extends Controller
     {
         $ip = $request->ip();
 
-        // LOG IP untuk debug — identifikasi IP asli yang digunakan Digiflazz
-        Log::info('Digiflazz callback masuk', ['ip' => $ip, 'allowed' => self::ALLOWED_IPS]);
+        Log::info('Digiflazz callback masuk', ['ip' => $ip]);
 
-        // TODO: aktifkan kembali setelah IP Digiflazz terverifikasi
-        // if (! in_array($ip, self::ALLOWED_IPS, true)) {
-        //     return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
-        // }
+        if (! in_array($ip, self::ALLOWED_IPS, true)) {
+            Log::warning('Digiflazz callback ditolak — IP tidak diizinkan', ['ip' => $ip]);
+            return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        }
 
         $payload = $request->getContent();
         $data = json_decode($payload, true);
@@ -105,14 +103,6 @@ class DigiflazzCallbackController extends Controller
 
             // Berikan reward loyalitas (hanya user login, bukan bayar via Coin)
             app(LoyaltyService::class)->awardFromTransaction($transaction->load('product.game'));
-
-            // Recalculate tier setelah transaksi sukses
-            if ($transaction->user_id) {
-                $txUser = User::find($transaction->user_id);
-                if ($txUser) {
-                    app(TierService::class)->recalculate($txUser);
-                }
-            }
 
             // Refresh agar loyalty_coins sudah terisi sebelum dikirim ke WA
             dispatch(SendWhatsAppNotification::topupSuccess($transaction->refresh()));

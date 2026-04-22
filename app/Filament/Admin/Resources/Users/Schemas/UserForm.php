@@ -2,7 +2,6 @@
 
 namespace App\Filament\Admin\Resources\Users\Schemas;
 
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
@@ -37,18 +36,7 @@ class UserForm
                         ->required()
                         ->helperText('Ubah saldo coin user secara manual. Perubahan tidak dicatat di riwayat transaksi coin.'),
 
-                    Select::make('tier')
-                        ->label('Tier Member')
-                        ->options([
-                            'bronze'   => 'Bronze',
-                            'silver'   => 'Silver',
-                            'gold'     => 'Gold',
-                            'platinum' => 'Platinum',
-                        ])
-                        ->required()
-                        ->helperText('Tier dihitung otomatis, tapi bisa diubah manual jika perlu.'),
-
-                    Select::make('roles')
+                    \Filament\Forms\Components\Select::make('roles')
                         ->label('Role')
                         ->relationship('roles', 'name')
                         ->multiple()

@@ -31,22 +31,10 @@ class VoucherForm
                     ->inline(false),
 
                 Toggle::make('is_public')
-                    ->label('Tampilkan di Dashboard & Nova')
-                    ->helperText('Jika aktif, voucher muncul di dashboard user (sesuai tier) dan Nova akan menyebutkannya saat ditanya promo.')
+                    ->label('Tampilkan di Dashboard')
+                    ->helperText('Jika aktif, voucher muncul di dashboard user.')
                     ->default(false)
                     ->inline(false),
-
-                Select::make('min_tier')
-                    ->label('Tier Minimum')
-                    ->helperText('Kosongkan jika voucher bisa dipakai semua member.')
-                    ->options([
-                        'bronze'   => '🥉 Bronze',
-                        'silver'   => '🥈 Silver',
-                        'gold'     => '🥇 Gold',
-                        'platinum' => '💎 Platinum',
-                    ])
-                    ->nullable()
-                    ->placeholder('Semua tier'),
             ])->columns(2),
 
             Section::make('Konfigurasi Diskon')->schema([

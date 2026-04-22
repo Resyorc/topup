@@ -8,7 +8,6 @@ use App\Models\User;
 use App\Services\CoinService;
 use App\Services\DigiflazzService;
 use App\Services\LoyaltyService;
-use App\Services\TierService;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Notifications\Notification;
@@ -147,13 +146,6 @@ class TransactionsTable
                                     }
 
                                     app(LoyaltyService::class)->awardFromTransaction($record);
-
-                                    if ($record->user_id) {
-                                        $txUser = User::find($record->user_id);
-                                        if ($txUser) {
-                                            app(TierService::class)->recalculate($txUser);
-                                        }
-                                    }
 
                                     Notification::make()
                                         ->success()

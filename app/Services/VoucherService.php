@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\User;
 use App\Models\Voucher;
-use App\Services\TierService;
 
 class VoucherService
 {
@@ -40,14 +39,6 @@ class VoucherService
                 'discount' => 0,
                 'message' => 'Minimum pembelian Rp '.number_format($voucher->min_amount, 0, ',', '.').' untuk voucher ini.',
             ];
-        }
-
-        if ($voucher->min_tier) {
-            $userTier = $user?->tier ?? 'bronze';
-            if (! app(TierService::class)->meetsMinTier($userTier, $voucher->min_tier)) {
-                $minLabel = TierService::label($voucher->min_tier);
-                return ['valid' => false, 'discount' => 0, 'message' => "Voucher ini hanya untuk member {$minLabel} ke atas."];
-            }
         }
 
         $discount = $voucher->calculateDiscount($amount);
@@ -98,14 +89,6 @@ class VoucherService
             throw new \Exception(
                 'Minimum pembelian Rp '.number_format($voucher->min_amount, 0, ',', '.').' untuk voucher ini.'
             );
-        }
-
-        if ($voucher->min_tier) {
-            $userTier = $user?->tier ?? 'bronze';
-            if (! app(TierService::class)->meetsMinTier($userTier, $voucher->min_tier)) {
-                $minLabel = TierService::label($voucher->min_tier);
-                throw new \Exception("Voucher ini hanya untuk member {$minLabel} ke atas.");
-            }
         }
 
         $voucher->increment('used_count');
