@@ -35,7 +35,7 @@ class ProductsTable
                     ->searchable()
                     ->wrap(),
 
-                TextColumn::make('providerProducts_count')
+                TextColumn::make('provider_products_count')
                     ->counts('providerProducts')
                     ->label('Seller')
                     ->badge()

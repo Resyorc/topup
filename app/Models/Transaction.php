@@ -16,6 +16,7 @@ class Transaction extends Model
         'invoice_id',
         'user_id',
         'product_id',
+        'provider_sku',
         'customer_game_id',
         'customer_zone_id',
         'customer_whatsapp',

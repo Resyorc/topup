@@ -36,9 +36,12 @@ class CheckoutController extends Controller
         ]);
 
         $qty = $validated['qty'] ?? 1;
+        $authenticatedUser = auth()->user();
+        $authenticatedUserId = $authenticatedUser?->id;
         $customerName = $validated['customer_name'] ?? 'Guest';
-        $customerEmail = $validated['customer_email'] ?? 'guest@nuvelo.com';
-        $authenticatedUserId = auth()->id();
+        $customerEmail = $validated['customer_email']
+            ?? $authenticatedUser?->email
+            ?? 'guest@nuvelo.com';
 
         $product = Product::with(['providerProducts' => function ($q) {
             $q->where('is_active', true)->orderBy('price', 'asc');
@@ -70,28 +73,20 @@ class CheckoutController extends Controller
 
         // Cegah double order: early check di luar transaction untuk UX yang cepat.
         // Re-check dengan lockForUpdate dilakukan di dalam DB::transaction (lihat bawah).
-        if ($authenticatedUserId) {
-            $existingTransaction = Transaction::where('product_id', $product->id)
-                ->where('customer_game_id', $validated['customer_game_id'])
-                ->where('user_id', $authenticatedUserId)
-                ->whereIn('status', ['pending', 'processing'])
-                ->where(function ($q) {
-                    $q->whereNull('expired_at')->orWhere('expired_at', '>', now());
-                })
-                ->latest()
-                ->first();
+        $existingTransaction = $this->findActiveDuplicateTransaction($product->id, $validated, $authenticatedUserId)
+            ->latest()
+            ->first();
 
-            if ($existingTransaction) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Kamu masih memiliki pesanan aktif untuk produk ini. Selesaikan atau tunggu pesanan sebelumnya expired.',
-                    'data' => [
-                        'invoice_id' => $existingTransaction->invoice_id,
-                        'status' => $existingTransaction->status,
-                        'expired_at' => $existingTransaction->expired_at?->toDateTimeString(),
-                    ],
-                ], 409);
-            }
+        if ($existingTransaction) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Kamu masih memiliki pesanan aktif untuk produk ini. Selesaikan atau tunggu pesanan sebelumnya expired.',
+                'data' => [
+                    'invoice_id' => $existingTransaction->invoice_id,
+                    'status' => $existingTransaction->status,
+                    'expired_at' => $existingTransaction->expired_at?->toDateTimeString(),
+                ],
+            ], 409);
         }
 
         $merchantRef = 'INV-'.strtoupper(Str::ulid());
@@ -139,26 +134,18 @@ class CheckoutController extends Controller
             $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $orderItems, $customerName, $customerEmail, $tripayService, $authenticatedUserId, $expiredTime, $expiredAt, $voucherService, $effectivePrice, $isFlashSale, $providerSku, &$duplicateInfo) {
 
                 // Re-check double order di dalam transaction dengan lockForUpdate — cegah race condition.
-                if ($authenticatedUserId) {
-                    $duplicate = Transaction::where('product_id', $product->id)
-                        ->where('customer_game_id', $validated['customer_game_id'])
-                        ->where('user_id', $authenticatedUserId)
-                        ->whereIn('status', ['pending', 'processing'])
-                        ->where(function ($q) {
-                            $q->whereNull('expired_at')->orWhere('expired_at', '>', now());
-                        })
-                        ->lockForUpdate()
-                        ->first();
+                $duplicate = $this->findActiveDuplicateTransaction($product->id, $validated, $authenticatedUserId)
+                    ->lockForUpdate()
+                    ->first();
 
-                    if ($duplicate) {
-                        $duplicateInfo = [
-                            'invoice_id' => $duplicate->invoice_id,
-                            'status' => $duplicate->status,
-                            'expired_at' => $duplicate->expired_at?->toDateTimeString(),
-                        ];
+                if ($duplicate) {
+                    $duplicateInfo = [
+                        'invoice_id' => $duplicate->invoice_id,
+                        'status' => $duplicate->status,
+                        'expired_at' => $duplicate->expired_at?->toDateTimeString(),
+                    ];
 
-                        return null;
-                    }
+                    return null;
                 }
 
                 $paymentResponse = $tripayService->createTransaction(
@@ -330,13 +317,7 @@ class CheckoutController extends Controller
             $transaction = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $customerName, $authenticatedUserId, $user, $coinService, $effectivePrice, $request, $providerSku) {
 
                 // Re-check double order di dalam transaction dengan lockForUpdate — cegah race condition.
-                $duplicate = Transaction::where('product_id', $product->id)
-                    ->where('customer_game_id', $validated['customer_game_id'])
-                    ->where('user_id', $authenticatedUserId)
-                    ->whereIn('status', ['pending', 'processing'])
-                    ->where(function ($q) {
-                        $q->whereNull('expired_at')->orWhere('expired_at', '>', now());
-                    })
+                $duplicate = $this->findActiveDuplicateTransaction($product->id, $validated, $authenticatedUserId)
                     ->lockForUpdate()
                     ->first();
 
@@ -357,6 +338,7 @@ class CheckoutController extends Controller
                     'invoice_id' => $merchantRef,
                     'user_id' => $authenticatedUserId,
                     'product_id' => $product->id,
+                    'provider_sku' => $providerSku,
                     'customer_game_id' => $validated['customer_game_id'],
                     'customer_zone_id' => $validated['customer_zone_id'] ?? null,
                     'customer_whatsapp' => $validated['customer_whatsapp'],
@@ -516,5 +498,22 @@ class CheckoutController extends Controller
                 'message' => 'Failed to calculate fee. Please try again.',
             ], 500);
         }
+    }
+
+    private function findActiveDuplicateTransaction(int $productId, array $validated, ?int $authenticatedUserId)
+    {
+        return Transaction::where('product_id', $productId)
+            ->where('customer_game_id', $validated['customer_game_id'])
+            ->when(
+                $authenticatedUserId,
+                fn ($query) => $query->where('user_id', $authenticatedUserId),
+                fn ($query) => $query
+                    ->whereNull('user_id')
+                    ->where('customer_whatsapp', $validated['customer_whatsapp'])
+            )
+            ->whereIn('status', ['pending', 'processing'])
+            ->where(function ($q) {
+                $q->whereNull('expired_at')->orWhere('expired_at', '>', now());
+            });
     }
 }

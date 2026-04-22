@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppNotification;
-use App\Models\DigiflazzSku;
 use App\Models\ErrorLog;
 use App\Models\Game;
 use App\Models\Transaction;
@@ -13,6 +12,7 @@ use App\Services\CoinService;
 use App\Services\LoyaltyService;
 use App\Services\TopupPriceService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 // Catatan: Digiflazz tidak menggunakan HMAC signature di webhook-nya.
@@ -23,7 +23,6 @@ class DigiflazzCallbackController extends Controller
     /**
      * Handle the incoming Digiflazz Webhook request.
      */
-    // IP server Digiflazz yang diizinkan mengirim callback
     private const ALLOWED_IPS = ['52.74.250.133'];
 
     public function handle(Request $request)
@@ -33,7 +32,8 @@ class DigiflazzCallbackController extends Controller
         Log::info('Digiflazz callback masuk', ['ip' => $ip]);
 
         if (! in_array($ip, self::ALLOWED_IPS, true)) {
-            Log::warning('Digiflazz callback ditolak — IP tidak diizinkan', ['ip' => $ip]);
+            Log::warning('Digiflazz callback ditolak - IP tidak diizinkan', ['ip' => $ip]);
+
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
 
@@ -45,7 +45,7 @@ class DigiflazzCallbackController extends Controller
             'status' => data_get($data, 'data.status', 'unknown'),
         ]);
 
-        if (! isset($data['data']) || ! isset($data['data']['ref_id'])) {
+        if (! isset($data['data'], $data['data']['ref_id'])) {
             return response()->json([
                 'success' => false,
                 'message' => 'Invalid data payload representation',
@@ -54,22 +54,88 @@ class DigiflazzCallbackController extends Controller
 
         $trxData = $data['data'];
         $refId = $trxData['ref_id'];
+        $status = strtolower((string) ($trxData['status'] ?? ''));
 
-        $transaction = Transaction::where('invoice_id', $refId)->first();
+        $outcome = DB::transaction(function () use ($refId, $status, $trxData) {
+            $transaction = Transaction::with(['product.game'])
+                ->where('invoice_id', $refId)
+                ->lockForUpdate()
+                ->first();
 
-        if (! $transaction) {
+            if (! $transaction) {
+                return ['type' => 'missing'];
+            }
+
+            if (in_array($transaction->status, ['success', 'failed'], true)) {
+                return ['type' => 'already_processed'];
+            }
+
+            if ($status === 'sukses') {
+                $transaction->update([
+                    'status' => 'success',
+                    'sn' => $trxData['sn'] ?? null,
+                ]);
+
+                $gameId = $transaction->product->game_id ?? null;
+                if ($gameId) {
+                    Game::where('id', $gameId)->increment('total_sold');
+                }
+
+                return [
+                    'type' => 'success',
+                    'invoice_id' => $transaction->invoice_id,
+                ];
+            }
+
+            if ($status === 'gagal') {
+                $failureReason = $trxData['rc'] ?? 'Unknown RC';
+
+                $transaction->update([
+                    'status' => 'failed',
+                    'failure_reason' => $failureReason,
+                ]);
+
+                return [
+                    'type' => 'failed',
+                    'invoice_id' => $transaction->invoice_id,
+                    'failure_reason' => $failureReason,
+                    'user_id' => $transaction->user_id,
+                    'payment_method' => $transaction->payment_method,
+                    'refund_amount' => max(0, (int) $transaction->amount - (int) $transaction->discount + (int) $transaction->fee),
+                ];
+            }
+
+            if ($status === 'gangguan') {
+                $skuCode = $trxData['buyer_sku_code'] ?? null;
+
+                if ($skuCode) {
+                    app(TopupPriceService::class)->failoverProductBySku($skuCode);
+                }
+
+                return [
+                    'type' => 'gangguan',
+                    'invoice_id' => $transaction->invoice_id,
+                    'sku_code' => $skuCode,
+                    'failure_reason' => $trxData['rc'] ?? '-',
+                ];
+            }
+
+            return ['type' => 'ignored'];
+        });
+
+        if ($outcome['type'] === 'missing') {
             Log::error('Digiflazz Callback Transaction Not Found: '.$refId);
 
             ErrorLog::create([
-                'level'       => 'error',
-                'message'     => "Digiflazz callback: transaksi tidak ditemukan untuk ref_id '{$refId}'.",
-                'exception'   => 'DigiflazzTransactionNotFound',
-                'file'        => __FILE__,
-                'line'        => __LINE__,
-                'trace'       => 'ref_id dari Digiflazz: '.$refId."\nStatus dari Digiflazz: ".($trxData['status'] ?? 'unknown'),
-                'url'         => request()->fullUrl(),
-                'method'      => 'POST',
-                'ip'          => request()->ip(),
+                'level' => 'error',
+                'message' => "Digiflazz callback: transaksi tidak ditemukan untuk ref_id '{$refId}'.",
+                'exception' => 'DigiflazzTransactionNotFound',
+                'file' => __FILE__,
+                'line' => __LINE__,
+                'trace' => 'ref_id dari Digiflazz: '.$refId."\nStatus dari Digiflazz: ".($trxData['status'] ?? 'unknown'),
+                'url' => $request->fullUrl(),
+                'method' => 'POST',
+                'ip' => $request->ip(),
                 'occurred_at' => now(),
             ]);
 
@@ -79,82 +145,53 @@ class DigiflazzCallbackController extends Controller
             ], 404);
         }
 
-        if (in_array($transaction->status, ['success', 'failed'])) {
+        if ($outcome['type'] === 'already_processed') {
             return response()->json([
                 'success' => true,
                 'message' => 'Transaction already processed',
             ]);
         }
 
-        // Processing the final top-up status from Provider
-        $status = strtolower($trxData['status']);
+        if ($outcome['type'] === 'success') {
+            $transaction = Transaction::with(['product.game'])
+                ->where('invoice_id', $outcome['invoice_id'])
+                ->firstOrFail();
 
-        if ($status === 'sukses') {
-            $transaction->update([
-                'status' => 'success',
-                'sn' => $trxData['sn'] ?? null,
-            ]);
-
-            // Increment total_sold di tabel games
-            $gameId = $transaction->load('product.game')->product->game_id ?? null;
-            if ($gameId) {
-                Game::where('id', $gameId)->increment('total_sold');
-            }
-
-            // Berikan reward loyalitas (hanya user login, bukan bayar via Coin)
-            app(LoyaltyService::class)->awardFromTransaction($transaction->load('product.game'));
-
-            // Refresh agar loyalty_coins sudah terisi sebelum dikirim ke WA
-            dispatch(SendWhatsAppNotification::topupSuccess($transaction->refresh()));
+            app(LoyaltyService::class)->awardFromTransaction($transaction);
+            dispatch(SendWhatsAppNotification::topupSuccess($transaction->fresh(['product.game'])));
 
             Log::info("Digiflazz Topup SUKSES for Invoice: {$refId}");
-        } elseif ($status === 'gagal') {
-            $rc = $trxData['rc'] ?? 'Unknown RC';
-            $transaction->update([
-                'status' => 'failed',
-                'failure_reason' => $rc,
-            ]);
+        } elseif ($outcome['type'] === 'failed') {
+            $transaction = Transaction::with(['product.game'])
+                ->where('invoice_id', $outcome['invoice_id'])
+                ->firstOrFail();
 
-            // Refund coin jika transaksi dibayar dengan COIN
-            if ($transaction->payment_method === 'COIN' && $transaction->user_id) {
+            if ($outcome['payment_method'] === 'COIN' && $outcome['user_id']) {
                 try {
-                    $user = User::find($transaction->user_id);
-                    if ($user) {
-                        $refundAmount = (int) ($transaction->amount + $transaction->fee);
+                    $user = User::find($outcome['user_id']);
+
+                    if ($user && $outcome['refund_amount'] > 0) {
                         app(CoinService::class)->credit(
                             $user,
-                            $refundAmount,
+                            $outcome['refund_amount'],
                             'Refund pesanan gagal: '.$transaction->invoice_id,
                             $transaction->invoice_id,
                         );
-                        Log::info("Coin refunded {$refundAmount} to user {$user->id} for failed invoice: {$refId}");
+
+                        Log::info("Coin refunded {$outcome['refund_amount']} to user {$user->id} for failed invoice: {$refId}");
                     }
                 } catch (\Exception $e) {
                     Log::error("Coin refund failed for invoice {$refId}: ".$e->getMessage());
                 }
             }
 
-            dispatch(SendWhatsAppNotification::topupFailed($transaction->load('product.game')));
+            dispatch(SendWhatsAppNotification::topupFailed($transaction));
 
-            Log::info("Digiflazz Topup GAGAL for Invoice: {$refId} - RC: {$rc}");
-        } elseif ($status === 'gangguan') {
-            $skuCode = $trxData['buyer_sku_code'] ?? null;
-
+            Log::info("Digiflazz Topup GAGAL for Invoice: {$refId} - RC: {$outcome['failure_reason']}");
+        } elseif ($outcome['type'] === 'gangguan') {
             Log::channel('digiflazz')->warning(
-                "Webhook GANGGUAN diterima: ref_id={$refId}, SKU={$skuCode}, RC=" . ($trxData['rc'] ?? '-')
+                "Webhook GANGGUAN diterima: ref_id={$outcome['invoice_id']}, SKU=".($outcome['sku_code'] ?? '-').", RC={$outcome['failure_reason']}"
             );
-
-            if ($skuCode) {
-                DigiflazzSku::where('sku_code', $skuCode)->update(['is_active' => false]);
-
-                // Cari product langsung via provider_sku (mapping 1:1)
-                $product = \App\Models\Product::where('provider_sku', $skuCode)->first();
-                if ($product) {
-                    app(TopupPriceService::class)->failoverProduct($product);
-                }
-            }
-
-            // Transaksi tetap pending — aktif kembali otomatis saat sync berikutnya jika SKU pulih
         }
 
         return response()->json(['success' => true]);
