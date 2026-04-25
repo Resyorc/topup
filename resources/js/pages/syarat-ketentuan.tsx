@@ -7,12 +7,11 @@ const tocItems = [
     { id: 's3', title: 'Layanan & Produk' },
     { id: 's4', title: 'Pembayaran' },
     { id: 's5', title: 'Kebijakan Refund' },
-    { id: 's6', title: 'Program Loyalitas (Krysta Coin)' },
-    { id: 's7', title: 'Kode Promo & Diskon' },
-    { id: 's8', title: 'Batasan Tanggung Jawab' },
-    { id: 's9', title: 'Perubahan Ketentuan' },
-    { id: 's10', title: 'Hukum yang Berlaku' },
-    { id: 's11', title: 'Hubungi Kami' },
+    { id: 's6', title: 'Kode Promo & Diskon' },
+    { id: 's7', title: 'Batasan Tanggung Jawab' },
+    { id: 's8', title: 'Perubahan Ketentuan' },
+    { id: 's9', title: 'Hukum yang Berlaku' },
+    { id: 's10', title: 'Hubungi Kami' },
 ];
 
 const sectionBase =
@@ -334,6 +333,24 @@ export default function SyaratKetentuanPage() {
                                 dalam 1–3 hari kerja
                             </li>
                         </ul>
+                        <p className={'mt-5 ' + sectionText + ' font-semibold text-white'}>
+                            5.4 Nilai Refund
+                        </p>
+                        <p className={sectionText}>
+                            Apabila pengajuan refund disetujui, dana yang dikembalikan adalah sebesar
+                            harga produk atau nominal transaksi yang diterima oleh Nuvelo, tidak
+                            termasuk biaya layanan, biaya admin, biaya payment gateway, kode unik,
+                            atau biaya lain yang dikenakan oleh penyedia pembayaran.
+                        </p>
+                        <p className={sectionText}>
+                            Biaya admin/payment gateway merupakan biaya yang dibebankan oleh pihak
+                            penyedia pembayaran dan dapat bersifat tidak dapat dikembalikan.
+                        </p>
+                        <p className={sectionText}>
+                            Dalam kondisi tertentu, Nuvelo dapat mengembalikan biaya admin/payment
+                            gateway apabila biaya tersebut juga dikembalikan oleh penyedia pembayaran
+                            atau berdasarkan kebijakan khusus dari Nuvelo.
+                        </p>
                         <div className={box}>
                             Nuvelo berhak meminta bukti tambahan untuk memverifikasi klaim refund.
                             Keputusan Nuvelo atas klaim refund bersifat final.
@@ -343,47 +360,6 @@ export default function SyaratKetentuanPage() {
                     <section id="s6" className={sectionBase}>
                         <div className={sectionHeader}>
                             <div className={sectionNum}>06</div>
-                            <h2 className={sectionTitle}>
-                                Program Loyalitas (Krysta Coin)
-                            </h2>
-                        </div>
-                        <ul>
-                            <li className={listItem}>
-                                Krysta Coin adalah program reward internal Nuvelo yang diberikan
-                                kepada pengguna aktif
-                            </li>
-                            <li className={listItem}>
-                                Pengguna mendapatkan Krysta Coin sebesar{' '}
-                                <strong className="text-white">1%</strong> dari nilai transaksi yang
-                                berhasil via QRIS, E-wallet, atau Virtual Account dengan minimum
-                                transaksi <strong className="text-white">Rp 10.000</strong>
-                            </li>
-                            <li className={listItem}>
-                                Krysta Coin hanya dapat digunakan untuk mendapatkan diskon pada
-                                transaksi berikutnya di Nuvelo
-                            </li>
-                            <li className={listItem}>
-                                Krysta Coin{' '}
-                                <strong className="text-white">
-                                    tidak dapat diuangkan, dipindahtangankan
-                                </strong>
-                                , atau ditukar dengan produk fisik
-                            </li>
-                            <li className={listItem}>
-                                Krysta Coin yang tidak digunakan selama{' '}
-                                <strong className="text-white">12 bulan</strong> akan hangus secara
-                                otomatis
-                            </li>
-                            <li className={listItem}>
-                                Nuvelo berhak mengubah, menangguhkan, atau menghentikan program
-                                Krysta Coin dengan pemberitahuan kepada pengguna
-                            </li>
-                        </ul>
-                    </section>
-
-                    <section id="s7" className={sectionBase}>
-                        <div className={sectionHeader}>
-                            <div className={sectionNum}>07</div>
                             <h2 className={sectionTitle}>Kode Promo & Diskon</h2>
                         </div>
                         <ul>
@@ -409,9 +385,9 @@ export default function SyaratKetentuanPage() {
                         </ul>
                     </section>
 
-                    <section id="s8" className={sectionBase}>
+                    <section id="s7" className={sectionBase}>
                         <div className={sectionHeader}>
-                            <div className={sectionNum}>08</div>
+                            <div className={sectionNum}>07</div>
                             <h2 className={sectionTitle}>Batasan Tanggung Jawab</h2>
                         </div>
                         <ul>
@@ -435,9 +411,9 @@ export default function SyaratKetentuanPage() {
                         </div>
                     </section>
 
-                    <section id="s9" className={sectionBase}>
+                    <section id="s8" className={sectionBase}>
                         <div className={sectionHeader}>
-                            <div className={sectionNum}>09</div>
+                            <div className={sectionNum}>08</div>
                             <h2 className={sectionTitle}>Perubahan Ketentuan</h2>
                         </div>
                         <p className={sectionText}>
@@ -449,9 +425,9 @@ export default function SyaratKetentuanPage() {
                         </p>
                     </section>
 
-                    <section id="s10" className={sectionBase}>
+                    <section id="s9" className={sectionBase}>
                         <div className={sectionHeader}>
-                            <div className={sectionNum}>10</div>
+                            <div className={sectionNum}>09</div>
                             <h2 className={sectionTitle}>Hukum yang Berlaku</h2>
                         </div>
                         <p className={sectionText}>
@@ -463,9 +439,9 @@ export default function SyaratKetentuanPage() {
                         </p>
                     </section>
 
-                    <section id="s11" className={sectionBase}>
+                    <section id="s10" className={sectionBase}>
                         <div className={sectionHeader}>
-                            <div className={sectionNum}>11</div>
+                            <div className={sectionNum}>10</div>
                             <h2 className={sectionTitle}>Hubungi Kami</h2>
                         </div>
                         <p className={sectionText}>

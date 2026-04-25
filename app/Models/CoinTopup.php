@@ -10,6 +10,7 @@ class CoinTopup extends Model
     protected $fillable = [
         'user_id',
         'invoice_id',
+        'guest_token',
         'amount',
         'status',
         'failure_reason',

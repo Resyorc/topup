@@ -34,14 +34,7 @@ export default function InvoiceSearch({
     searchedInvoiceId = '',
 }: InvoiceSearchProps) {
     const { auth } = usePage<{ auth: { user: any } }>().props;
-    const { ownsInvoice, hasReviewed: guestHasReviewed, markReviewed } = useGuestInvoice();
-    const isGuest = !auth.user;
-
-    // Guest ownership check: if guest tries to view an invoice they don't own, block it
-    const [accessDenied] = useState<boolean>(() => {
-        if (!isGuest || !initialInvoiceData?.invoice_no) return false;
-        return !ownsInvoice(initialInvoiceData.invoice_no);
-    });
+    const { hasReviewed: guestHasReviewed, markReviewed } = useGuestInvoice();
 
     const { data, setData, get, processing, errors } = useForm({
         invoice_id: searchedInvoiceId,
@@ -77,9 +70,7 @@ export default function InvoiceSearch({
         }
     };
 
-    const [invoiceData, setInvoiceData] = useState<any>(
-        accessDenied ? null : initialInvoiceData,
-    );
+    const [invoiceData, setInvoiceData] = useState<any>(initialInvoiceData);
     const [animatedStatus, setAnimatedStatus] = useState<number>(0);
     const [isPaymentOpen, setIsPaymentOpen] = useState<boolean>(true);
     const [remainingSeconds, setRemainingSeconds] = useState<number | null>(
@@ -419,33 +410,6 @@ export default function InvoiceSearch({
         invoiceData?.status,
         invoiceData?.invoice_no,
     ]);
-
-    if (accessDenied) {
-        return (
-            <GuestLayout>
-                <Head title="Akses Ditolak" />
-                <div className="flex min-h-[calc(100vh-106px)] items-center justify-center px-4">
-                    <div className="text-center">
-                        <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10">
-                            <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-red-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M12 15v.01M12 9v3m9-3a9 9 0 11-18 0 9 9 0 0118 0z" />
-                            </svg>
-                        </div>
-                        <h2 className="mb-2 text-xl font-bold text-white">Akses Ditolak</h2>
-                        <p className="mb-6 text-sm text-gray-400">
-                            Invoice ini bukan milikmu, atau kamu belum pernah membuat pesanan ini.
-                        </p>
-                        <Link
-                            href="/"
-                            className="inline-block rounded-xl bg-primary px-6 py-3 text-sm font-bold text-white transition hover:bg-primary/90"
-                        >
-                            Kembali ke Beranda
-                        </Link>
-                    </div>
-                </div>
-            </GuestLayout>
-        );
-    }
 
     return (
         <GuestLayout>

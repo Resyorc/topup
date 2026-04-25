@@ -12,8 +12,10 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('products', function (Blueprint $table) {
-            $table->dropColumn('provider_sku');
-            
+            if (Schema::hasColumn('products', 'provider_sku')) {
+                $table->dropColumn('provider_sku');
+            }
+
             // Margins per tier
             $table->decimal('margin_guest_flat', 12, 2)->default(0)->after('price_cost');
             $table->decimal('margin_bronze_flat', 12, 2)->default(0)->after('margin_guest_flat');
@@ -31,7 +33,13 @@ return new class extends Migration
             $table->string('logo_url')->nullable()->after('is_available');
 
             // Drop existing margin and single price
-            $table->dropColumn(['margin_flat', 'margin_percent', 'price_sell']);
+            $dropCols = array_filter(
+                ['margin_flat', 'margin_percent', 'price_sell'],
+                fn ($col) => Schema::hasColumn('products', $col)
+            );
+            if (!empty($dropCols)) {
+                $table->dropColumn(array_values($dropCols));
+            }
         });
 
         Schema::table('games', function (Blueprint $table) {

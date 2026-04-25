@@ -20,8 +20,8 @@ Route::get('/reseller', [HomeController::class, 'reseller'])->name('reseller');
 
 Route::get('/order/{slug}', [App\Http\Controllers\GameController::class, 'show'])->name('game.detail');
 Route::get('/invoice', [App\Http\Controllers\InvoiceController::class, 'show'])->name('invoice');
-Route::get('/invoice/data', [App\Http\Controllers\InvoiceController::class, 'data'])->name('invoice.data');
-Route::get('/invoice/by-phone', [App\Http\Controllers\InvoiceController::class, 'searchByPhone'])->name('invoice.by-phone');
+Route::get('/invoice/data', [App\Http\Controllers\InvoiceController::class, 'data'])->middleware('throttle:10,1')->name('invoice.data');
+Route::get('/invoice/by-phone', [App\Http\Controllers\InvoiceController::class, 'searchByPhone'])->middleware('throttle:10,1')->name('invoice.by-phone');
 Route::get('/blog', [App\Http\Controllers\ArticleController::class, 'index'])->name('blog');
 Route::get('/blog/{slug}', [App\Http\Controllers\ArticleController::class, 'show'])->name('blog.show');
 

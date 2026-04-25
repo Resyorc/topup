@@ -161,9 +161,12 @@ class CheckoutController extends Controller
 
                 $fee = (int) ($paymentResponse['fee_customer'] ?? 0);
 
+                $guestToken = $authenticatedUserId ? null : Str::random(48);
+
                 $transaction = Transaction::create([
                     'invoice_id' => $merchantRef,
                     'user_id' => $authenticatedUserId,
+                    'guest_token' => $guestToken,
                     'product_id' => $product->id,
                     'provider_sku' => $providerSku,
                     'customer_game_id' => $validated['customer_game_id'],
@@ -233,6 +236,7 @@ class CheckoutController extends Controller
                     'pay_code' => $result['paymentResponse']['pay_code'] ?? null,
                     'amount' => $amount,
                     'expired_at' => $expiredAt->toDateTimeString(),
+                    'guest_token' => $result['transaction']->guest_token,
                 ],
             ]);
 

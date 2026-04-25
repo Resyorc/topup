@@ -21,7 +21,7 @@ class DashboardController extends Controller
             ->whereDate('created_at', now()->toDateString());
 
         $dashboardStats = [
-            'pending' => (clone $baseTodayQuery)->whereIn('status', ['pending', 'paid'])->count(),
+            'pending' => (clone $baseTodayQuery)->where('status', 'pending')->count(),
             'processing' => (clone $baseTodayQuery)->where('status', 'processing')->count(),
             'success' => (clone $baseTodayQuery)->where('status', 'success')->count(),
             'failed' => (clone $baseTodayQuery)->where('status', 'failed')->count(),

@@ -29,6 +29,8 @@ class Transaction extends Model
         'voucher_code',
         'discount',
         'status',
+        'fulfilment_status',
+        'guest_token',
         'sn',
         'failure_reason',      // ✅ tambah
         'payment_url',

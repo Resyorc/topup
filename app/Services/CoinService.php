@@ -17,16 +17,26 @@ class CoinService
     public function credit(User $user, int $amount, string $description, ?string $referenceId = null): CoinTransaction
     {
         return DB::transaction(function () use ($user, $amount, $description, $referenceId) {
-            // Kunci row user — cegah race condition
             $user = User::where('id', $user->id)->lockForUpdate()->first();
+
+            if ($referenceId !== null) {
+                $exists = CoinTransaction::where('reference_id', $referenceId)
+                    ->where('type', 'credit')
+                    ->lockForUpdate()
+                    ->exists();
+
+                if ($exists) {
+                    throw new Exception("Duplikat credit coin: reference_id '{$referenceId}' sudah pernah diproses.");
+                }
+            }
 
             $user->increment('coin_balance', $amount);
 
             return CoinTransaction::create([
-                'user_id' => $user->id,
-                'amount' => $amount,
-                'type' => 'credit',
-                'description' => $description,
+                'user_id'      => $user->id,
+                'amount'       => $amount,
+                'type'         => 'credit',
+                'description'  => $description,
                 'reference_id' => $referenceId,
             ]);
         });

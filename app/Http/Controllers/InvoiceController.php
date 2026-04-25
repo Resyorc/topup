@@ -57,7 +57,8 @@ class InvoiceController extends Controller
 
     public function show(Request $request, TransactionExpiryService $transactionExpiryService)
     {
-        $invoiceId = $request->query('invoice_id');
+        $invoiceId  = $request->query('invoice_id');
+        $guestToken = $request->query('guest_token');
         $invoiceData = null;
 
         if ($invoiceId) {
@@ -68,7 +69,7 @@ class InvoiceController extends Controller
                 ->first();
 
             if ($transaction) {
-                if ($transaction->user_id && $transaction->user_id !== auth()->id()) {
+                if (! $this->canAccessTransaction($transaction, $guestToken)) {
                     abort(403);
                 }
 
@@ -80,7 +81,7 @@ class InvoiceController extends Controller
                     ->first();
 
                 if ($coinTopup) {
-                    if ($coinTopup->user_id && $coinTopup->user_id !== auth()->id()) {
+                    if (! $this->canAccessCoinTopup($coinTopup, $guestToken)) {
                         abort(403);
                     }
 
@@ -97,18 +98,17 @@ class InvoiceController extends Controller
             }
         }
 
-        // dd($invoiceData);
-
         return Inertia::render('invoice', [
             'initialInvoiceData' => $invoiceData,
-            'searchedInvoiceId' => $invoiceId,
+            'searchedInvoiceId'  => $invoiceId,
         ]);
     }
 
     public function data(Request $request, TransactionExpiryService $transactionExpiryService)
     {
         $validated = $request->validate([
-            'invoice_id' => 'required|string',
+            'invoice_id'  => 'required|string',
+            'guest_token' => 'nullable|string|max:64',
         ]);
 
         $transactionExpiryService->expireOverdue($validated['invoice_id']);
@@ -118,7 +118,7 @@ class InvoiceController extends Controller
             ->first();
 
         if ($transaction) {
-            if ($transaction->user_id && $transaction->user_id !== auth()->id()) {
+            if (! $this->canAccessTransaction($transaction, $validated['guest_token'] ?? null)) {
                 return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
             }
 
@@ -133,13 +133,10 @@ class InvoiceController extends Controller
             ->first();
 
         if (! $coinTopup) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invoice tidak ditemukan.',
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Invoice tidak ditemukan.'], 404);
         }
 
-        if ($coinTopup->user_id && $coinTopup->user_id !== auth()->id()) {
+        if (! $this->canAccessCoinTopup($coinTopup, $validated['guest_token'] ?? null)) {
             return response()->json(['success' => false, 'message' => 'Unauthorized.'], 403);
         }
 
@@ -155,6 +152,43 @@ class InvoiceController extends Controller
             'success' => true,
             'data' => $this->mapCoinTopupToInvoiceData($coinTopup),
         ]);
+    }
+
+    private function canAccessTransaction(Transaction $transaction, ?string $guestToken): bool
+    {
+        // Transaksi milik user login — wajib match user
+        if ($transaction->user_id) {
+            return $transaction->user_id === auth()->id();
+        }
+
+        // Transaksi guest lama (sebelum sistem guest_token) — tetap aksesibel untuk backward compat
+        if (! $transaction->guest_token) {
+            return true;
+        }
+
+        // Transaksi guest baru — wajib ada token yang valid
+        if (! $guestToken) {
+            return false;
+        }
+
+        return hash_equals($transaction->guest_token, $guestToken);
+    }
+
+    private function canAccessCoinTopup(CoinTopup $coinTopup, ?string $guestToken): bool
+    {
+        if ($coinTopup->user_id) {
+            return $coinTopup->user_id === auth()->id();
+        }
+
+        if (! $coinTopup->guest_token) {
+            return true;
+        }
+
+        if (! $guestToken) {
+            return false;
+        }
+
+        return hash_equals($coinTopup->guest_token, $guestToken);
     }
 
     private function mapTransactionToInvoiceData(Transaction $transaction): array

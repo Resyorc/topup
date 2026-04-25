@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\Transactions\Tables;
 
+use App\Models\CoinTransaction;
 use App\Models\Game;
 use App\Models\Transaction;
 use App\Models\User;
@@ -92,12 +93,21 @@ class TransactionsTable
             ])
             ->filters([
                 SelectFilter::make('status')
-                    ->label('Status')
+                    ->label('Status Fulfilment')
                     ->options([
                         'pending'    => 'Pending',
                         'processing' => 'Processing',
                         'success'    => 'Success',
                         'failed'     => 'Failed',
+                    ]),
+
+                SelectFilter::make('payment_status')
+                    ->label('Status Pembayaran')
+                    ->options([
+                        'pending'  => 'Pending',
+                        'paid'     => 'Paid',
+                        'expired'  => 'Expired',
+                        'failed'   => 'Failed',
                     ]),
             ])
             ->recordActions([
@@ -113,11 +123,11 @@ class TransactionsTable
                         ->modalSubmitActionLabel('Sync Sekarang')
                         ->action(function (Transaction $record): void {
                             try {
-                                $product = $record->load('product.game')->product;
+                                $record->load('product.game');
                                 $customerNo = $record->customer_game_id.($record->customer_zone_id ?? '');
 
                                 $result = app(DigiflazzService::class)->checkTransactionStatus(
-                                    $product->provider_sku,
+                                    $record->provider_sku,
                                     $customerNo,
                                     $record->invoice_id,
                                 );
@@ -159,16 +169,24 @@ class TransactionsTable
                                         'failure_reason' => $result['rc'] ?? 'Sync manual admin',
                                     ]);
 
+                                    $coinRefunded = false;
                                     if ($record->payment_method === 'COIN' && $record->user_id) {
-                                        $user = User::find($record->user_id);
-                                        if ($user) {
-                                            $refundAmount = (int) ($record->amount + $record->fee);
-                                            app(CoinService::class)->credit(
-                                                $user,
-                                                $refundAmount,
-                                                'Refund otomatis (sync admin): '.$record->invoice_id,
-                                                $record->invoice_id,
-                                            );
+                                        $alreadyRefunded = CoinTransaction::where('reference_id', $record->invoice_id)
+                                            ->where('type', 'credit')
+                                            ->exists();
+
+                                        if (! $alreadyRefunded) {
+                                            $user = User::find($record->user_id);
+                                            if ($user) {
+                                                $refundAmount = (int) ($record->amount + $record->fee);
+                                                app(CoinService::class)->credit(
+                                                    $user,
+                                                    $refundAmount,
+                                                    'Refund otomatis (sync admin): '.$record->invoice_id,
+                                                    $record->invoice_id,
+                                                );
+                                                $coinRefunded = true;
+                                            }
                                         }
                                     }
 
@@ -176,7 +194,7 @@ class TransactionsTable
                                         ->danger()
                                         ->title('Transaksi diupdate: FAILED')
                                         ->body('RC: '.($result['rc'] ?? '-')
-                                            .($record->payment_method === 'COIN' ? ' | Coin dikembalikan.' : ''))
+                                            .($coinRefunded ? ' | Coin dikembalikan.' : ($record->payment_method === 'COIN' ? ' | Coin sudah dikembalikan sebelumnya.' : '')))
                                         ->send();
 
                                 } else {
@@ -217,26 +235,40 @@ class TransactionsTable
                                 'failure_reason' => $data['failure_reason'],
                             ]);
 
+                            $coinRefunded = false;
                             if ($record->payment_method === 'COIN' && $record->user_id) {
-                                try {
-                                    $user = User::find($record->user_id);
-                                    if ($user) {
-                                        $refundAmount = (int) ($record->amount + $record->fee);
-                                        app(CoinService::class)->credit(
-                                            $user,
-                                            $refundAmount,
-                                            'Refund manual oleh admin: '.$record->invoice_id,
-                                            $record->invoice_id,
-                                        );
-                                    }
-                                } catch (\Exception $e) {
+                                $alreadyRefunded = CoinTransaction::where('reference_id', $record->invoice_id)
+                                    ->where('type', 'credit')
+                                    ->exists();
+
+                                if ($alreadyRefunded) {
                                     Notification::make()
                                         ->warning()
-                                        ->title('Status diupdate, tapi refund coin gagal')
-                                        ->body($e->getMessage())
+                                        ->title('Refund dilewati — sudah pernah diproses')
+                                        ->body('Coin untuk '.$record->invoice_id.' sudah dikembalikan sebelumnya.')
                                         ->send();
+                                } else {
+                                    try {
+                                        $user = User::find($record->user_id);
+                                        if ($user) {
+                                            $refundAmount = (int) ($record->amount + $record->fee);
+                                            app(CoinService::class)->credit(
+                                                $user,
+                                                $refundAmount,
+                                                'Refund manual oleh admin: '.$record->invoice_id,
+                                                $record->invoice_id,
+                                            );
+                                            $coinRefunded = true;
+                                        }
+                                    } catch (\Exception $e) {
+                                        Notification::make()
+                                            ->warning()
+                                            ->title('Status diupdate, tapi refund coin gagal')
+                                            ->body($e->getMessage())
+                                            ->send();
 
-                                    return;
+                                        return;
+                                    }
                                 }
                             }
 
@@ -244,7 +276,7 @@ class TransactionsTable
                                 ->danger()
                                 ->title('Transaksi ditandai FAILED')
                                 ->body($record->invoice_id
-                                    .($record->payment_method === 'COIN' ? ' | Coin dikembalikan.' : ''))
+                                    .($coinRefunded ? ' | Coin dikembalikan.' : ''))
                                 ->send();
                         }),
                 ])->label('Aksi')->icon('heroicon-o-ellipsis-vertical'),
