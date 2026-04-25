@@ -11,9 +11,13 @@ class MaintenanceMode
 {
     public function handle(Request $request, Closure $next)
     {
+        $adminPath = trim((string) config('app.admin_path', 'nuvelo-control'), '/');
+        $adminDomain = config('app.admin_domain');
+
         // Jangan blokir admin panel, API callback (webhook), dan aset
         if (
-            $request->is('admin/*') ||
+            ($adminDomain && $request->getHost() === $adminDomain) ||
+            ($adminPath !== '' && $request->is($adminPath.'*')) ||
             $request->is('api/digiflazz-callback') ||
             $request->is('storage/*')
         ) {

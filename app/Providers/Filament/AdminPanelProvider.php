@@ -34,10 +34,17 @@ class AdminPanelProvider extends PanelProvider
             : cache()->rememberForever('site_logo', function () {
                 return Setting::where('key', 'web_logo')->value('value');
             });
+        $adminDomain = config('app.admin_domain');
+        $adminPath = config('app.admin_path');
+        $appScheme = parse_url((string) config('app.url'), PHP_URL_SCHEME) ?: 'https';
+        $homeUrl = $adminDomain
+            ? sprintf('%s://%s/%s', $appScheme, $adminDomain, ltrim((string) $adminPath, '/'))
+            : url('/'.ltrim((string) $adminPath, '/'));
 
         return $panel
             ->id('admin')
-            ->path('nuvelo-control')
+            ->domain($adminDomain)
+            ->path($adminPath)
             ->brandLogo(asset('storage/' . $logoPath))
             ->colors([
                 'primary' => Color::Purple,
@@ -46,7 +53,7 @@ class AdminPanelProvider extends PanelProvider
 
             ->discoverPages(in: app_path('Filament/Admin/Pages'), for: 'App\Filament\Admin\Pages')
             ->login()
-            ->homeUrl(url('/nuvelo-control'))
+            ->homeUrl(rtrim($homeUrl, '/'))
             ->pages([
                 Dashboard::class,
             ])

@@ -9,13 +9,6 @@ use Symfony\Component\HttpFoundation\Response;
 
 class LogVisitor
 {
-    // Prefix URL yang tidak perlu dicatat
-    private const SKIP_PREFIXES = [
-        '/nuvelo-control',  // admin panel
-        '/up',              // health check
-        '/livewire',        // Livewire internal
-    ];
-
     // Ekstensi file statis yang tidak perlu dicatat
     private const SKIP_EXTENSIONS = [
         'js', 'css', 'webp', 'png', 'jpg', 'jpeg', 'gif', 'svg',
@@ -32,9 +25,21 @@ class LogVisitor
         }
 
         $path = $request->path();
+        $adminPath = trim((string) config('app.admin_path', 'nuvelo-control'), '/');
+        $adminDomain = config('app.admin_domain');
 
         // Skip admin panel dan health check
-        foreach (self::SKIP_PREFIXES as $prefix) {
+        $skipPrefixes = array_filter([
+            $adminPath !== '' ? '/'.$adminPath : null,
+            '/up',
+            '/livewire',
+        ]);
+
+        if ($adminDomain && $request->getHost() === $adminDomain) {
+            return $response;
+        }
+
+        foreach ($skipPrefixes as $prefix) {
             if (str_starts_with('/'.$path, $prefix)) {
                 return $response;
             }

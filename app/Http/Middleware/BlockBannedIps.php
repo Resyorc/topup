@@ -11,8 +11,12 @@ class BlockBannedIps
 {
     public function handle(Request $request, Closure $next): Response
     {
+        $adminPath = trim((string) config('app.admin_path', 'nuvelo-control'), '/');
+        $adminDomain = config('app.admin_domain');
+
         // Skip untuk admin panel dan Livewire internal requests
-        if (str_starts_with($request->path(), 'nuvelo-control') ||
+        if (($adminDomain && $request->getHost() === $adminDomain) ||
+            ($adminPath !== '' && str_starts_with($request->path(), $adminPath)) ||
             str_starts_with($request->path(), 'livewire')) {
             return $next($request);
         }
