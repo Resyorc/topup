@@ -2,15 +2,14 @@
 
 namespace App\Jobs;
 
-use App\Models\ErrorLog;
 use App\Models\Transaction;
 use App\Services\DigiflazzService;
+use App\Services\OperationalLogger;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Log;
 use Throwable;
 
 class ProcessFulfilmentJob implements ShouldQueue
@@ -29,7 +28,9 @@ class ProcessFulfilmentJob implements ShouldQueue
             ->first();
 
         if (! $transaction) {
-            Log::warning('ProcessFulfilmentJob: transaksi tidak ditemukan', ['invoice_id' => $this->invoiceId]);
+            OperationalLogger::warning('ProcessFulfilmentJob: transaksi tidak ditemukan', [
+                'invoice_id' => $this->invoiceId,
+            ], channel: 'payments');
             return;
         }
 
@@ -40,7 +41,10 @@ class ProcessFulfilmentJob implements ShouldQueue
 
         // Pastikan sudah dibayar sebelum fulfilment
         if ($transaction->payment_status !== 'paid') {
-            Log::warning('ProcessFulfilmentJob: transaksi belum dibayar', ['invoice_id' => $this->invoiceId]);
+            OperationalLogger::warning('ProcessFulfilmentJob: transaksi belum dibayar', [
+                'invoice_id' => $this->invoiceId,
+                'payment_status' => $transaction->payment_status,
+            ], channel: 'payments');
             return;
         }
 
@@ -76,23 +80,10 @@ class ProcessFulfilmentJob implements ShouldQueue
             }
 
             if ($sku === '') {
-                Log::error('ProcessFulfilmentJob: provider_sku kosong', [
+                OperationalLogger::error('ProcessFulfilmentJob: provider_sku kosong', [
                     'invoice_id' => $this->invoiceId,
-                    'reason'     => $reason ?? 'unknown',
-                ]);
-
-                ErrorLog::create([
-                    'level'       => 'error',
-                    'message'     => "Fulfilment gagal: provider_sku kosong. {$reason}",
-                    'exception'   => 'MissingProviderSku',
-                    'file'        => __FILE__,
-                    'line'        => __LINE__,
-                    'trace'       => json_encode(['invoice_id' => $this->invoiceId]),
-                    'url'         => null,
-                    'method'      => 'JOB',
-                    'ip'          => null,
-                    'occurred_at' => now(),
-                ]);
+                    'reason' => $reason ?? 'unknown',
+                ], channel: 'payments');
 
                 $transaction->update([
                     'status'            => 'failed',
@@ -107,39 +98,37 @@ class ProcessFulfilmentJob implements ShouldQueue
         $transaction->update(['fulfilment_status' => 'processing']);
 
         try {
+            $transaction->forceFill([
+                'provider_sku' => $sku,
+            ])->save();
+
+            $customerNo = (string) $transaction->customer_game_id.(string) ($transaction->customer_zone_id ?? '');
             $topupResult = $digiflazzService->createTransaction(
                 $sku,
-                $transaction->customer_game_id.$transaction->customer_zone_id,
-                $transaction->invoice_id,
+                $customerNo,
+                $transaction->invoice_id
             );
 
             $transaction->update([
                 'status'            => 'processing',
                 'fulfilment_status' => 'processing',
+                'reference_id_provider' => $topupResult['ref_id']
+                    ?? $topupResult['message']
+                    ?? $transaction->reference_id_provider,
+                'api_logs' => $topupResult,
             ]);
 
-            Log::info('ProcessFulfilmentJob: Digiflazz request berhasil', [
+            OperationalLogger::info('ProcessFulfilmentJob: provider request berhasil', [
                 'invoice_id' => $this->invoiceId,
-                'result'     => $topupResult,
-            ]);
+                'provider_sku' => $sku,
+                'result' => $topupResult,
+            ], 'payments');
         } catch (Throwable $e) {
-            Log::error('ProcessFulfilmentJob: Digiflazz gagal', [
+            OperationalLogger::error('ProcessFulfilmentJob: provider gagal', [
                 'invoice_id' => $this->invoiceId,
-                'error'      => $e->getMessage(),
-            ]);
-
-            ErrorLog::create([
-                'level'       => 'error',
-                'message'     => 'Fulfilment gagal saat kirim ke Digiflazz: '.$e->getMessage(),
-                'exception'   => get_class($e),
-                'file'        => $e->getFile(),
-                'line'        => $e->getLine(),
-                'trace'       => mb_substr($e->getTraceAsString(), 0, 65535),
-                'url'         => null,
-                'method'      => 'JOB',
-                'ip'          => null,
-                'occurred_at' => now(),
-            ]);
+                'provider_sku' => $sku,
+                'error' => $e->getMessage(),
+            ], $e, channel: 'payments');
 
             $transaction->update([
                 'status'            => 'failed',

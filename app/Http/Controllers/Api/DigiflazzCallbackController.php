@@ -4,12 +4,12 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppNotification;
-use App\Models\ErrorLog;
 use App\Models\Game;
 use App\Models\Transaction;
 use App\Models\User;
 use App\Services\CoinService;
 use App\Services\LoyaltyService;
+use App\Services\OperationalLogger;
 use App\Services\TopupPriceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -29,10 +29,14 @@ class DigiflazzCallbackController extends Controller
     {
         $ip = $request->ip();
 
-        Log::info('Digiflazz callback masuk', ['ip' => $ip]);
+        OperationalLogger::info('Digiflazz callback masuk', [
+            'ip' => $ip,
+        ], 'payments');
 
         if (! in_array($ip, self::ALLOWED_IPS, true)) {
-            Log::warning('Digiflazz callback ditolak - IP tidak diizinkan', ['ip' => $ip]);
+            OperationalLogger::warning('Digiflazz callback ditolak - IP tidak diizinkan', [
+                'ip' => $ip,
+            ], $request, 'payments');
 
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
         }
@@ -40,10 +44,10 @@ class DigiflazzCallbackController extends Controller
         $payload = $request->getContent();
         $data = json_decode($payload, true);
 
-        Log::info('Digiflazz callback diterima', [
+        OperationalLogger::info('Digiflazz callback diterima', [
             'ref_id' => data_get($data, 'data.ref_id', 'unknown'),
             'status' => data_get($data, 'data.status', 'unknown'),
-        ]);
+        ], 'payments');
 
         if (! isset($data['data'], $data['data']['ref_id'])) {
             return response()->json([
@@ -124,20 +128,10 @@ class DigiflazzCallbackController extends Controller
         });
 
         if ($outcome['type'] === 'missing') {
-            Log::error('Digiflazz Callback Transaction Not Found: '.$refId);
-
-            ErrorLog::create([
-                'level' => 'error',
-                'message' => "Digiflazz callback: transaksi tidak ditemukan untuk ref_id '{$refId}'.",
-                'exception' => 'DigiflazzTransactionNotFound',
-                'file' => __FILE__,
-                'line' => __LINE__,
-                'trace' => 'ref_id dari Digiflazz: '.$refId."\nStatus dari Digiflazz: ".($trxData['status'] ?? 'unknown'),
-                'url' => $request->fullUrl(),
-                'method' => 'POST',
-                'ip' => $request->ip(),
-                'occurred_at' => now(),
-            ]);
+            OperationalLogger::error('Digiflazz Callback Transaction Not Found', [
+                'ref_id' => $refId,
+                'status' => $trxData['status'] ?? 'unknown',
+            ], request: $request, channel: 'payments');
 
             return response()->json([
                 'success' => false,
@@ -160,7 +154,10 @@ class DigiflazzCallbackController extends Controller
             app(LoyaltyService::class)->awardFromTransaction($transaction);
             dispatch(SendWhatsAppNotification::topupSuccess($transaction->fresh(['product.game'])));
 
-            Log::info("Digiflazz Topup SUKSES for Invoice: {$refId}");
+            OperationalLogger::info('Digiflazz Topup SUKSES', [
+                'invoice_id' => $refId,
+                'transaction_id' => $transaction->id,
+            ], 'payments');
         } elseif ($outcome['type'] === 'failed') {
             $transaction = Transaction::with(['product.game'])
                 ->where('invoice_id', $outcome['invoice_id'])
@@ -178,16 +175,26 @@ class DigiflazzCallbackController extends Controller
                             $transaction->invoice_id,
                         );
 
-                        Log::info("Coin refunded {$outcome['refund_amount']} to user {$user->id} for failed invoice: {$refId}");
+                        OperationalLogger::info('Coin refund berhasil untuk transaksi gagal', [
+                            'invoice_id' => $refId,
+                            'user_id' => $user->id,
+                            'refund_amount' => $outcome['refund_amount'],
+                        ], 'payments');
                     }
                 } catch (\Exception $e) {
-                    Log::error("Coin refund failed for invoice {$refId}: ".$e->getMessage());
+                    OperationalLogger::error('Coin refund gagal untuk transaksi Digiflazz failed', [
+                        'invoice_id' => $refId,
+                        'refund_amount' => $outcome['refund_amount'],
+                    ], $e, $request, 'payments');
                 }
             }
 
             dispatch(SendWhatsAppNotification::topupFailed($transaction));
 
-            Log::info("Digiflazz Topup GAGAL for Invoice: {$refId} - RC: {$outcome['failure_reason']}");
+            OperationalLogger::info('Digiflazz Topup GAGAL', [
+                'invoice_id' => $refId,
+                'failure_reason' => $outcome['failure_reason'],
+            ], 'payments');
         } elseif ($outcome['type'] === 'gangguan') {
             Log::channel('digiflazz')->warning(
                 "Webhook GANGGUAN diterima: ref_id={$outcome['invoice_id']}, SKU=".($outcome['sku_code'] ?? '-').", RC={$outcome['failure_reason']}"

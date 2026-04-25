@@ -6,12 +6,11 @@ use App\Http\Controllers\Controller;
 use App\Jobs\ProcessFulfilmentJob;
 use App\Jobs\SendWhatsAppNotification;
 use App\Models\CoinTopup;
-use App\Models\ErrorLog;
 use App\Models\Transaction;
 use App\Services\CoinService;
+use App\Services\OperationalLogger;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 
 class TripayCallbackController extends Controller
 {
@@ -24,20 +23,11 @@ class TripayCallbackController extends Controller
         $signature = hash_hmac('sha256', $json, $privateKey);
 
         if (! hash_equals($signature, (string) $callbackSignature)) {
-            Log::warning('Tripay Callback Invalid Signature', ['received' => $callbackSignature, 'calculated' => $signature]);
-
-            ErrorLog::create([
-                'level'       => 'warning',
-                'message'     => 'Tripay callback ditolak: signature tidak cocok.',
-                'exception'   => 'TripaySignatureMismatch',
-                'file'        => __FILE__,
-                'line'        => __LINE__,
-                'trace'       => "Received: {$callbackSignature}\nCalculated: {$signature}\nPrivate key configured: ".($privateKey ? 'YES ('.strlen($privateKey).' chars)' : 'NOT SET'),
-                'url'         => request()->fullUrl(),
-                'method'      => 'POST',
-                'ip'          => request()->ip(),
-                'occurred_at' => now(),
-            ]);
+            OperationalLogger::warning('Tripay Callback Invalid Signature', [
+                'received' => $callbackSignature,
+                'calculated' => $signature,
+                'event' => $request->header('X-Callback-Event'),
+            ], $request, 'payments');
 
             return response()->json(['success' => false, 'message' => 'Invalid signature'], 403);
         }
@@ -95,7 +85,11 @@ class TripayCallbackController extends Controller
         $transaction = Transaction::where('invoice_id', $data->merchant_ref)->first();
 
         if (! $transaction) {
-            Log::error('Tripay Callback Transaction Not Found: '.$data->merchant_ref);
+            OperationalLogger::error('Tripay Callback Transaction Not Found', [
+                'merchant_ref' => $data->merchant_ref,
+                'reference' => $data->reference ?? null,
+                'status' => $data->status ?? null,
+            ], request: $request, channel: 'payments');
 
             return response()->json(['success' => false, 'message' => 'Invoice not found'], 404);
         }

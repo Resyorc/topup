@@ -9,6 +9,7 @@ use App\Models\User;
 use App\Services\CoinService;
 use App\Services\DigiflazzService;
 use App\Services\LoyaltyService;
+use Illuminate\Support\Facades\Log;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Notifications\Notification;
@@ -112,7 +113,7 @@ class TransactionsTable
             ])
             ->recordActions([
                 ActionGroup::make([
-                    Action::make('sync_digiflazz')
+                    Action::make('sync_provider')
                         ->label('Sync Digiflazz')
                         ->icon('heroicon-o-arrow-path')
                         ->color('warning')
@@ -124,12 +125,11 @@ class TransactionsTable
                         ->action(function (Transaction $record): void {
                             try {
                                 $record->load('product.game');
-                                $customerNo = $record->customer_game_id.($record->customer_zone_id ?? '');
-
+                                $customerNo = (string) $record->customer_game_id.(string) ($record->customer_zone_id ?? '');
                                 $result = app(DigiflazzService::class)->checkTransactionStatus(
-                                    $record->provider_sku,
+                                    (string) $record->provider_sku,
                                     $customerNo,
-                                    $record->invoice_id,
+                                    $record->invoice_id
                                 );
 
                                 if (empty($result)) {
@@ -142,15 +142,17 @@ class TransactionsTable
                                     return;
                                 }
 
-                                $status = strtolower($result['status'] ?? '');
+                                $status = strtolower((string) ($result['status'] ?? $result['transaction_status'] ?? ''));
+                                $serialNumber = $result['sn'] ?? $result['serial_number'] ?? null;
+                                $failureReason = $result['rc'] ?? $result['message'] ?? $result['note'] ?? 'Sync manual admin';
 
-                                if ($status === 'sukses') {
+                                if (in_array($status, ['sukses', 'success', 'sandbox - sukses'], true)) {
                                     $record->update([
                                         'status' => 'success',
-                                        'sn'     => $result['sn'] ?? null,
+                                        'sn'     => $serialNumber,
                                     ]);
 
-                                    $gameId = $product->game_id ?? null;
+                                    $gameId = $record->product?->game_id;
                                     if ($gameId) {
                                         Game::where('id', $gameId)->increment('total_sold');
                                     }
@@ -160,13 +162,13 @@ class TransactionsTable
                                     Notification::make()
                                         ->success()
                                         ->title('Transaksi diupdate: SUCCESS')
-                                        ->body('SN: '.($result['sn'] ?: '-'))
+                                        ->body('SN: '.($serialNumber ?: '-'))
                                         ->send();
 
-                                } elseif ($status === 'gagal') {
+                                } elseif (in_array($status, ['gagal', 'failed'], true)) {
                                     $record->update([
                                         'status'         => 'failed',
-                                        'failure_reason' => $result['rc'] ?? 'Sync manual admin',
+                                        'failure_reason' => $failureReason,
                                     ]);
 
                                     $coinRefunded = false;
@@ -193,19 +195,26 @@ class TransactionsTable
                                     Notification::make()
                                         ->danger()
                                         ->title('Transaksi diupdate: FAILED')
-                                        ->body('RC: '.($result['rc'] ?? '-')
+                                        ->body('RC: '.($failureReason ?: '-')
                                             .($coinRefunded ? ' | Coin dikembalikan.' : ($record->payment_method === 'COIN' ? ' | Coin sudah dikembalikan sebelumnya.' : '')))
                                         ->send();
 
                                 } else {
                                     Notification::make()
                                         ->info()
-                                        ->title('Status Digiflazz: '.strtoupper($status ?: 'unknown'))
+                                        ->title('Status Provider: '.strtoupper($status ?: 'unknown'))
                                         ->body('Transaksi belum selesai diproses Digiflazz. Coba sync ulang nanti.')
                                         ->send();
                                 }
 
                             } catch (\Exception $e) {
+                                Log::error('Manual Digiflazz sync failed', [
+                                    'transaction_id' => $record->id,
+                                    'invoice_id' => $record->invoice_id,
+                                    'provider_sku' => $record->provider_sku,
+                                    'message' => $e->getMessage(),
+                                ]);
+
                                 Notification::make()
                                     ->danger()
                                     ->title('Sync gagal')
@@ -227,7 +236,7 @@ class TransactionsTable
                         ])
                         ->requiresConfirmation()
                         ->modalHeading(fn (Transaction $record) => 'Paksa Gagal: '.$record->invoice_id)
-                        ->modalDescription('Gunakan jika Digiflazz tidak bisa dihubungi. Jika bayar via Coin, coin dikembalikan otomatis.')
+                        ->modalDescription('Gunakan jika provider tidak bisa dihubungi. Jika bayar via Coin, coin dikembalikan otomatis.')
                         ->modalSubmitActionLabel('Tandai Gagal')
                         ->action(function (Transaction $record, array $data): void {
                             $record->update([

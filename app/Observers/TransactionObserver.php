@@ -9,7 +9,7 @@ class TransactionObserver
 {
     public function updated(Transaction $transaction): void
     {
-        if ($transaction->wasChanged('status')) {
+        if ($transaction->wasChanged(['status', 'payment_status'])) {
             TransactionStatusUpdated::dispatch($transaction);
         }
     }

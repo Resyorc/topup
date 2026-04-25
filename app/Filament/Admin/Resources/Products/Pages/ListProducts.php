@@ -16,8 +16,7 @@ class ListProducts extends ListRecords
     protected function getHeaderActions(): array
     {
         return [
-            // Tombol Sync Manual Digiflazz
-            Action::make('sync_digiflazz')
+            Action::make('sync_providers')
                 ->label('Sync Harga Digiflazz')
                 ->icon('heroicon-o-arrow-path')
                 ->color('info')

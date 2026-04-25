@@ -24,7 +24,9 @@ class ProviderProductsRelationManager extends RelationManager
             ->components([
                 TextInput::make('provider_name')
                     ->required()
-                    ->default('digiflazz'),
+                    ->default('digiflazz')
+                    ->disabled()
+                    ->dehydrated(),
                 TextInput::make('provider_sku')
                     ->required(),
                 TextInput::make('product_name')
@@ -46,8 +48,6 @@ class ProviderProductsRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('product_name')
             ->columns([
-                TextColumn::make('provider_name')
-                    ->searchable(),
                 TextColumn::make('provider_sku')
                     ->searchable(),
                 TextColumn::make('product_name')

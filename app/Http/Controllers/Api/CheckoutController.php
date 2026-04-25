@@ -4,16 +4,16 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\SendWhatsAppNotification;
-use App\Models\ErrorLog;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Services\AuditLogger;
 use App\Services\CoinService;
+use App\Services\DigiflazzService;
+use App\Services\OperationalLogger;
 use App\Services\TripayService;
 use App\Services\VoucherService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
 class CheckoutController extends Controller
@@ -51,7 +51,9 @@ class CheckoutController extends Controller
             return response()->json(['error' => 'Product is currently unavailable.'], 400);
         }
 
-        $providerSku = $product->providerProducts->first()?->provider_sku;
+        $selectedProvider = $product->providerProducts->first();
+        $providerSku = $selectedProvider?->provider_sku;
+
         if (! $providerSku) {
             return response()->json(['error' => 'Produk tidak memiliki SKU provider aktif. Silakan hubungi admin.'], 400);
         }
@@ -241,7 +243,11 @@ class CheckoutController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Checkout Error: '.$e->getMessage(), ['request' => $validated]);
+            OperationalLogger::error('Checkout Tripay gagal', [
+                'request' => $validated,
+                'product_id' => $validated['product_id'] ?? null,
+                'payment_method' => $validated['payment_method'] ?? null,
+            ], $e, $request, 'payments');
 
             // Voucher errors dari validateAndClaim — aman dikembalikan ke user
             if (str_starts_with($e->getMessage(), 'Voucher')
@@ -249,20 +255,6 @@ class CheckoutController extends Controller
                 || str_starts_with($e->getMessage(), 'Minimum pembelian')) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
             }
-
-            ErrorLog::create([
-                'level'       => 'error',
-                'message'     => 'Checkout Tripay gagal: '.$e->getMessage(),
-                'exception'   => get_class($e),
-                'file'        => $e->getFile(),
-                'line'        => $e->getLine(),
-                'trace'       => mb_substr($e->getTraceAsString(), 0, 65535),
-                'url'         => request()->fullUrl(),
-                'method'      => 'POST',
-                'ip'          => request()->ip(),
-                'user_id'     => auth()->id(),
-                'occurred_at' => now(),
-            ]);
 
             return response()->json([
                 'success' => false,
@@ -373,12 +365,20 @@ class CheckoutController extends Controller
                 }
 
                 // 3. Kirim ke Digiflazz langsung
-                $digiflazzService = app(\App\Services\DigiflazzService::class);
-                $digiflazzService->createTransaction(
+                $customerNo = $validated['customer_game_id']
+                    .(! empty($validated['customer_zone_id']) ? $validated['customer_zone_id'] : '');
+                $providerResponse = app(DigiflazzService::class)->createTransaction(
                     $providerSku,
-                    $transaction->customer_game_id.($transaction->customer_zone_id ?? ''),
-                    $transaction->invoice_id,
+                    $customerNo,
+                    $transaction->invoice_id
                 );
+
+                $transaction->update([
+                    'reference_id_provider' => $providerResponse['invoice_number']
+                        ?? $providerResponse['invoice']
+                        ?? $transaction->reference_id_provider,
+                    'api_logs' => $providerResponse,
+                ]);
 
                 return $transaction;
             });
@@ -404,7 +404,11 @@ class CheckoutController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Coin Checkout Error: '.$e->getMessage(), ['request' => $validated]);
+            OperationalLogger::critical('Checkout COIN gagal', [
+                'request' => $validated,
+                'product_id' => $validated['product_id'] ?? null,
+                'user_id' => $authenticatedUserId,
+            ], $e, $request, 'payments');
 
             if ($e->getMessage() === 'DUPLICATE_ORDER') {
                 return response()->json([
@@ -423,20 +427,6 @@ class CheckoutController extends Controller
                 || str_starts_with($e->getMessage(), 'Minimum pembelian')) {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
             }
-
-            ErrorLog::create([
-                'level'       => 'critical',
-                'message'     => 'Checkout COIN gagal: '.$e->getMessage(),
-                'exception'   => get_class($e),
-                'file'        => $e->getFile(),
-                'line'        => $e->getLine(),
-                'trace'       => mb_substr($e->getTraceAsString(), 0, 65535),
-                'url'         => request()->fullUrl(),
-                'method'      => 'POST',
-                'ip'          => request()->ip(),
-                'user_id'     => $authenticatedUserId,
-                'occurred_at' => now(),
-            ]);
 
             return response()->json([
                 'success' => false,
@@ -495,7 +485,10 @@ class CheckoutController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            Log::error('Calculate Fee Error: '.$e->getMessage());
+            OperationalLogger::error('Calculate Fee Error', [
+                'amount' => $validated['amount'] ?? null,
+                'method' => $validated['method'] ?? null,
+            ], $e, $request, 'payments');
 
             return response()->json([
                 'success' => false,
