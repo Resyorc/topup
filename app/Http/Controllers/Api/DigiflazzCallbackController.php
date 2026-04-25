@@ -23,19 +23,19 @@ class DigiflazzCallbackController extends Controller
     /**
      * Handle the incoming Digiflazz Webhook request.
      */
-    private const ALLOWED_IPS = ['52.74.250.133'];
-
     public function handle(Request $request)
     {
         $ip = $request->ip();
+        $allowedIps = config('services.digiflazz.allowed_ips', ['52.74.250.133']);
 
         OperationalLogger::info('Digiflazz callback masuk', [
             'ip' => $ip,
         ], 'payments');
 
-        if (! in_array($ip, self::ALLOWED_IPS, true)) {
+        if (! in_array($ip, $allowedIps, true)) {
             OperationalLogger::warning('Digiflazz callback ditolak - IP tidak diizinkan', [
                 'ip' => $ip,
+                'allowed_ips' => $allowedIps,
             ], $request, 'payments');
 
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
@@ -77,6 +77,8 @@ class DigiflazzCallbackController extends Controller
             if ($status === 'sukses') {
                 $transaction->update([
                     'status' => 'success',
+                    'payment_status' => $transaction->payment_status ?: 'paid',
+                    'fulfilment_status' => 'success',
                     'sn' => $trxData['sn'] ?? null,
                 ]);
 
@@ -96,6 +98,7 @@ class DigiflazzCallbackController extends Controller
 
                 $transaction->update([
                     'status' => 'failed',
+                    'fulfilment_status' => 'failed',
                     'failure_reason' => $failureReason,
                 ]);
 

@@ -207,10 +207,10 @@ export default function GuestLayout({
                     )}
 
                     {/* Sub-Header Navigation with Ticker */}
-                    <div className="flex w-full items-center justify-center bg-primary/40 backdrop-blur-lg text-sm font-medium shadow-inner select-none border-t border-b border-primary/30">
-                        <div className="mx-auto flex w-full max-w-7xl flex-col-reverse flex-nowrap items-center gap-0 px-4 sm:px-4 md:flex-row md:gap-12 md:px-8">
+                    <div className="w-full border-t border-b border-primary/30 bg-primary/40 text-sm font-medium shadow-inner backdrop-blur-lg select-none">
+                        <div className="mx-auto flex w-full max-w-7xl items-center gap-6 px-4 md:px-8">
                             {/* Static Links — hidden on mobile (bottom nav handles navigation), visible on desktop */}
-                            <div className="hidden w-full flex-nowrap items-center justify-center gap-x-6 pb-2 sm:flex-nowrap sm:justify-between sm:gap-12 sm:gap-x-8 md:flex md:w-auto md:pb-0">
+                            <div className="hidden shrink-0 items-center gap-8 md:flex">
                                 <Link
                                     href="/"
                                     className={`group relative flex cursor-pointer items-center py-2 text-nowrap transition md:py-3 ${isActive('/') ? 'text-client-warning' : 'text-white hover:text-gray-200'}`}
@@ -296,31 +296,16 @@ export default function GuestLayout({
                             {/* Divider — desktop only */}
                             {/* Divider — desktop only */}
                             {hasBroadcast && (
-                                <div className="hidden md:block">
-                                    <svg
-                                        width="1"
-                                        height="30"
-                                        viewBox="0 0 1 30"
-                                        fill="none"
-                                        xmlns="http://www.w3.org/2000/svg"
-                                        className="fill-white/30"
-                                    >
-                                        <path
-                                            fillRule="evenodd"
-                                            clipRule="evenodd"
-                                            d="M0.5 0C0.367392 0 0.240214 0.0831764 0.146446 0.231231C0.052678 0.379286 0 0.580092 0 0.789474V29.2105C0 29.4199 0.052678 29.6207 0.146446 29.7688C0.240214 29.9168 0.367392 30 0.5 30C0.632608 30 0.759786 29.9168 0.853554 29.7688C0.947322 29.6207 1 29.4199 1 29.2105V0.789474C1 0.580092 0.947322 0.379286 0.853554 0.231231C0.759786 0.0831764 0.632608 0 0.5 0Z"
-                                        />
-                                    </svg>
-                                </div>
+                                <div className="hidden h-8 w-px shrink-0 bg-white/15 md:block" />
                             )}
 
                             {/* Ticker */}
                             {hasBroadcast && (
-                                <div className="relative w-full flex-grow overflow-hidden py-2 md:py-0">
+                                <div className="hidden min-w-0 flex-1 overflow-hidden md:block">
                                     <NewsTicker
                                         messages={broadcastMessages}
                                         speed={30}
-                                        separator="◈"
+                                        separator="•"
                                     />
                                 </div>
                             )}
@@ -654,7 +639,4 @@ export default function GuestLayout({
         </>
     );
 }
-
-
-
 

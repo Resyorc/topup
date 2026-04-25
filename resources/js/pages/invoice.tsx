@@ -1644,6 +1644,3 @@ export default function InvoiceSearch({
 }
 
 
-
-
-

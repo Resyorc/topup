@@ -46,6 +46,10 @@ return [
         'api_key' => env('DIGIFLAZZ_API_KEY'),
         'webhook_secret' => env('DIGIFLAZZ_WEBHOOK_SECRET'),
         'base_url' => env('DIGIFLAZZ_BASE_URL', 'https://api.digiflazz.com/v1'),
+        'allowed_ips' => array_values(array_filter(array_map(
+            static fn (string $value) => trim($value),
+            explode(',', (string) env('DIGIFLAZZ_ALLOWED_IPS', '52.74.250.133'))
+        ))),
     ],
 
     'tripay' => [
