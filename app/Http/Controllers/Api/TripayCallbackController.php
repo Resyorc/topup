@@ -46,7 +46,6 @@ class TripayCallbackController extends Controller
             return response()->json(['success' => false, 'message' => 'Open payment is not supported'], 400);
         }
 
-        // ===== Coin Topup =====
         $coinTopup = CoinTopup::where('invoice_id', $data->merchant_ref)->first();
 
         if ($coinTopup) {
@@ -68,9 +67,9 @@ class TripayCallbackController extends Controller
                     $lockedTopup->update(['status' => 'paid', 'paid_at' => now()]);
 
                     dispatch(SendWhatsAppNotification::coinTopupSuccess($lockedTopup->load('user')));
-                } elseif (in_array($data->status, ['EXPIRED', 'FAILED'])) {
+                } elseif (in_array($data->status, ['EXPIRED', 'FAILED'], true)) {
                     $lockedTopup->update([
-                        'status'         => $data->status === 'EXPIRED' ? 'expired' : 'failed',
+                        'status' => $data->status === 'EXPIRED' ? 'expired' : 'failed',
                         'failure_reason' => $data->status === 'EXPIRED'
                             ? 'Pembayaran melewati batas waktu (expired).'
                             : 'Pembayaran gagal.',
@@ -81,7 +80,6 @@ class TripayCallbackController extends Controller
             return response()->json(['success' => true]);
         }
 
-        // ===== Game Transaction =====
         $transaction = Transaction::where('invoice_id', $data->merchant_ref)->first();
 
         if (! $transaction) {
@@ -99,26 +97,28 @@ class TripayCallbackController extends Controller
                 ->lockForUpdate()
                 ->first();
 
-            // Sudah diproses sebelumnya — abaikan callback duplikat
             if (in_array($transaction->status, ['success', 'failed'], true)) {
                 return;
             }
 
             if ($data->status === 'PAID') {
+                $shouldDispatchFulfilment = ! in_array($transaction->fulfilment_status, ['processing', 'success'], true);
+
                 $transaction->update([
                     'payment_status' => 'paid',
                     'status' => 'processing',
                     'fulfilment_status' => 'processing',
                 ]);
 
-                // Dispatch job — fulfilment diproses di background, callback cepat kembali 200
-                ProcessFulfilmentJob::dispatch($transaction->invoice_id);
+                if ($shouldDispatchFulfilment) {
+                    ProcessFulfilmentJob::dispatch($transaction->invoice_id);
+                }
 
                 dispatch(SendWhatsAppNotification::paymentReceived($transaction->load('product.game')));
-            } elseif (in_array($data->status, ['EXPIRED', 'FAILED'])) {
+            } elseif (in_array($data->status, ['EXPIRED', 'FAILED'], true)) {
                 $transaction->update([
-                    'payment_status'    => 'expired',
-                    'status'            => 'failed',
+                    'payment_status' => 'expired',
+                    'status' => 'failed',
                     'fulfilment_status' => 'failed',
                 ]);
             }
