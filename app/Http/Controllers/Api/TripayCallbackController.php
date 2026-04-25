@@ -100,12 +100,16 @@ class TripayCallbackController extends Controller
                 ->first();
 
             // Sudah diproses sebelumnya — abaikan callback duplikat
-            if (in_array($transaction->status, ['paid', 'success', 'failed'])) {
+            if (in_array($transaction->status, ['success', 'failed'], true)) {
                 return;
             }
 
             if ($data->status === 'PAID') {
-                $transaction->update(['payment_status' => 'paid']);
+                $transaction->update([
+                    'payment_status' => 'paid',
+                    'status' => 'processing',
+                    'fulfilment_status' => 'processing',
+                ]);
 
                 // Dispatch job — fulfilment diproses di background, callback cepat kembali 200
                 ProcessFulfilmentJob::dispatch($transaction->invoice_id);
