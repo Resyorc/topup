@@ -1,5 +1,7 @@
 <?php
 
+$adminPanelPath = getenv('ADMIN_PANEL_PATH');
+
 return [
 
     /*
@@ -56,7 +58,9 @@ return [
 
     'admin_domain' => env('ADMIN_PANEL_DOMAIN'),
 
-    'admin_path' => trim((string) env('ADMIN_PANEL_PATH', 'nuvelo-control'), '/'),
+    'admin_path' => $adminPanelPath === false
+        ? 'nuvelo-control'
+        : trim((string) $adminPanelPath, '/'),
 
     /*
     |--------------------------------------------------------------------------
