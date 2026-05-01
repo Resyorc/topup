@@ -28,11 +28,9 @@ php /app/artisan migrate --force || true
 # Storage link
 php /app/artisan storage:link || true
 
-# Start SSR server via PM2
-if [ -f /app/bootstrap/ssr/ssr.js ]; then
-    pm2 start /app/ecosystem.config.cjs
-    sleep 2
-fi
+# Start background workers via PM2 (SSR if built, queue worker, and Reverb websocket server)
+pm2 start /app/ecosystem.config.cjs
+sleep 2
 
 # Start Nginx (foreground)
 nginx

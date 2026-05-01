@@ -71,6 +71,6 @@ RUN mkdir -p /var/log/nginx /run/nginx \
 COPY docker/nginx.conf /etc/nginx/nginx.conf
 COPY docker/ecosystem.config.cjs /app/ecosystem.config.cjs
 
-EXPOSE 80
+EXPOSE 80 8082
 
 CMD ["/bin/sh", "/app/docker/start.sh"]
