@@ -15,9 +15,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
-// Catatan: Digiflazz tidak menggunakan HMAC signature di webhook-nya.
-// Keamanan dijamin via IP whitelist (ALLOWED_IPS).
-
 class DigiflazzCallbackController extends Controller
 {
     /**
@@ -26,22 +23,37 @@ class DigiflazzCallbackController extends Controller
     public function handle(Request $request)
     {
         $ip = $request->ip();
+        $payload = $request->getContent();
+        $webhookSecret = (string) config('services.digiflazz.webhook_secret', '');
         $allowedIps = config('services.digiflazz.allowed_ips', ['52.74.250.133']);
 
         OperationalLogger::info('Digiflazz callback masuk', [
             'ip' => $ip,
         ], 'payments');
 
-        if (! in_array($ip, $allowedIps, true)) {
+        if ($webhookSecret !== '') {
+            if (! $this->hasValidSignature($request, $payload, $webhookSecret)) {
+                OperationalLogger::warning('Digiflazz callback ditolak - signature tidak valid', [
+                    'ip' => $ip,
+                    'has_x_hub_signature' => $request->hasHeader('X-Hub-Signature'),
+                    'has_x_digiflazz_signature' => $request->hasHeader('X-Digiflazz-Signature'),
+                ], $request, 'payments');
+
+                return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+            }
+        } elseif (! in_array($ip, $allowedIps, true)) {
             OperationalLogger::warning('Digiflazz callback ditolak - IP tidak diizinkan', [
                 'ip' => $ip,
                 'allowed_ips' => $allowedIps,
             ], $request, 'payments');
 
             return response()->json(['success' => false, 'message' => 'Unauthorized'], 403);
+        } else {
+            OperationalLogger::critical('Digiflazz webhook secret belum diset, callback masih fallback ke IP whitelist', [
+                'ip' => $ip,
+            ], request: $request, channel: 'payments');
         }
 
-        $payload = $request->getContent();
         $data = json_decode($payload, true);
 
         OperationalLogger::info('Digiflazz callback diterima', [
@@ -205,5 +217,35 @@ class DigiflazzCallbackController extends Controller
         }
 
         return response()->json(['success' => true]);
+    }
+
+    private function hasValidSignature(Request $request, string $payload, string $secret): bool
+    {
+        $receivedSignatures = array_filter([
+            $request->header('X-Hub-Signature'),
+            $request->header('X-Digiflazz-Signature'),
+            $request->header('X-Callback-Signature'),
+        ]);
+
+        if ($receivedSignatures === []) {
+            return false;
+        }
+
+        $expectedSignatures = [
+            hash_hmac('sha1', $payload, $secret),
+            'sha1='.hash_hmac('sha1', $payload, $secret),
+            hash_hmac('sha256', $payload, $secret),
+            'sha256='.hash_hmac('sha256', $payload, $secret),
+        ];
+
+        foreach ($receivedSignatures as $receivedSignature) {
+            foreach ($expectedSignatures as $expectedSignature) {
+                if (hash_equals($expectedSignature, trim((string) $receivedSignature))) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
     }
 }

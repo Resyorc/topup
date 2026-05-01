@@ -13,6 +13,14 @@ return new class extends Migration
             $table->string('provider_name')->nullable()->after('provider_sku');
         });
 
+        if (DB::getDriverName() === 'sqlite') {
+            DB::table('transactions')
+                ->whereNull('provider_name')
+                ->update(['provider_name' => 'digiflazz']);
+
+            return;
+        }
+
         DB::statement("
             UPDATE transactions t
             LEFT JOIN provider_products pp ON pp.provider_sku = t.provider_sku

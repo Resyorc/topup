@@ -14,9 +14,11 @@ class Transaction extends Model
 
     protected $fillable = [
         'invoice_id',
+        'idempotency_key',
         'user_id',
         'product_id',
         'provider_sku',
+        'provider_name',
         'customer_game_id',
         'customer_zone_id',
         'customer_whatsapp',

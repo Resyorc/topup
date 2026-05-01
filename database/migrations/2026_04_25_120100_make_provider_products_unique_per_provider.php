@@ -9,6 +9,14 @@ return new class extends Migration
 {
     public function up(): void
     {
+        if (DB::getDriverName() === 'sqlite') {
+            Schema::table('provider_products', function (Blueprint $table) {
+                $table->unique(['provider_name', 'provider_sku'], 'provider_products_provider_name_sku_unique');
+            });
+
+            return;
+        }
+
         $indexes = collect(DB::select('SHOW INDEX FROM provider_products'))
             ->pluck('Key_name')
             ->unique()
@@ -30,6 +38,11 @@ return new class extends Migration
     {
         Schema::table('provider_products', function (Blueprint $table) {
             $table->dropUnique('provider_products_provider_name_sku_unique');
+
+            if (DB::getDriverName() === 'sqlite') {
+                return;
+            }
+
             $table->unique('provider_sku');
         });
     }

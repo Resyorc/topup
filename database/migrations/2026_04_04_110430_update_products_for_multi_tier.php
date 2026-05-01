@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,6 +12,18 @@ return new class extends Migration
      */
     public function up(): void
     {
+        if (Schema::hasColumn('products', 'provider_sku')) {
+            if (DB::getDriverName() === 'sqlite') {
+                DB::statement('DROP INDEX IF EXISTS products_provider_sku_unique');
+            } else {
+                try {
+                    DB::statement('ALTER TABLE products DROP INDEX products_provider_sku_unique');
+                } catch (Throwable) {
+                    // Index may already be absent on older databases.
+                }
+            }
+        }
+
         Schema::table('products', function (Blueprint $table) {
             if (Schema::hasColumn('products', 'provider_sku')) {
                 $table->dropColumn('provider_sku');

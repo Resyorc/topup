@@ -3,16 +3,18 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Jobs\ProcessFulfilmentJob;
 use App\Jobs\SendWhatsAppNotification;
 use App\Models\Product;
 use App\Models\Transaction;
 use App\Services\AuditLogger;
 use App\Services\CoinService;
-use App\Services\DigiflazzService;
 use App\Services\OperationalLogger;
 use App\Services\TripayService;
+use App\Services\UserIdCheckService;
 use App\Services\VoucherService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
@@ -21,8 +23,13 @@ class CheckoutController extends Controller
     /**
      * Handle the incoming checkout request.
      */
-    public function store(Request $request, TripayService $tripayService, CoinService $coinService, VoucherService $voucherService)
-    {
+    public function store(
+        Request $request,
+        TripayService $tripayService,
+        CoinService $coinService,
+        VoucherService $voucherService,
+        UserIdCheckService $userIdCheckService
+    ) {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
             'customer_game_id' => 'required|string|max:50|regex:/^[a-zA-Z0-9._\-]+$/',
@@ -38,14 +45,16 @@ class CheckoutController extends Controller
         $qty = $validated['qty'] ?? 1;
         $authenticatedUser = auth()->user();
         $authenticatedUserId = $authenticatedUser?->id;
-        $customerName = $validated['customer_name'] ?? 'Guest';
         $customerEmail = $validated['customer_email']
             ?? $authenticatedUser?->email
             ?? 'guest@nuvelo.com';
 
-        $product = Product::with(['providerProducts' => function ($q) {
-            $q->where('is_active', true)->orderBy('price', 'asc');
-        }])->findOrFail($validated['product_id']);
+        $product = Product::with([
+            'game',
+            'providerProducts' => function ($q) {
+                $q->where('is_active', true)->orderBy('price', 'asc');
+            },
+        ])->findOrFail($validated['product_id']);
 
         if (! $product->is_available) {
             return response()->json(['error' => 'Product is currently unavailable.'], 400);
@@ -53,28 +62,38 @@ class CheckoutController extends Controller
 
         $selectedProvider = $product->providerProducts->first();
         $providerSku = $selectedProvider?->provider_sku;
+        $providerName = $selectedProvider?->provider_name ?? 'digiflazz';
 
         if (! $providerSku) {
             return response()->json(['error' => 'Produk tidak memiliki SKU provider aktif. Silakan hubungi admin.'], 400);
         }
 
+        $accountCheck = $this->validateCustomerAccount($product, $validated, $userIdCheckService);
+        if (! $accountCheck['success']) {
+            return response()->json([
+                'success' => false,
+                'message' => $accountCheck['message'],
+            ], 422);
+        }
+
+        $customerName = $accountCheck['nickname']
+            ?? $validated['customer_name']
+            ?? $authenticatedUser?->name
+            ?? 'Guest';
+
         $basePrice = (int) ($product->price_sell ?? 0);
 
-        // Harga efektif: flash_sale_price jika ada flash sale aktif, selain itu harga normal
         $isFlashSale = $product->flash_sale_price !== null
             && $product->flash_sale_ends_at !== null
             && $product->flash_sale_ends_at->gt(now());
         $effectivePrice = $isFlashSale ? (int) ceil($product->flash_sale_price) : $basePrice;
 
-        // Cek stok flash sale
         if ($isFlashSale && $product->flash_sale_stock !== null) {
             if ($product->flash_sale_purchased >= $product->flash_sale_stock) {
                 return response()->json(['success' => false, 'message' => 'Stok flash sale sudah habis.'], 422);
             }
         }
 
-        // Cegah double order: early check di luar transaction untuk UX yang cepat.
-        // Re-check dengan lockForUpdate dilakukan di dalam DB::transaction (lihat bawah).
         $existingTransaction = $this->findActiveDuplicateTransaction($product->id, $validated, $authenticatedUserId)
             ->latest()
             ->first();
@@ -94,7 +113,6 @@ class CheckoutController extends Controller
         $merchantRef = 'INV-'.strtoupper(Str::ulid());
         $amount = $effectivePrice * $qty;
 
-        // ===== VOUCHER =====
         $discount = 0;
         $voucherCode = null;
 
@@ -107,49 +125,110 @@ class CheckoutController extends Controller
             $voucherCode = strtoupper(trim($validated['promo_code']));
         }
 
-        $chargeAmount = $amount - $discount; // amount yang benar-benar ditagihkan
+        $chargeAmount = $amount - $discount;
+        if ($chargeAmount <= 0) {
+            return response()->json(['success' => false, 'message' => 'Total pembayaran tidak valid.'], 422);
+        }
 
-        // ===== COIN PAYMENT =====
         if ($validated['payment_method'] === 'COIN') {
             return $this->checkoutWithCoin(
-                $validated, $product, $qty, $merchantRef, $amount, $chargeAmount,
-                $discount, $voucherCode, $customerName, $authenticatedUserId, $coinService, $request, $effectivePrice, $providerSku
+                $validated,
+                $product,
+                $qty,
+                $merchantRef,
+                $amount,
+                $chargeAmount,
+                $discount,
+                $voucherCode,
+                $customerName,
+                $authenticatedUserId,
+                $coinService,
+                $request,
+                $effectivePrice,
+                $providerSku,
+                $providerName,
+                $isFlashSale
             );
         }
 
-        // ===== TRIPAY PAYMENT =====
         $expiredAt = now()->addHour();
-        $expiredTime = $expiredAt->timestamp; // Unix timestamp untuk Tripay API
+        $expiredTime = $expiredAt->timestamp;
+        $idempotencyKey = $this->makeIdempotencyKey($product->id, $validated, $authenticatedUserId);
+        $duplicateInfo = null;
+        $paymentResponse = null;
 
         $orderItems = [
             [
                 'sku' => $providerSku,
                 'name' => $product->game->name.' - '.$product->name,
-                'price' => $effectivePrice,
-                'quantity' => $qty,
+                'price' => $chargeAmount,
+                'quantity' => 1,
             ],
         ];
 
-        $duplicateInfo = null;
-
         try {
-            $result = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $orderItems, $customerName, $customerEmail, $tripayService, $authenticatedUserId, $expiredTime, $expiredAt, $voucherService, $effectivePrice, $isFlashSale, $providerSku, &$duplicateInfo) {
+            $transaction = Cache::lock('checkout:'.$idempotencyKey, 10)->block(5, function () use ($validated, $product, $qty, $merchantRef, $amount, $discount, $voucherCode, $customerName, $customerEmail, $authenticatedUserId, $expiredAt, $voucherService, $effectivePrice, $isFlashSale, $providerSku, $providerName, $idempotencyKey, &$duplicateInfo, $request) {
+                return DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $discount, $voucherCode, $customerName, $customerEmail, $authenticatedUserId, $expiredAt, $voucherService, $effectivePrice, $isFlashSale, $providerSku, $providerName, $idempotencyKey, &$duplicateInfo, $request) {
+                    $duplicate = $this->findActiveDuplicateTransaction($product->id, $validated, $authenticatedUserId)
+                        ->lockForUpdate()
+                        ->first();
 
-                // Re-check double order di dalam transaction dengan lockForUpdate — cegah race condition.
-                $duplicate = $this->findActiveDuplicateTransaction($product->id, $validated, $authenticatedUserId)
-                    ->lockForUpdate()
-                    ->first();
+                    if ($duplicate) {
+                        $duplicateInfo = [
+                            'invoice_id' => $duplicate->invoice_id,
+                            'status' => $duplicate->status,
+                            'expired_at' => $duplicate->expired_at?->toDateTimeString(),
+                        ];
 
-                if ($duplicate) {
-                    $duplicateInfo = [
-                        'invoice_id' => $duplicate->invoice_id,
-                        'status' => $duplicate->status,
-                        'expired_at' => $duplicate->expired_at?->toDateTimeString(),
-                    ];
+                        return null;
+                    }
 
-                    return null;
-                }
+                    $guestToken = $authenticatedUserId ? null : Str::random(48);
 
+                    $transaction = Transaction::create([
+                        'invoice_id' => $merchantRef,
+                        'user_id' => $authenticatedUserId,
+                        'guest_token' => $guestToken,
+                        'idempotency_key' => $idempotencyKey,
+                        'product_id' => $product->id,
+                        'provider_sku' => $providerSku,
+                        'provider_name' => $providerName,
+                        'customer_game_id' => $validated['customer_game_id'],
+                        'customer_zone_id' => $validated['customer_zone_id'] ?? null,
+                        'customer_whatsapp' => $validated['customer_whatsapp'],
+                        'customer_name' => $customerName,
+                        'customer_email' => $customerEmail,
+                        'amount' => $amount,
+                        'fee' => 0,
+                        'discount' => $discount,
+                        'voucher_code' => $voucherCode,
+                        'profit' => ($effectivePrice - $product->price_cost) * $qty - $discount,
+                        'status' => 'pending',
+                        'payment_status' => 'unpaid',
+                        'fulfilment_status' => 'pending',
+                        'sn' => null,
+                        'expired_at' => $expiredAt,
+                    ]);
+
+                    if ($voucherCode) {
+                        $voucherService->validateAndClaim($voucherCode, $amount, $request->user());
+                    }
+
+                    $this->claimFlashSaleStock($product, $qty, $isFlashSale);
+
+                    return $transaction;
+                });
+            });
+
+            if ($duplicateInfo !== null || ! $transaction) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Kamu masih memiliki pesanan aktif untuk produk ini. Selesaikan atau tunggu pesanan sebelumnya expired.',
+                    'data' => $duplicateInfo,
+                ], 409);
+            }
+
+            try {
                 $paymentResponse = $tripayService->createTransaction(
                     $validated['payment_method'],
                     $merchantRef,
@@ -161,84 +240,51 @@ class CheckoutController extends Controller
                     $expiredTime
                 );
 
-                $fee = (int) ($paymentResponse['fee_customer'] ?? 0);
-
-                $guestToken = $authenticatedUserId ? null : Str::random(48);
-
-                $transaction = Transaction::create([
-                    'invoice_id' => $merchantRef,
-                    'user_id' => $authenticatedUserId,
-                    'guest_token' => $guestToken,
-                    'product_id' => $product->id,
-                    'provider_sku' => $providerSku,
-                    'customer_game_id' => $validated['customer_game_id'],
-                    'customer_zone_id' => $validated['customer_zone_id'] ?? null,
-                    'customer_whatsapp' => $validated['customer_whatsapp'],
-                    'customer_name' => $customerName,
-                    'customer_email' => $customerEmail,
-                    'amount' => $amount,
-                    'fee' => $fee,
-                    'discount' => $discount,
-                    'voucher_code' => $voucherCode,
-                    'profit' => ($effectivePrice - $product->price_cost) * $qty - $discount,
-                    'status' => 'pending',
-                    'sn' => null,
+                $transaction->update([
+                    'fee' => (int) ($paymentResponse['fee_customer'] ?? 0),
                     'payment_url' => $paymentResponse['checkout_url'] ?? null,
                     'reference_id_provider' => $paymentResponse['reference'] ?? null,
-                    'expired_at' => $expiredAt,
-                    'payment_method' => $paymentResponse['payment_method'] ?? null,
+                    'payment_method' => $paymentResponse['payment_method'] ?? $validated['payment_method'],
                     'payment_name' => $paymentResponse['payment_name'] ?? null,
                     'pay_code' => $paymentResponse['pay_code'] ?? null,
                     'qr_url' => $paymentResponse['qr_url'] ?? null,
                     'pay_url' => $paymentResponse['pay_url'] ?? null,
-                    'api_logs' => $paymentResponse,
+                    'api_logs' => array_merge($paymentResponse, ['tripay' => $paymentResponse]),
+                    'failure_reason' => null,
+                ]);
+                $transaction->refresh();
+            } catch (\Exception $e) {
+                $transaction->update([
+                    'status' => 'failed',
+                    'payment_status' => 'unpaid',
+                    'fulfilment_status' => 'failed',
+                    'failure_reason' => 'Invoice Tripay belum berhasil dibuat: '.$e->getMessage(),
                 ]);
 
-                // Atomic: re-validasi + increment used_count dalam satu lock — cegah race condition voucher.
-                if ($voucherCode) {
-                    $voucherService->validateAndClaim($voucherCode, $amount, $request->user());
-                }
-
-                // Increment flash sale purchased counter
-                if ($isFlashSale) {
-                    $product->increment('flash_sale_purchased', $qty);
-                }
-
-                return [
-                    'transaction' => $transaction,
-                    'paymentResponse' => $paymentResponse,
-                ];
-            });
-
-            if ($duplicateInfo !== null) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Kamu masih memiliki pesanan aktif untuk produk ini. Selesaikan atau tunggu pesanan sebelumnya expired.',
-                    'data' => $duplicateInfo,
-                ], 409);
+                throw $e;
             }
 
             AuditLogger::log(
                 event: 'checkout',
-                description: 'Checkout '.$product->name.' — '.$merchantRef,
+                description: 'Checkout '.$product->name.' - '.$merchantRef,
                 subjectType: 'Transaction',
                 subjectId: $merchantRef,
                 request: $request,
             );
 
-            dispatch(SendWhatsAppNotification::orderPending($result['transaction']->load('product.game')))
+            dispatch(SendWhatsAppNotification::orderPending($transaction->load('product.game')))
                 ->delay(now()->addSeconds(3));
 
             return response()->json([
                 'success' => true,
                 'message' => 'Checkout successful.',
                 'data' => [
-                    'transaction' => $result['transaction'],
-                    'payment' => $result['paymentResponse'],
-                    'pay_code' => $result['paymentResponse']['pay_code'] ?? null,
+                    'transaction' => $transaction,
+                    'payment' => $paymentResponse,
+                    'pay_code' => $paymentResponse['pay_code'] ?? null,
                     'amount' => $amount,
                     'expired_at' => $expiredAt->toDateTimeString(),
-                    'guest_token' => $result['transaction']->guest_token,
+                    'guest_token' => $transaction->guest_token,
                 ],
             ]);
 
@@ -249,7 +295,10 @@ class CheckoutController extends Controller
                 'payment_method' => $validated['payment_method'] ?? null,
             ], $e, $request, 'payments');
 
-            // Voucher errors dari validateAndClaim — aman dikembalikan ke user
+            if ($e->getMessage() === 'FLASH_SALE_SOLD_OUT') {
+                return response()->json(['success' => false, 'message' => 'Stok flash sale sudah habis.'], 422);
+            }
+
             if (str_starts_with($e->getMessage(), 'Voucher')
                 || str_starts_with($e->getMessage(), 'Kode voucher')
                 || str_starts_with($e->getMessage(), 'Minimum pembelian')) {
@@ -265,7 +314,6 @@ class CheckoutController extends Controller
 
     /**
      * Handle checkout menggunakan Krysta Coin.
-     * Coin 1:1 dengan Rupiah — langsung proses topup via Digiflazz.
      */
     private function checkoutWithCoin(
         array $validated,
@@ -279,11 +327,12 @@ class CheckoutController extends Controller
         string $customerName,
         ?int $authenticatedUserId,
         CoinService $coinService,
-        \Illuminate\Http\Request $request,
+        Request $request,
         int $effectivePrice,
-        string $providerSku
+        string $providerSku,
+        string $providerName,
+        bool $isFlashSale
     ) {
-        // Harus login untuk pakai coin
         if (! $authenticatedUserId) {
             return response()->json([
                 'success' => false,
@@ -293,7 +342,6 @@ class CheckoutController extends Controller
 
         $user = \App\Models\User::findOrFail($authenticatedUserId);
 
-        // Harus verifikasi email untuk pakai coin
         if (! $user->hasVerifiedEmail()) {
             return response()->json([
                 'success' => false,
@@ -301,7 +349,6 @@ class CheckoutController extends Controller
             ], 403);
         }
 
-        // Cek saldo sebelum masuk transaksi
         if (! $coinService->hasSufficientBalance($user, $chargeAmount)) {
             return response()->json([
                 'success' => false,
@@ -309,87 +356,70 @@ class CheckoutController extends Controller
             ], 400);
         }
 
+        $idempotencyKey = $this->makeIdempotencyKey($product->id, $validated, $authenticatedUserId);
+
         try {
-            $transaction = DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $customerName, $authenticatedUserId, $user, $coinService, $effectivePrice, $request, $providerSku) {
+            $transaction = Cache::lock('checkout:'.$idempotencyKey, 10)->block(5, function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $customerName, $authenticatedUserId, $user, $coinService, $effectivePrice, $request, $providerSku, $providerName, $isFlashSale, $idempotencyKey) {
+                return DB::transaction(function () use ($validated, $product, $qty, $merchantRef, $amount, $chargeAmount, $discount, $voucherCode, $customerName, $authenticatedUserId, $user, $coinService, $effectivePrice, $request, $providerSku, $providerName, $isFlashSale, $idempotencyKey) {
+                    $duplicate = $this->findActiveDuplicateTransaction($product->id, $validated, $authenticatedUserId)
+                        ->lockForUpdate()
+                        ->first();
 
-                // Re-check double order di dalam transaction dengan lockForUpdate — cegah race condition.
-                $duplicate = $this->findActiveDuplicateTransaction($product->id, $validated, $authenticatedUserId)
-                    ->lockForUpdate()
-                    ->first();
+                    if ($duplicate) {
+                        throw new \Exception('DUPLICATE_ORDER');
+                    }
 
-                if ($duplicate) {
-                    throw new \Exception('DUPLICATE_ORDER');
-                }
+                    $coinService->debit(
+                        $user,
+                        $chargeAmount,
+                        'Topup '.$product->game->name.' - '.$product->name,
+                        $merchantRef
+                    );
 
-                // 1. Potong saldo coin — otomatis rollback kalau gagal
-                $coinService->debit(
-                    $user,
-                    $chargeAmount,
-                    'Topup '.$product->game->name.' - '.$product->name,
-                    $merchantRef
-                );
+                    $transaction = Transaction::create([
+                        'invoice_id' => $merchantRef,
+                        'user_id' => $authenticatedUserId,
+                        'idempotency_key' => $idempotencyKey,
+                        'product_id' => $product->id,
+                        'provider_sku' => $providerSku,
+                        'provider_name' => $providerName,
+                        'customer_game_id' => $validated['customer_game_id'],
+                        'customer_zone_id' => $validated['customer_zone_id'] ?? null,
+                        'customer_whatsapp' => $validated['customer_whatsapp'],
+                        'customer_name' => $customerName,
+                        'customer_email' => $user->email,
+                        'amount' => $amount,
+                        'fee' => 0,
+                        'discount' => $discount,
+                        'voucher_code' => $voucherCode,
+                        'profit' => ($effectivePrice - $product->price_cost) * $qty - $discount,
+                        'status' => 'processing',
+                        'payment_status' => 'paid',
+                        'fulfilment_status' => 'pending',
+                        'payment_method' => 'COIN',
+                        'payment_name' => 'Krysta Coin',
+                        'sn' => null,
+                    ]);
 
-                // 2. Buat transaksi — langsung paid & processing karena sudah bayar
-                $transaction = Transaction::create([
-                    'invoice_id' => $merchantRef,
-                    'user_id' => $authenticatedUserId,
-                    'product_id' => $product->id,
-                    'provider_sku' => $providerSku,
-                    'customer_game_id' => $validated['customer_game_id'],
-                    'customer_zone_id' => $validated['customer_zone_id'] ?? null,
-                    'customer_whatsapp' => $validated['customer_whatsapp'],
-                    'customer_name' => $customerName,
-                    'customer_email' => $user->email,
-                    'amount' => $amount,
-                    'discount' => $discount,
-                    'voucher_code' => $voucherCode,
-                    'profit' => ($effectivePrice - $product->price_cost) * $qty - $discount,
-                    'status' => 'processing', // langsung processing
-                    'payment_status' => 'paid',       // langsung paid
-                    'payment_method' => 'COIN',
-                    'payment_name' => 'Krysta Coin',
-                    'sn' => null,
-                ]);
+                    if ($voucherCode) {
+                        app(VoucherService::class)->validateAndClaim($voucherCode, $amount, $request->user());
+                    }
 
-                // Atomic: re-validasi + increment used_count dalam satu lock — cegah race condition voucher.
-                if ($voucherCode) {
-                    app(VoucherService::class)->validateAndClaim($voucherCode, $amount, $request->user());
-                }
+                    $this->claimFlashSaleStock($product, $qty, $isFlashSale);
 
-                // Increment flash sale purchased counter
-                $isFs = $product->flash_sale_price !== null
-                    && $product->flash_sale_ends_at !== null
-                    && $product->flash_sale_ends_at->gt(now());
-                if ($isFs) {
-                    $product->increment('flash_sale_purchased', $qty);
-                }
-
-                // 3. Kirim ke Digiflazz langsung
-                $customerNo = $validated['customer_game_id']
-                    .(! empty($validated['customer_zone_id']) ? $validated['customer_zone_id'] : '');
-                $providerResponse = app(DigiflazzService::class)->createTransaction(
-                    $providerSku,
-                    $customerNo,
-                    $transaction->invoice_id
-                );
-
-                $transaction->update([
-                    'reference_id_provider' => $providerResponse['invoice_number']
-                        ?? $providerResponse['invoice']
-                        ?? $transaction->reference_id_provider,
-                    'api_logs' => $providerResponse,
-                ]);
-
-                return $transaction;
+                    return $transaction;
+                });
             });
 
             AuditLogger::log(
                 event: 'checkout',
-                description: 'Checkout COIN '.$product->name.' — '.$merchantRef,
+                description: 'Checkout COIN '.$product->name.' - '.$merchantRef,
                 subjectType: 'Transaction',
                 subjectId: $merchantRef,
                 request: $request,
             );
+
+            ProcessFulfilmentJob::dispatch($transaction->invoice_id)->afterCommit();
 
             dispatch(SendWhatsAppNotification::paymentReceived($transaction->load('product.game')))
                 ->delay(now()->addSeconds(3));
@@ -417,11 +447,14 @@ class CheckoutController extends Controller
                 ], 409);
             }
 
+            if ($e->getMessage() === 'FLASH_SALE_SOLD_OUT') {
+                return response()->json(['success' => false, 'message' => 'Stok flash sale sudah habis.'], 422);
+            }
+
             if ($e->getMessage() === 'Saldo coin tidak cukup.') {
                 return response()->json(['success' => false, 'message' => $e->getMessage()], 400);
             }
 
-            // Voucher errors dari validateAndClaim — aman dikembalikan ke user
             if (str_starts_with($e->getMessage(), 'Voucher')
                 || str_starts_with($e->getMessage(), 'Kode voucher')
                 || str_starts_with($e->getMessage(), 'Minimum pembelian')) {
@@ -501,6 +534,18 @@ class CheckoutController extends Controller
     {
         return Transaction::where('product_id', $productId)
             ->where('customer_game_id', $validated['customer_game_id'])
+            ->where(function ($query) use ($validated) {
+                $zoneId = $validated['customer_zone_id'] ?? null;
+
+                if ($zoneId !== null && $zoneId !== '') {
+                    $query->where('customer_zone_id', $zoneId);
+
+                    return;
+                }
+
+                $query->whereNull('customer_zone_id')
+                    ->orWhere('customer_zone_id', '');
+            })
             ->when(
                 $authenticatedUserId,
                 fn ($query) => $query->where('user_id', $authenticatedUserId),
@@ -512,5 +557,79 @@ class CheckoutController extends Controller
             ->where(function ($q) {
                 $q->whereNull('expired_at')->orWhere('expired_at', '>', now());
             });
+    }
+
+    private function validateCustomerAccount(Product $product, array $validated, UserIdCheckService $userIdCheckService): array
+    {
+        $product->loadMissing('game');
+        $game = $product->game;
+
+        if (! $game) {
+            return ['success' => false, 'message' => 'Game produk tidak ditemukan.'];
+        }
+
+        $config = (array) config("services.user_id_check.games.{$game->slug}", []);
+        $requiresZone = (bool) ($config['need_zone'] ?? false);
+
+        if ($requiresZone && empty($validated['customer_zone_id'])) {
+            return ['success' => false, 'message' => 'Server / Zone ID wajib diisi untuk game ini.'];
+        }
+
+        if ($config === []) {
+            return [
+                'success' => true,
+                'nickname' => $validated['customer_name'] ?? null,
+            ];
+        }
+
+        $result = $userIdCheckService->check(
+            $game->slug,
+            $validated['customer_game_id'],
+            $validated['customer_zone_id'] ?? null,
+        );
+
+        if (! ($result['success'] ?? false)) {
+            return [
+                'success' => false,
+                'message' => $result['message'] ?? 'User ID tidak valid.',
+            ];
+        }
+
+        return [
+            'success' => true,
+            'nickname' => $result['nickname'] ?? $validated['customer_name'] ?? null,
+        ];
+    }
+
+    private function makeIdempotencyKey(int $productId, array $validated, ?int $authenticatedUserId): string
+    {
+        $actor = $authenticatedUserId
+            ? 'user:'.$authenticatedUserId
+            : 'guest:'.preg_replace('/[^0-9]/', '', $validated['customer_whatsapp']);
+
+        return hash('sha256', implode('|', [
+            'checkout',
+            $actor,
+            $productId,
+            $validated['customer_game_id'],
+            $validated['customer_zone_id'] ?? '',
+            $validated['payment_method'],
+        ]));
+    }
+
+    private function claimFlashSaleStock(Product $product, int $qty, bool $isFlashSale): void
+    {
+        if (! $isFlashSale) {
+            return;
+        }
+
+        $lockedProduct = Product::whereKey($product->id)->lockForUpdate()->firstOrFail();
+
+        if ($lockedProduct->flash_sale_stock !== null
+            && ($lockedProduct->flash_sale_purchased + $qty) > $lockedProduct->flash_sale_stock) {
+            throw new \Exception('FLASH_SALE_SOLD_OUT');
+        }
+
+        $lockedProduct->increment('flash_sale_purchased', $qty);
     }
 }

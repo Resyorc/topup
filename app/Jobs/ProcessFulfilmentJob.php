@@ -11,6 +11,8 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Throwable;
 
 class ProcessFulfilmentJob implements ShouldQueue, ShouldBeUnique
@@ -30,45 +32,62 @@ class ProcessFulfilmentJob implements ShouldQueue, ShouldBeUnique
 
     public function handle(DigiflazzService $digiflazzService): void
     {
-        $transaction = Transaction::where('invoice_id', $this->invoiceId)->first();
+        Cache::lock('fulfilment:'.$this->invoiceId, 300)->block(5, function () use ($digiflazzService) {
+            $this->process($digiflazzService);
+        });
+    }
 
-        if (! $transaction) {
-            OperationalLogger::warning('ProcessFulfilmentJob: transaksi tidak ditemukan', [
-                'invoice_id' => $this->invoiceId,
-            ], channel: 'payments');
+    private function process(DigiflazzService $digiflazzService): void
+    {
+        $transaction = DB::transaction(function () {
+            $transaction = Transaction::with('product')
+                ->where('invoice_id', $this->invoiceId)
+                ->lockForUpdate()
+                ->first();
 
-            return;
-        }
+            if (! $transaction) {
+                OperationalLogger::warning('ProcessFulfilmentJob: transaksi tidak ditemukan', [
+                    'invoice_id' => $this->invoiceId,
+                ], channel: 'payments');
 
-        if (in_array($transaction->fulfilment_status, ['success', 'failed'], true)) {
-            return;
-        }
+                return null;
+            }
 
-        if ($transaction->payment_status !== 'paid') {
-            OperationalLogger::warning('ProcessFulfilmentJob: transaksi belum dibayar', [
-                'invoice_id' => $this->invoiceId,
-                'payment_status' => $transaction->payment_status,
-            ], channel: 'payments');
+            if (in_array($transaction->fulfilment_status, ['success', 'failed'], true)) {
+                return null;
+            }
 
-            return;
-        }
+            if ($transaction->payment_status !== 'paid') {
+                OperationalLogger::warning('ProcessFulfilmentJob: transaksi belum dibayar', [
+                    'invoice_id' => $this->invoiceId,
+                    'payment_status' => $transaction->payment_status,
+                ], channel: 'payments');
 
-        $sku = $this->resolveSku($transaction);
+                return null;
+            }
 
-        if ($sku === null) {
-            return;
-        }
+            $sku = $this->resolveSku($transaction);
 
-        $transaction->update([
-            'status' => 'processing',
-            'fulfilment_status' => 'processing',
-        ]);
+            if ($sku === null) {
+                return null;
+            }
 
-        try {
             $transaction->forceFill([
                 'provider_sku' => $sku,
+                'status' => 'processing',
+                'fulfilment_status' => 'processing',
             ])->save();
 
+            return $transaction->fresh(['product']);
+        });
+
+        if (! $transaction) {
+            return;
+        }
+
+        $sku = (string) $transaction->provider_sku;
+
+        try {
             $customerNo = (string) $transaction->customer_game_id.(string) ($transaction->customer_zone_id ?? '');
             $topupResult = $digiflazzService->createTransaction(
                 $sku,
@@ -82,7 +101,7 @@ class ProcessFulfilmentJob implements ShouldQueue, ShouldBeUnique
                 'reference_id_provider' => $topupResult['ref_id']
                     ?? $topupResult['message']
                     ?? $transaction->reference_id_provider,
-                'api_logs' => $topupResult,
+                'api_logs' => $this->mergeApiLogs($transaction->fresh() ?? $transaction, 'digiflazz', $topupResult),
                 'failure_reason' => null,
             ]);
 
@@ -186,7 +205,7 @@ class ProcessFulfilmentJob implements ShouldQueue, ShouldBeUnique
                         ?? $statusResult['message']
                         ?? $transaction->reference_id_provider,
                     'sn' => $serialNumber,
-                    'api_logs' => $statusResult,
+                    'api_logs' => $this->mergeApiLogs($transaction, 'digiflazz_reconcile', $statusResult),
                     'failure_reason' => null,
                 ]);
 
@@ -206,7 +225,7 @@ class ProcessFulfilmentJob implements ShouldQueue, ShouldBeUnique
                     'reference_id_provider' => $statusResult['ref_id']
                         ?? $statusResult['message']
                         ?? $transaction->reference_id_provider,
-                    'api_logs' => $statusResult,
+                    'api_logs' => $this->mergeApiLogs($transaction, 'digiflazz_reconcile', $statusResult),
                     'failure_reason' => $failureReason,
                 ]);
 
@@ -231,5 +250,17 @@ class ProcessFulfilmentJob implements ShouldQueue, ShouldBeUnique
             'fulfilment_status' => 'processing',
             'failure_reason' => 'Transaksi sedang diverifikasi ke provider setelah gangguan koneksi.',
         ]);
+    }
+
+    private function mergeApiLogs(Transaction $transaction, string $key, array $payload): array
+    {
+        $logs = $transaction->api_logs ?? [];
+        if (! is_array($logs)) {
+            $logs = [];
+        }
+
+        $logs[$key] = $payload;
+
+        return $logs;
     }
 }

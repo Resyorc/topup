@@ -19,6 +19,8 @@ class MaintenanceMode
             ($adminDomain && $request->getHost() === $adminDomain) ||
             ($adminPath !== '' && $request->is($adminPath.'*')) ||
             $request->is('api/digiflazz-callback') ||
+            $request->is('api/callback/tripay') ||
+            $request->is('api/callback/digiflazz') ||
             $request->is('storage/*')
         ) {
             return $next($request);

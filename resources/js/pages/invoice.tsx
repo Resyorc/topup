@@ -1,4 +1,4 @@
-import { Head, useForm, Link, usePage } from '@inertiajs/react';
+import { Head, useForm, Link, router, usePage } from '@inertiajs/react';
 import { useEchoPublic } from '@laravel/echo-react';
 import axios from 'axios';
 import DOMPurify from 'dompurify';
@@ -34,9 +34,13 @@ export default function InvoiceSearch({
     searchedInvoiceId = '',
 }: InvoiceSearchProps) {
     const { auth } = usePage<{ auth: { user: any } }>().props;
-    const { hasReviewed: guestHasReviewed, markReviewed } = useGuestInvoice();
+    const {
+        hasReviewed: guestHasReviewed,
+        markReviewed,
+        getGuestToken,
+    } = useGuestInvoice();
 
-    const { data, setData, get, processing, errors } = useForm({
+    const { data, setData, processing, errors } = useForm({
         invoice_id: searchedInvoiceId,
     });
 
@@ -191,7 +195,12 @@ export default function InvoiceSearch({
     const submit = (e: React.SyntheticEvent) => {
         e.preventDefault();
 
-        get('/invoice', {
+        const guestToken = getGuestToken(data.invoice_id);
+
+        router.get('/invoice', {
+            invoice_id: data.invoice_id,
+            ...(guestToken ? { guest_token: guestToken } : {}),
+        }, {
             preserveState: true,
             preserveScroll: true,
         });
@@ -522,7 +531,12 @@ export default function InvoiceSearch({
                                                     {phoneResults.map((r) => (
                                                         <Link
                                                             key={r.invoice_id}
-                                                            href={`/invoice?invoice_id=${r.invoice_id}`}
+                                                            href={
+                                                                `/invoice?invoice_id=${encodeURIComponent(r.invoice_id)}` +
+                                                                (getGuestToken(r.invoice_id)
+                                                                    ? `&guest_token=${encodeURIComponent(getGuestToken(r.invoice_id) ?? '')}`
+                                                                    : '')
+                                                            }
                                                             className="flex items-center justify-between rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] px-4 py-3 transition hover:border-primary"
                                                         >
                                                             <div>
@@ -1642,5 +1656,3 @@ export default function InvoiceSearch({
         </GuestLayout>
     );
 }
-
-

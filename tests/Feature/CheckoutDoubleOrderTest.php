@@ -3,6 +3,7 @@
 use App\Models\Category;
 use App\Models\Game;
 use App\Models\Product;
+use App\Models\ProviderProduct;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Support\Str;
@@ -23,14 +24,25 @@ function makeActiveGame(): Game
 
 function makeAvailableProduct(Game $game): Product
 {
-    return Product::create([
+    $product = Product::create([
         'game_id'      => $game->id,
         'name'         => 'DO Product',
-        'provider_sku' => 'DO-SKU-' . uniqid(),
         'price_cost'   => 8000,
         'price_sell'   => 10000,
         'is_available' => true,
     ]);
+
+    ProviderProduct::create([
+        'provider_name' => 'digiflazz',
+        'provider_sku'  => 'DO-SKU-' . uniqid(),
+        'product_name'  => $product->name,
+        'price'         => 8000,
+        'seller_name'   => 'Digiflazz',
+        'is_active'     => true,
+        'product_id'    => $product->id,
+    ]);
+
+    return $product->fresh('providerProducts');
 }
 
 function makePendingTrxFor(User $user, Product $product, string $gameId = '99999', array $overrides = []): Transaction
@@ -62,11 +74,11 @@ function checkoutPayload(Product $product, string $gameId = '99999'): array
 
 describe('Checkout Double Order — BLACK-BOX', function () {
 
-    test('[BLACK-BOX] guest tidak terkena duplicate check — tidak ada 409 dari check awal', function () {
+    test('[BLACK-BOX] guest dengan pesanan pending aktif mendapat 409', function () {
         $game    = makeActiveGame();
         $product = makeAvailableProduct($game);
 
-        // Guest order sebelumnya (user_id = null) tidak memblokir guest baru
+        // Guest order sebelumnya (user_id = null) dengan WhatsApp sama memblokir guest baru.
         Transaction::create([
             'invoice_id'        => 'INV-' . strtoupper(Str::ulid()),
             'user_id'           => null,
@@ -80,9 +92,9 @@ describe('Checkout Double Order — BLACK-BOX', function () {
 
         // Guest checkout — duplicate check di controller hanya berlaku untuk user login.
         // Response tidak boleh 409 (akan gagal di Tripay, tapi bukan karena duplicate check).
-        $response = $this->postJson('/api/checkout', checkoutPayload($product));
-
-        expect($response->status())->not->toBe(409);
+        $this->postJson('/api/checkout', checkoutPayload($product))
+            ->assertStatus(409)
+            ->assertJson(['success' => false]);
     });
 
     test('[BLACK-BOX] user login dengan pesanan pending aktif mendapat 409', function () {

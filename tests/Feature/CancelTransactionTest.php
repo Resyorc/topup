@@ -3,6 +3,7 @@
 use App\Models\Category;
 use App\Models\Game;
 use App\Models\Product;
+use App\Models\ProviderProduct;
 use App\Models\Transaction;
 use App\Models\User;
 use Illuminate\Support\Str;
@@ -23,14 +24,25 @@ function makeGame(): Game
 
 function makeProduct(Game $game): Product
 {
-    return Product::create([
+    $product = Product::create([
         'game_id'      => $game->id,
         'name'         => 'Test Product',
-        'provider_sku' => 'SKU-' . uniqid(),
         'price_cost'   => 8000,
         'price_sell'   => 10000,
         'is_available' => true,
     ]);
+
+    ProviderProduct::create([
+        'provider_name' => 'digiflazz',
+        'provider_sku'  => 'SKU-' . uniqid(),
+        'product_name'  => $product->name,
+        'price'         => 8000,
+        'seller_name'   => 'Digiflazz',
+        'is_active'     => true,
+        'product_id'    => $product->id,
+    ]);
+
+    return $product->fresh('providerProducts');
 }
 
 function makeTrx(array $overrides = []): Transaction

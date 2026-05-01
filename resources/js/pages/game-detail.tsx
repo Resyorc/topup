@@ -648,8 +648,15 @@ export default function GameDetail({
                 response.data.data.transaction.invoice_id
             ) {
                 const invoiceId = response.data.data.transaction.invoice_id;
-                addInvoice(invoiceId);
-                router.visit('/invoice?invoice_id=' + invoiceId);
+                const guestToken = response.data.data.guest_token ?? null;
+                addInvoice(invoiceId, guestToken);
+                router.visit(
+                    '/invoice?invoice_id=' +
+                        encodeURIComponent(invoiceId) +
+                        (guestToken
+                            ? '&guest_token=' + encodeURIComponent(guestToken)
+                            : ''),
+                );
             } else {
                 swalError('Gagal membuat pesanan. Silakan coba lagi.');
             }
