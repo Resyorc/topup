@@ -87,6 +87,7 @@ return [
             'path' => storage_path('logs/digiflazz.log'),
             'level' => env('LOG_LEVEL', 'debug'),
             'days' => 14,
+            'permission' => 0666,
             'replace_placeholders' => true,
         ],
 
@@ -95,6 +96,7 @@ return [
             'path' => storage_path('logs/operations.log'),
             'level' => env('LOG_OPERATIONS_LEVEL', env('LOG_LEVEL', 'info')),
             'days' => env('LOG_OPERATIONS_DAYS', 30),
+            'permission' => 0666,
             'replace_placeholders' => true,
         ],
 
@@ -103,6 +105,7 @@ return [
             'path' => storage_path('logs/payments.log'),
             'level' => env('LOG_PAYMENTS_LEVEL', env('LOG_LEVEL', 'info')),
             'days' => env('LOG_PAYMENTS_DAYS', 30),
+            'permission' => 0666,
             'replace_placeholders' => true,
         ],
 
