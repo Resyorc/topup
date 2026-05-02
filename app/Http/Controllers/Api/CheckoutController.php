@@ -10,6 +10,7 @@ use App\Models\Transaction;
 use App\Services\AuditLogger;
 use App\Services\CoinService;
 use App\Services\OperationalLogger;
+use App\Services\ProviderSkuSelector;
 use App\Services\TripayService;
 use App\Services\UserIdCheckService;
 use App\Services\VoucherService;
@@ -28,7 +29,8 @@ class CheckoutController extends Controller
         TripayService $tripayService,
         CoinService $coinService,
         VoucherService $voucherService,
-        UserIdCheckService $userIdCheckService
+        UserIdCheckService $userIdCheckService,
+        ProviderSkuSelector $providerSkuSelector
     ) {
         $validated = $request->validate([
             'product_id' => 'required|exists:products,id',
@@ -49,18 +51,13 @@ class CheckoutController extends Controller
             ?? $authenticatedUser?->email
             ?? 'guest@nuvelo.com';
 
-        $product = Product::with([
-            'game',
-            'providerProducts' => function ($q) {
-                $q->where('is_active', true)->orderBy('price', 'asc');
-            },
-        ])->findOrFail($validated['product_id']);
+        $product = Product::with('game')->findOrFail($validated['product_id']);
 
         if (! $product->is_available) {
             return response()->json(['error' => 'Product is currently unavailable.'], 400);
         }
 
-        $selectedProvider = $product->providerProducts->first();
+        $selectedProvider = $providerSkuSelector->bestForProduct($product);
         $providerSku = $selectedProvider?->provider_sku;
         $providerName = $selectedProvider?->provider_name ?? 'digiflazz';
 

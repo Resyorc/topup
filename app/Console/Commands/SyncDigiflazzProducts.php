@@ -9,14 +9,14 @@ class SyncDigiflazzProducts extends Command
 {
     protected $signature = 'digiflazz:sync-products';
 
-    protected $description = 'Sync harga & status produk dari Digiflazz API berdasarkan provider_sku yang sudah dipetakan admin';
+    protected $description = 'Sync pricelist Digiflazz dan refresh harga produk yang sudah dipetakan';
 
     public function handle(TopupPriceService $priceService): void
     {
         $this->info('Starting Digiflazz product synchronization...');
 
-        $start   = microtime(true);
-        $result  = $priceService->syncPrices();
+        $start = microtime(true);
+        $result = $priceService->syncPrices();
         $elapsed = round(microtime(true) - $start, 2);
 
         $this->info("Synchronization completed in {$elapsed}s.");

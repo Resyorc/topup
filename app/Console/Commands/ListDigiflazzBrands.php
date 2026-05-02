@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use App\Models\DigiflazzSku;
 use App\Models\Game;
+use App\Models\ProviderProduct;
 use Illuminate\Console\Command;
 
 class ListDigiflazzBrands extends Command
@@ -14,7 +14,8 @@ class ListDigiflazzBrands extends Command
 
     public function handle(): void
     {
-        $brands = DigiflazzSku::query()
+        $brands = ProviderProduct::query()
+            ->where('provider_name', 'digiflazz')
             ->whereNotNull('brand')
             ->select('brand')
             ->selectRaw('COUNT(*) as sku_count')
@@ -24,7 +25,8 @@ class ListDigiflazzBrands extends Command
             ->get();
 
         if ($brands->isEmpty()) {
-            $this->warn('Belum ada data SKU. Jalankan: php artisan digiflazz:sync-products');
+            $this->warn('Belum ada data SKU. Jalankan: php artisan digiflazz:bootstrap-catalog');
+
             return;
         }
 
@@ -38,7 +40,7 @@ class ListDigiflazzBrands extends Command
             return [
                 $b->brand,
                 $b->sku_count,
-                'Rp ' . number_format($b->min_price, 0, ',', '.'),
+                'Rp '.number_format($b->min_price, 0, ',', '.'),
                 $matched ? '<fg=green>✓ Match</>' : '<fg=red>✗ Belum ada di games</>',
             ];
         })->toArray();

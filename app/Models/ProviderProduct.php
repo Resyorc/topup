@@ -9,6 +9,12 @@ class ProviderProduct extends Model
 {
     protected $guarded = ['id'];
 
+    protected $casts = [
+        'is_active' => 'boolean',
+        'price' => 'integer',
+        'priority' => 'integer',
+    ];
+
     public function product(): BelongsTo
     {
         return $this->belongsTo(Product::class);

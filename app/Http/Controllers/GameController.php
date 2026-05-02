@@ -18,7 +18,12 @@ class GameController extends Controller
     {
         // 1. Fetch the Game including its active products and category
         $game = Game::with(['category', 'products' => function ($query) {
-            $query->with('providerProducts')
+            $query->with(['providerProducts' => function ($providerQuery) {
+                $providerQuery->where('is_active', true)
+                    ->orderBy('priority')
+                    ->orderBy('price')
+                    ->orderBy('id');
+            }])
                 ->where('is_available', true)
                 ->orderBy('price_sell', 'asc');
         }])
@@ -136,8 +141,8 @@ class GameController extends Controller
         $paymentMethods = $sorted;
 
         return Inertia::render('game-detail', [
-            'game'           => $gameData,
-            'productGroups'  => $productsGrouped,
+            'game' => $gameData,
+            'productGroups' => $productsGrouped,
             'flashSaleGroups' => $mappedFlashSale,
             'paymentMethods' => $paymentMethods,
             'loyaltyMinAmount' => (int) Setting::get('loyalty_min_amount', config('services.loyalty.min_amount', 5000)),

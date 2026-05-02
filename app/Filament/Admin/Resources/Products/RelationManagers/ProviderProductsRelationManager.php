@@ -2,10 +2,13 @@
 
 namespace App\Filament\Admin\Resources\Products\RelationManagers;
 
+use App\Models\ProviderProduct;
+use App\Services\TopupPriceService;
 use Filament\Actions\AssociateAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DissociateAction;
 use Filament\Actions\DissociateBulkAction;
+use Filament\Actions\EditAction;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Resources\RelationManagers\RelationManager;
@@ -36,6 +39,12 @@ class ProviderProductsRelationManager extends RelationManager
                     ->required()
                     ->numeric()
                     ->prefix('$'),
+                TextInput::make('priority')
+                    ->label('Prioritas')
+                    ->helperText('Angka lebih kecil dipilih lebih dulu. Jika sama, harga modal termurah dipakai.')
+                    ->numeric()
+                    ->default(100)
+                    ->required(),
                 TextInput::make('seller_name')
                     ->required(),
                 Toggle::make('is_active')
@@ -57,6 +66,10 @@ class ProviderProductsRelationManager extends RelationManager
                 TextColumn::make('price')
                     ->numeric()
                     ->prefix('Rp')
+                    ->sortable(),
+                TextColumn::make('priority')
+                    ->label('Prioritas')
+                    ->badge()
                     ->sortable(),
                 TextColumn::make('seller_name')
                     ->searchable(),
@@ -80,6 +93,13 @@ class ProviderProductsRelationManager extends RelationManager
                     ->multiple(),
             ])
             ->recordActions([
+                EditAction::make()
+                    ->after(function (ProviderProduct $record): void {
+                        if ($record->product) {
+                            app(TopupPriceService::class)->refreshProductPricing($record->product);
+                        }
+                    })
+                    ->visible(fn () => auth()->user()->hasAnyRole(['Super Admin', 'Staff'])),
                 DissociateAction::make(),
             ])
             ->bulkActions([

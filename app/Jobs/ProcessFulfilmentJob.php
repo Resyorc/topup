@@ -5,6 +5,7 @@ namespace App\Jobs;
 use App\Models\Transaction;
 use App\Services\DigiflazzService;
 use App\Services\OperationalLogger;
+use App\Services\ProviderSkuSelector;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldBeUnique;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -15,12 +16,14 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Throwable;
 
-class ProcessFulfilmentJob implements ShouldQueue, ShouldBeUnique
+class ProcessFulfilmentJob implements ShouldBeUnique, ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
     public int $tries = 3;
+
     public int $backoff = 30;
+
     public int $uniqueFor = 300;
 
     public function __construct(public readonly string $invoiceId) {}
@@ -30,16 +33,16 @@ class ProcessFulfilmentJob implements ShouldQueue, ShouldBeUnique
         return $this->invoiceId;
     }
 
-    public function handle(DigiflazzService $digiflazzService): void
+    public function handle(DigiflazzService $digiflazzService, ProviderSkuSelector $providerSkuSelector): void
     {
-        Cache::lock('fulfilment:'.$this->invoiceId, 300)->block(5, function () use ($digiflazzService) {
-            $this->process($digiflazzService);
+        Cache::lock('fulfilment:'.$this->invoiceId, 300)->block(5, function () use ($digiflazzService, $providerSkuSelector) {
+            $this->process($digiflazzService, $providerSkuSelector);
         });
     }
 
-    private function process(DigiflazzService $digiflazzService): void
+    private function process(DigiflazzService $digiflazzService, ProviderSkuSelector $providerSkuSelector): void
     {
-        $transaction = DB::transaction(function () {
+        $transaction = DB::transaction(function () use ($providerSkuSelector) {
             $transaction = Transaction::with('product')
                 ->where('invoice_id', $this->invoiceId)
                 ->lockForUpdate()
@@ -66,14 +69,15 @@ class ProcessFulfilmentJob implements ShouldQueue, ShouldBeUnique
                 return null;
             }
 
-            $sku = $this->resolveSku($transaction);
+            $providerProduct = $this->resolveProviderProduct($transaction, $providerSkuSelector);
 
-            if ($sku === null) {
+            if ($providerProduct === null) {
                 return null;
             }
 
             $transaction->forceFill([
-                'provider_sku' => $sku,
+                'provider_sku' => $providerProduct->provider_sku,
+                'provider_name' => $providerProduct->provider_name,
                 'status' => 'processing',
                 'fulfilment_status' => 'processing',
             ])->save();
@@ -123,58 +127,62 @@ class ProcessFulfilmentJob implements ShouldQueue, ShouldBeUnique
         }
     }
 
-    private function resolveSku(Transaction $transaction): ?string
-    {
+    private function resolveProviderProduct(
+        Transaction $transaction,
+        ProviderSkuSelector $providerSkuSelector,
+    ): ?\App\Models\ProviderProduct {
         $sku = (string) ($transaction->provider_sku ?? '');
-
-        if ($sku !== '') {
-            return $sku;
-        }
-
         $product = $transaction->product;
 
         if (! $product) {
             $reason = 'Produk tidak ditemukan (product_id tidak valid atau sudah dihapus).';
         } else {
+            if ($sku !== '') {
+                $currentProvider = $providerSkuSelector->activeBySkuForProduct(
+                    $product,
+                    $sku,
+                    $transaction->provider_name,
+                );
+
+                if ($currentProvider) {
+                    return $currentProvider;
+                }
+
+                OperationalLogger::warning('ProcessFulfilmentJob: provider_sku transaksi tidak aktif, memilih alternatif', [
+                    'invoice_id' => $this->invoiceId,
+                    'provider_sku' => $sku,
+                    'provider_name' => $transaction->provider_name,
+                ], channel: 'payments');
+            }
+
+            $providerProduct = $providerSkuSelector->bestForProduct($product);
+
+            if ($providerProduct) {
+                return $providerProduct;
+            }
+
             $totalProviderProducts = $product->providerProducts()->count();
             $activeProviderProducts = $product->providerProducts()->where('is_active', true)->count();
 
-            if ($totalProviderProducts === 0) {
-                $reason = 'Produk belum di-mapping ke provider (tidak ada provider_products).';
-            } elseif ($activeProviderProducts === 0) {
-                $reason = 'Semua provider_products untuk produk ini tidak aktif.';
-            } else {
-                $reason = null;
-            }
-
-            if ($reason === null) {
-                $sku = (string) ($product->providerProducts()
-                    ->where('is_active', true)
-                    ->orderBy('price', 'asc')
-                    ->value('provider_sku') ?? '');
-
-                if ($sku === '') {
-                    $reason = 'provider_sku aktif ditemukan namun nilainya kosong/null.';
-                }
-            }
+            $reason = match (true) {
+                $totalProviderProducts === 0 => 'Produk belum di-mapping ke provider (tidak ada provider_products).',
+                $activeProviderProducts === 0 => 'Semua provider_products untuk produk ini tidak aktif.',
+                default => 'provider_sku aktif ditemukan namun tidak bisa dipilih.',
+            };
         }
 
-        if ($sku === '') {
-            OperationalLogger::error('ProcessFulfilmentJob: provider_sku kosong', [
-                'invoice_id' => $this->invoiceId,
-                'reason' => $reason ?? 'unknown',
-            ], channel: 'payments');
+        OperationalLogger::error('ProcessFulfilmentJob: provider_sku kosong', [
+            'invoice_id' => $this->invoiceId,
+            'reason' => $reason ?? 'unknown',
+        ], channel: 'payments');
 
-            $transaction->update([
-                'status' => 'failed',
-                'fulfilment_status' => 'failed',
-                'failure_reason' => "Produk tidak valid: {$reason}",
-            ]);
+        $transaction->update([
+            'status' => 'failed',
+            'fulfilment_status' => 'failed',
+            'failure_reason' => "Produk tidak valid: {$reason}",
+        ]);
 
-            return null;
-        }
-
-        return $sku;
+        return null;
     }
 
     private function reconcileAfterProviderException(

@@ -14,6 +14,7 @@ class Product extends Model
 
     protected $casts = [
         'flash_sale_ends_at' => 'datetime',
+        'is_available' => 'boolean',
     ];
 
     public function game(): BelongsTo

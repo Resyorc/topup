@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Services;
 
-use App\Models\ProviderProduct;
 use App\Models\Product;
+use App\Models\ProviderProduct;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
 
@@ -27,37 +27,17 @@ class TopupPriceService
         $skipped = 0;
 
         try {
-            ProviderProduct::where('provider_name', 'digiflazz')->update(['is_active' => false]);
-
             $this->syncDigiflazzCatalog();
 
-            Product::with(['providerProducts' => function ($q) {
-                $q->where('is_active', true)->orderBy('price', 'asc');
-            }])->chunk(200, function ($products) use (&$updated, &$skipped) {
+            Product::query()->chunk(200, function ($products) use (&$updated, &$skipped) {
                 foreach ($products as $product) {
-                    $cheapestProvider = $product->providerProducts->first();
-
-                    if ($cheapestProvider) {
-                        $cost = (float) $cheapestProvider->price;
-
-                        $product->update([
-                            'price_cost' => $cost,
-                            'price_sell' => $this->calculateSellPrice($cost, (float) $product->margin_flat),
-                            'is_available' => true,
-                        ]);
-
+                    if ($this->refreshProductPricing($product)) {
                         $updated++;
-                    } else {
-                        if ($product->is_available) {
-                            $product->update(['is_available' => false]);
-                            Log::channel('payments')->warning(
-                                "Auto-Failover [Sync]: Product ID {$product->id} ({$product->name}) diputus - Tidak ada SKU provider yang aktif."
-                            );
-                            $updated++;
-                        } else {
-                            $skipped++;
-                        }
+
+                        continue;
                     }
+
+                    $skipped++;
                 }
             });
 
@@ -81,28 +61,61 @@ class TopupPriceService
             Log::channel('payments')->warning("Auto-Failover [Webhook]: Digiflazz SKU '{$skuCode}' dimatikan.");
 
             if ($providerProduct->product_id) {
-                $product = Product::with(['providerProducts' => function ($q) {
-                    $q->where('is_active', true)->orderBy('price', 'asc');
-                }])->find($providerProduct->product_id);
+                $product = Product::find($providerProduct->product_id);
 
                 if ($product) {
-                    $cheapest = $product->providerProducts->first();
-                    if ($cheapest) {
-                        $cost = (float) $cheapest->price;
-                        $product->update([
-                            'price_cost' => $cost,
-                            'price_sell' => $this->calculateSellPrice($cost, (float) $product->margin_flat),
-                        ]);
-                        Log::channel('payments')->info(
-                            "Auto-Recovery: Product ID {$product->id} switch ke seller {$cheapest->seller_name} dengan biaya Rp{$cost}"
-                        );
-                    } else {
-                        $product->update(['is_available' => false]);
-                        Log::channel('payments')->warning("Auto-Failover: Product ID {$product->id} diputus (Tidak ada alternatif seller).");
-                    }
+                    $this->refreshProductPricing($product);
                 }
             }
         }
+    }
+
+    public function refreshProductPricing(Product $product): bool
+    {
+        $bestProvider = app(ProviderSkuSelector::class)->bestForProduct($product);
+
+        if ($bestProvider) {
+            $cost = (float) $bestProvider->price;
+
+            $product->update([
+                'price_cost' => $cost,
+                'price_sell' => $this->calculateSellPrice($cost, (float) $product->margin_flat),
+                'is_available' => true,
+            ]);
+
+            Log::channel('payments')->info('Product pricing refreshed from provider alternative', [
+                'product_id' => $product->id,
+                'provider_sku' => $bestProvider->provider_sku,
+                'seller_name' => $bestProvider->seller_name,
+                'priority' => $bestProvider->priority,
+                'price_cost' => $cost,
+            ]);
+
+            return true;
+        }
+
+        if ($product->is_available) {
+            $product->update(['is_available' => false]);
+            Log::channel('payments')->warning(
+                "Auto-Failover: Product ID {$product->id} ({$product->name}) dinonaktifkan - tidak ada SKU provider aktif."
+            );
+
+            return true;
+        }
+
+        return false;
+    }
+
+    /**
+     * Ambil seluruh pricelist Digiflazz dan sinkronkan ke provider_products.
+     *
+     * @return array{synced: int, active: int, inactive: int}
+     */
+    public function syncDigiflazzCatalog(): array
+    {
+        ProviderProduct::where('provider_name', 'digiflazz')->update(['is_active' => false]);
+
+        return $this->upsertDigiflazzCatalog(app(DigiflazzService::class)->getPrepaidProducts());
     }
 
     private function notifyAdminSyncFailed(string $errorMessage): void
@@ -115,9 +128,9 @@ class TopupPriceService
 
         $time = now()->format('d/m/Y H:i');
         $body = "[Nuvelo] Provider Sync Gagal\n\n"
-            . "Waktu: {$time}\n"
-            . "Error: {$errorMessage}\n\n"
-            . "Harga produk mungkin tidak terupdate. Cek log server untuk detail.";
+            ."Waktu: {$time}\n"
+            ."Error: {$errorMessage}\n\n"
+            .'Harga produk mungkin tidak terupdate. Cek log server untuk detail.';
 
         Mail::raw($body, function ($message) use ($adminEmail, $time) {
             $message->to($adminEmail)
@@ -125,9 +138,15 @@ class TopupPriceService
         });
     }
 
-    private function syncDigiflazzCatalog(): void
+    /**
+     * @param  array<int, array<string, mixed>>  $apiProducts
+     * @return array{synced: int, active: int, inactive: int}
+     */
+    private function upsertDigiflazzCatalog(array $apiProducts): array
     {
-        $apiProducts = app(DigiflazzService::class)->getPrepaidProducts();
+        $synced = 0;
+        $active = 0;
+        $inactive = 0;
 
         foreach ($apiProducts as $item) {
             $sku = $item['buyer_sku_code'] ?? null;
@@ -148,7 +167,15 @@ class TopupPriceService
                     'is_active' => $isAvailable,
                 ]
             );
-        }
-    }
 
+            $synced++;
+            $isAvailable ? $active++ : $inactive++;
+        }
+
+        return [
+            'synced' => $synced,
+            'active' => $active,
+            'inactive' => $inactive,
+        ];
+    }
 }

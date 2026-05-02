@@ -13,6 +13,7 @@ class Game extends Model
     protected $guarded = ['id'];
 
     protected $casts = [
+        'is_active' => 'boolean',
         'grouping_rules' => 'array',
         'icon_rules' => 'array',
         'region_map' => 'array',
@@ -42,7 +43,7 @@ class Game extends Model
             return null;
         }
 
-        $name      = $product->name;
+        $name = $product->name;
         $cleanName = str_contains($name, '(')
             ? trim(substr($name, 0, strpos($name, '(')))
             : $name;
@@ -51,7 +52,7 @@ class Game extends Model
         $group = '';
         foreach ($this->grouping_rules ?? [] as $rule) {
             $groupLabel = $rule['group'] ?? '';
-            $keywords   = array_map('trim', explode(',', $rule['keywords'] ?? ''));
+            $keywords = array_map('trim', explode(',', $rule['keywords'] ?? ''));
             foreach ($keywords as $kw) {
                 if ($kw !== '' && str_contains(strtolower($name), strtolower($kw))) {
                     $group = $groupLabel;
@@ -67,7 +68,7 @@ class Game extends Model
             if ($type === 'group') {
                 $matchGroup = $rule['match_group'] ?? '';
                 if ($matchGroup !== '' && str_contains(strtolower($group), strtolower($matchGroup))) {
-                    return $icon ? '/storage/' . $icon : null;
+                    return $icon ? '/storage/'.$icon : null;
                 }
             } elseif ($type === 'keyword') {
                 $matchKeyword = $rule['match_keyword'] ?? '';
@@ -75,7 +76,7 @@ class Game extends Model
                     $keywords = array_map('trim', explode(',', $matchKeyword));
                     foreach ($keywords as $kw) {
                         if ($kw !== '' && str_contains(strtolower($cleanName), strtolower($kw))) {
-                            return $icon ? '/storage/' . $icon : null;
+                            return $icon ? '/storage/'.$icon : null;
                         }
                     }
                 }
@@ -83,10 +84,10 @@ class Game extends Model
                 preg_match('/\d+/', $cleanName, $matches);
                 if (! empty($matches)) {
                     $amount = (int) $matches[0];
-                    $min    = isset($rule['amount_min']) && $rule['amount_min'] !== '' ? (int) $rule['amount_min'] : null;
-                    $max    = isset($rule['amount_max']) && $rule['amount_max'] !== '' ? (int) $rule['amount_max'] : null;
+                    $min = isset($rule['amount_min']) && $rule['amount_min'] !== '' ? (int) $rule['amount_min'] : null;
+                    $max = isset($rule['amount_max']) && $rule['amount_max'] !== '' ? (int) $rule['amount_max'] : null;
                     if (($min === null || $amount >= $min) && ($max === null || $amount <= $max)) {
-                        return $icon ? '/storage/' . $icon : null;
+                        return $icon ? '/storage/'.$icon : null;
                     }
                 }
             }
