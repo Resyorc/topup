@@ -74,4 +74,6 @@ COPY docker/ecosystem.config.cjs /app/ecosystem.config.cjs
 
 EXPOSE 80 8082
 
+RUN chown -R www-data:www-data /app/storage/logs
+
 CMD ["/bin/sh", "/app/docker/start.sh"]

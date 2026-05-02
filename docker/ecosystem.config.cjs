@@ -13,7 +13,7 @@ const apps = [
     {
         name: 'nuvelo-reverb',
         script: 'php',
-        args: `artisan reverb:start --host=0.0.0.0 --port=${process.env.REVERB_SERVER_PORT || process.env.REVERB_PORT || 8082}`,
+        args: `artisan reverb:start --host=0.0.0.0 --port=${process.env.REVERB_SERVER_PORT || 8082}`,
         watch: false,
         instances: 1,
         exec_mode: 'fork',
