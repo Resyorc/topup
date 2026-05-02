@@ -7,10 +7,7 @@ import Swal from 'sweetalert2';
 import GameCard from '@/components/game-card';
 import { useGuestInvoice } from '@/contexts/guest-invoice-context';
 import GuestLayout from '@/layouts/guest-layout';
-import {
-    getPaymentStatusBadge,
-    getTransactionStatusBadge,
-} from '@/lib';
+import { getPaymentStatusBadge, getTransactionStatusBadge } from '@/lib';
 import { swalError } from '@/lib/swal';
 
 function InvoiceRealtimeListener({
@@ -43,7 +40,9 @@ export default function InvoiceSearch({
         invoice_id: searchedInvoiceId,
     });
 
-    const [searchMode, setSearchMode] = useState<'invoice' | 'phone'>('invoice');
+    const [searchMode, setSearchMode] = useState<'invoice' | 'phone'>(
+        'invoice',
+    );
     const [phoneInput, setPhoneInput] = useState('');
     const [phoneResults, setPhoneResults] = useState<Array<{
         invoice_id: string;
@@ -75,7 +74,7 @@ export default function InvoiceSearch({
 
     const [invoiceData, setInvoiceData] = useState<any>(initialInvoiceData);
     const [animatedStatus, setAnimatedStatus] = useState<number>(0);
-    const [isPaymentOpen, setIsPaymentOpen] = useState<boolean>(true);
+    const [isPaymentOpen, setIsPaymentOpen] = useState<boolean>(false);
     const [remainingSeconds, setRemainingSeconds] = useState<number | null>(
         null,
     );
@@ -83,7 +82,8 @@ export default function InvoiceSearch({
     // Review state
     const [hasReviewed, setHasReviewed] = useState<boolean>(
         initialInvoiceData?.has_reviewed ||
-        (!!initialInvoiceData?.invoice_no && guestHasReviewed(initialInvoiceData.invoice_no)),
+            (!!initialInvoiceData?.invoice_no &&
+                guestHasReviewed(initialInvoiceData.invoice_no)),
     );
     const [reviewRating, setReviewRating] = useState<number>(0);
     const [reviewTags, setReviewTags] = useState<string[]>([]);
@@ -189,7 +189,9 @@ export default function InvoiceSearch({
 
             if (typeof window === 'undefined') return null;
 
-            return new URLSearchParams(window.location.search).get('guest_token');
+            return new URLSearchParams(window.location.search).get(
+                'guest_token',
+            );
         },
         [getGuestToken],
     );
@@ -205,19 +207,22 @@ export default function InvoiceSearch({
         [],
     );
 
-
     const submit = (e: React.SyntheticEvent) => {
         e.preventDefault();
 
         const guestToken = resolveGuestToken(data.invoice_id);
 
-        router.get('/invoice', {
-            invoice_id: data.invoice_id,
-            ...(guestToken ? { guest_token: guestToken } : {}),
-        }, {
-            preserveState: true,
-            preserveScroll: true,
-        });
+        router.get(
+            '/invoice',
+            {
+                invoice_id: data.invoice_id,
+                ...(guestToken ? { guest_token: guestToken } : {}),
+            },
+            {
+                preserveState: true,
+                preserveScroll: true,
+            },
+        );
     };
 
     const copyToClipboard = async (value: string | number) => {
@@ -302,6 +307,31 @@ export default function InvoiceSearch({
     const paymentBadge = getPaymentStatusBadge(invoiceData?.payment_status);
     const transactionBadge = getTransactionStatusBadge(invoiceData?.status);
     const isCoinTopup = invoiceData?.type === 'coin_topup';
+    const invoiceStatusLower = String(invoiceData?.status ?? '').toLowerCase();
+    const showInvoiceTimer =
+        ['pending', 'expired'].includes(invoiceStatusLower) &&
+        remainingSeconds !== null &&
+        remainingSeconds > 0;
+    const mobileStatusTitle =
+        invoiceStatusLower === 'pending'
+            ? 'Menunggu Pembayaran'
+            : invoiceStatusLower === 'processing'
+              ? 'Pesanan Diproses'
+              : invoiceStatusLower === 'success'
+                ? 'Pesanan Selesai'
+                : ['failed', 'expired', 'canceled'].includes(invoiceStatusLower)
+                  ? 'Pesanan Tidak Aktif'
+                  : 'Status Invoice';
+    const mobileStatusCopy =
+        invoiceStatusLower === 'pending'
+            ? 'Selesaikan pembayaran agar pesanan segera diproses.'
+            : invoiceStatusLower === 'processing'
+              ? 'Pembayaran diterima. Pesanan sedang dikirim ke provider.'
+              : invoiceStatusLower === 'success'
+                ? 'Transaksi sudah selesai dan status akhir diterima.'
+                : ['failed', 'expired', 'canceled'].includes(invoiceStatusLower)
+                  ? 'Buat pesanan baru jika masih ingin melakukan top up.'
+                  : 'Pantau status pesanan dari halaman ini.';
 
     // Animate progress bar incrementally when invoice status changes
     useEffect(() => {
@@ -438,7 +468,7 @@ export default function InvoiceSearch({
         <GuestLayout>
             <Head title="Cek Invoice" />
 
-            <div className="relative flex min-h-[calc(100vh-106px)] items-center justify-center overflow-hidden py-10 md:py-20">
+            <div className="relative flex min-h-[calc(100vh-106px)] items-start justify-center overflow-hidden py-4 md:items-center md:py-20">
                 {/* Dotted Texture Background - Top Right */}
                 <div className="pointer-events-none absolute top-0 right-0 h-96 w-96 bg-[radial-gradient(#fff_2px,transparent_2px)] [mask-image:radial-gradient(ellipse_at_top_right,black_10%,transparent_70%)] [background-size:24px_24px] opacity-[0.03]"></div>
 
@@ -474,7 +504,11 @@ export default function InvoiceSearch({
                                         Nomor Invoice
                                     </button>
                                     <button
-                                        onClick={() => { setSearchMode('phone'); setPhoneResults(null); setPhoneError(null); }}
+                                        onClick={() => {
+                                            setSearchMode('phone');
+                                            setPhoneResults(null);
+                                            setPhoneError(null);
+                                        }}
                                         className={`flex-1 px-6 py-4 text-sm font-bold transition ${searchMode === 'phone' ? 'border-b-2 border-primary bg-white/5 text-white' : 'text-gray-400 hover:text-white'}`}
                                     >
                                         Nomor WhatsApp
@@ -484,21 +518,32 @@ export default function InvoiceSearch({
                                 {/* Box Body */}
                                 <div className="p-4 md:p-8">
                                     {searchMode === 'invoice' ? (
-                                        <form onSubmit={submit} className="flex flex-col gap-6">
+                                        <form
+                                            onSubmit={submit}
+                                            className="flex flex-col gap-6"
+                                        >
                                             <div>
                                                 <input
                                                     type="text"
                                                     value={data.invoice_id}
-                                                    onChange={(e) => setData('invoice_id', e.target.value)}
+                                                    onChange={(e) =>
+                                                        setData(
+                                                            'invoice_id',
+                                                            e.target.value,
+                                                        )
+                                                    }
                                                     placeholder="Contoh: INV-1234567890"
                                                     className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-4 text-white placeholder-gray-500 transition outline-none focus:border-primary focus:ring-primary"
                                                     required
                                                 />
                                                 <p className="mt-2 text-xs text-gray-500">
-                                                    Masukkan nomor Invoice yang didapatkan saat transaksi.
+                                                    Masukkan nomor Invoice yang
+                                                    didapatkan saat transaksi.
                                                 </p>
                                                 {errors.invoice_id && (
-                                                    <p className="mt-2 text-sm text-red-500">{errors.invoice_id}</p>
+                                                    <p className="mt-2 text-sm text-red-500">
+                                                        {errors.invoice_id}
+                                                    </p>
                                                 )}
                                             </div>
                                             <button
@@ -510,21 +555,33 @@ export default function InvoiceSearch({
                                             </button>
                                         </form>
                                     ) : (
-                                        <form onSubmit={searchByPhone} className="flex flex-col gap-6">
+                                        <form
+                                            onSubmit={searchByPhone}
+                                            className="flex flex-col gap-6"
+                                        >
                                             <div>
                                                 <input
                                                     type="text"
                                                     value={phoneInput}
-                                                    onChange={(e) => { setPhoneInput(e.target.value); setPhoneResults(null); setPhoneError(null); }}
+                                                    onChange={(e) => {
+                                                        setPhoneInput(
+                                                            e.target.value,
+                                                        );
+                                                        setPhoneResults(null);
+                                                        setPhoneError(null);
+                                                    }}
                                                     placeholder="Contoh: 08123456789"
                                                     className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-4 text-white placeholder-gray-500 transition outline-none focus:border-primary"
                                                     required
                                                 />
                                                 <p className="mt-2 text-xs text-gray-500">
-                                                    Masukkan nomor WhatsApp yang digunakan saat transaksi.
+                                                    Masukkan nomor WhatsApp yang
+                                                    digunakan saat transaksi.
                                                 </p>
                                                 {phoneError && (
-                                                    <p className="mt-2 text-sm text-red-400">{phoneError}</p>
+                                                    <p className="mt-2 text-sm text-red-400">
+                                                        {phoneError}
+                                                    </p>
                                                 )}
                                             </div>
 
@@ -533,49 +590,88 @@ export default function InvoiceSearch({
                                                 disabled={phoneSearching}
                                                 className="w-full rounded-lg bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-6 py-4 text-lg font-bold text-white shadow-[var(--shadow-glow)] transition hover:opacity-90 disabled:opacity-50"
                                             >
-                                                {phoneSearching ? 'Mencari...' : 'Cari Transaksi'}
+                                                {phoneSearching
+                                                    ? 'Mencari...'
+                                                    : 'Cari Transaksi'}
                                             </button>
 
                                             {/* Phone search results */}
-                                            {phoneResults && phoneResults.length > 0 && (
-                                                <div className="flex flex-col gap-2">
-                                                    <p className="text-xs font-semibold text-gray-400 uppercase">
-                                                        {phoneResults.length} transaksi ditemukan
-                                                    </p>
-                                                    {phoneResults.map((r) => (
-                                                        <Link
-                                                            key={r.invoice_id}
-                                                            href={
-                                                                `/invoice?invoice_id=${encodeURIComponent(r.invoice_id)}` +
-                                                                (getGuestToken(r.invoice_id)
-                                                                    ? `&guest_token=${encodeURIComponent(getGuestToken(r.invoice_id) ?? '')}`
-                                                                    : '')
-                                                            }
-                                                            className="flex items-center justify-between rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] px-4 py-3 transition hover:border-primary"
-                                                        >
-                                                            <div>
-                                                                <div className="text-xs font-bold text-white">{r.invoice_id}</div>
-                                                                <div className="mt-0.5 text-[11px] text-gray-400">{r.created_at}</div>
-                                                            </div>
-                                                            <div className="text-right">
-                                                                <div className="text-sm font-bold text-white">
-                                                                    Rp {r.amount.toLocaleString('id-ID')}
-                                                                </div>
-                                                                <span className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${
-                                                                    r.status === 'success' ? 'bg-status-success-bg text-status-success' :
-                                                                    r.status === 'canceled' ? 'bg-status-canceled-bg text-status-canceled' :
-                                                                    r.status === 'refunded' ? 'bg-status-refunded-bg text-status-refunded' :
-                                                                    r.status === 'failed' || r.status === 'expired' ? 'bg-status-failed-bg text-status-failed' :
-                                                                    r.status === 'pending' ? 'bg-status-pending-bg text-status-pending' :
-                                                                    'bg-status-processing-bg text-status-processing'
-                                                                }`}>
-                                                                    {r.status}
-                                                                </span>
-                                                            </div>
-                                                        </Link>
-                                                    ))}
-                                                </div>
-                                            )}
+                                            {phoneResults &&
+                                                phoneResults.length > 0 && (
+                                                    <div className="flex flex-col gap-2">
+                                                        <p className="text-xs font-semibold text-gray-400 uppercase">
+                                                            {
+                                                                phoneResults.length
+                                                            }{' '}
+                                                            transaksi ditemukan
+                                                        </p>
+                                                        {phoneResults.map(
+                                                            (r) => (
+                                                                <Link
+                                                                    key={
+                                                                        r.invoice_id
+                                                                    }
+                                                                    href={
+                                                                        `/invoice?invoice_id=${encodeURIComponent(r.invoice_id)}` +
+                                                                        (getGuestToken(
+                                                                            r.invoice_id,
+                                                                        )
+                                                                            ? `&guest_token=${encodeURIComponent(getGuestToken(r.invoice_id) ?? '')}`
+                                                                            : '')
+                                                                    }
+                                                                    className="flex items-center justify-between rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] px-4 py-3 transition hover:border-primary"
+                                                                >
+                                                                    <div>
+                                                                        <div className="text-xs font-bold text-white">
+                                                                            {
+                                                                                r.invoice_id
+                                                                            }
+                                                                        </div>
+                                                                        <div className="mt-0.5 text-[11px] text-gray-400">
+                                                                            {
+                                                                                r.created_at
+                                                                            }
+                                                                        </div>
+                                                                    </div>
+                                                                    <div className="text-right">
+                                                                        <div className="text-sm font-bold text-white">
+                                                                            Rp{' '}
+                                                                            {r.amount.toLocaleString(
+                                                                                'id-ID',
+                                                                            )}
+                                                                        </div>
+                                                                        <span
+                                                                            className={`mt-0.5 inline-block rounded-full px-2 py-0.5 text-[10px] font-semibold capitalize ${
+                                                                                r.status ===
+                                                                                'success'
+                                                                                    ? 'bg-status-success-bg text-status-success'
+                                                                                    : r.status ===
+                                                                                        'canceled'
+                                                                                      ? 'bg-status-canceled-bg text-status-canceled'
+                                                                                      : r.status ===
+                                                                                          'refunded'
+                                                                                        ? 'bg-status-refunded-bg text-status-refunded'
+                                                                                        : r.status ===
+                                                                                                'failed' ||
+                                                                                            r.status ===
+                                                                                                'expired'
+                                                                                          ? 'bg-status-failed-bg text-status-failed'
+                                                                                          : r.status ===
+                                                                                              'pending'
+                                                                                            ? 'bg-status-pending-bg text-status-pending'
+                                                                                            : 'bg-status-processing-bg text-status-processing'
+                                                                            }`}
+                                                                        >
+                                                                            {
+                                                                                r.status
+                                                                            }
+                                                                        </span>
+                                                                    </div>
+                                                                </Link>
+                                                            ),
+                                                        )}
+                                                    </div>
+                                                )}
                                         </form>
                                     )}
                                 </div>
@@ -585,9 +681,60 @@ export default function InvoiceSearch({
 
                     {/* DETAIL INVOICE SECTION (Tampil jika ada data invoice) */}
                     {invoiceData && (
-                        <div className="animate-fade-in-up mt-6 flex w-full max-w-5xl flex-col gap-4 md:mt-10 md:gap-6">
+                        <div className="animate-fade-in-up mt-2 flex w-full max-w-5xl flex-col gap-4 md:mt-10 md:gap-6">
+                            <div className="rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-4 shadow-lg md:hidden">
+                                <div className="mb-3 flex items-start justify-between gap-3">
+                                    <div className="min-w-0">
+                                        <p className="text-[11px] font-semibold text-gray-500 uppercase">
+                                            Invoice
+                                        </p>
+                                        <p className="mt-0.5 truncate font-mono text-xs font-semibold text-gray-300">
+                                            {invoiceData.invoice_no}
+                                        </p>
+                                    </div>
+                                    <span
+                                        className={`${transactionBadge.className} shrink-0 rounded px-2 py-1 text-[10px] font-bold uppercase`}
+                                    >
+                                        {transactionBadge.label}
+                                    </span>
+                                </div>
+
+                                <h2 className="text-xl font-black text-white">
+                                    {mobileStatusTitle}
+                                </h2>
+                                <p className="mt-1 text-xs leading-relaxed text-gray-400">
+                                    {mobileStatusCopy}
+                                </p>
+
+                                <div className="mt-4 rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] px-3 py-3">
+                                    <div className="flex items-center justify-between gap-3">
+                                        <span className="text-xs font-semibold text-gray-400">
+                                            Total Pembayaran
+                                        </span>
+                                        <span className="text-lg font-black text-[var(--color-warning)]">
+                                            Rp{' '}
+                                            {invoiceData.total.toLocaleString(
+                                                'id-ID',
+                                            )}
+                                        </span>
+                                    </div>
+                                    {showInvoiceTimer && (
+                                        <div className="mt-2 flex items-center justify-between gap-3 border-t border-[var(--color-border-light)] pt-2 text-xs">
+                                            <span className="text-gray-400">
+                                                Batas Bayar
+                                            </span>
+                                            <span className="font-mono font-bold text-[#ffb3d7]">
+                                                {formatCountdownCompact(
+                                                    remainingSeconds!,
+                                                )}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
+                            </div>
+
                             {/* Status Bar Card */}
-                            <div className="relative overflow-hidden rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-4 shadow-lg md:p-10">
+                            <div className="relative hidden overflow-hidden rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-4 shadow-lg md:block md:p-10">
                                 <h2 className="mb-8 text-center text-lg font-bold text-white md:mb-12 md:text-2xl">
                                     Detail Invoice
                                 </h2>
@@ -739,13 +886,13 @@ export default function InvoiceSearch({
 
                                 if (!showTimer) {
                                     return (
-                                        <div className="mt-8 h-7 md:mt-10 md:h-9" />
+                                        <div className="hidden md:mt-10 md:block md:h-9" />
                                     );
                                 }
 
                                 return (
-                                    <div className="mt-8 flex w-full justify-end md:mt-10">
-                                        <span className="text-[#ffb3d7] inline-flex max-w-full items-center gap-1 whitespace-nowrap rounded-full border border-[#ef4b9a]/40 bg-[#ef4b9a]/15 px-2.5 py-1 text-[10px] font-semibold md:gap-1.5 md:px-4.5 md:py-2 md:text-sm">
+                                    <div className="hidden w-full justify-end md:mt-10 md:flex">
+                                        <span className="inline-flex max-w-full items-center gap-1 rounded-full border border-[#ef4b9a]/40 bg-[#ef4b9a]/15 px-2.5 py-1 text-[10px] font-semibold whitespace-nowrap text-[#ffb3d7] md:gap-1.5 md:px-4.5 md:py-2 md:text-sm">
                                             <svg
                                                 width="12"
                                                 height="12"
@@ -780,9 +927,9 @@ export default function InvoiceSearch({
                             })()}
 
                             {/* Account Info Card */}
-                            <div className="relative z-10 mt-3 flex min-h-[140px] flex-col items-center gap-4 overflow-visible rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-4 shadow-lg md:mt-5 md:flex-row md:items-stretch md:gap-8 md:p-6">
+                            <div className="relative z-10 mt-0 flex min-h-[140px] flex-col items-center gap-4 overflow-visible rounded-2xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-4 shadow-lg md:mt-5 md:flex-row md:items-stretch md:gap-8 md:p-6">
                                 {/* Game Card Component - Overlapping Top */}
-                                <div className="relative -mt-16 flex shrink-0 justify-center md:-mt-32 md:mb-0 md:w-40">
+                                <div className="relative flex shrink-0 justify-center md:-mt-32 md:mb-0 md:w-40">
                                     <GameCard
                                         cardSize="sm"
                                         title={invoiceData.game.name}
@@ -797,24 +944,30 @@ export default function InvoiceSearch({
                                         }
                                         active={true}
                                         slug={invoiceData.game.slug || '#'}
-                                        customClass="!m-0 !w-24 !h-[140px] md:!w-auto md:!h-auto"
+                                        customClass="!m-0 !w-20 !h-[116px] sm:!w-24 sm:!h-[140px] md:!w-auto md:!h-auto"
                                     />
                                 </div>
 
                                 {/* Content Grid */}
                                 <div className="relative grid w-full flex-1 grid-cols-1 gap-6 md:grid-cols-2">
                                     {/* Status Badge (Top Right) */}
-                                    {invoiceData.status.toLowerCase() === 'success' && (
-                                        <div className="absolute top-0 right-0 z-20">
-                                            <span className="rounded-full border border-[var(--color-success)]/50 bg-bg-[color-mix(in_srgb,var(--color-success)_20%,transparent)] px-4 py-1.5 text-xs font-bold text-[var(--color-success)] shadow-[0_0_10px_rgba(74,222,128,0.2)]">
+                                    {invoiceData.status.toLowerCase() ===
+                                        'success' && (
+                                        <div className="absolute top-0 right-0 z-20 hidden md:block">
+                                            <span className="bg-bg-[color-mix(in_srgb,var(--color-success)_20%,transparent)] rounded-full border border-[var(--color-success)]/50 px-4 py-1.5 text-xs font-bold text-[var(--color-success)] shadow-[0_0_10px_rgba(74,222,128,0.2)]">
                                                 Pesanan telah selesai.
                                             </span>
                                         </div>
                                     )}
-                                    {['failed', 'canceled', 'expired'].includes(invoiceData.status.toLowerCase()) && (
-                                        <div className="absolute top-0 right-0 z-20">
+                                    {['failed', 'canceled', 'expired'].includes(
+                                        invoiceData.status.toLowerCase(),
+                                    ) && (
+                                        <div className="absolute top-0 right-0 z-20 hidden md:block">
                                             <span className="rounded-full border border-red-500/50 bg-red-950/60 px-4 py-1.5 text-xs font-bold text-red-400 shadow-[0_0_10px_rgba(239,68,68,0.2)]">
-                                                {invoiceData.status.toLowerCase() === 'expired' ? 'Pesanan kadaluarsa.' : 'Pesanan dibatalkan.'}
+                                                {invoiceData.status.toLowerCase() ===
+                                                'expired'
+                                                    ? 'Pesanan kadaluarsa.'
+                                                    : 'Pesanan dibatalkan.'}
                                             </span>
                                         </div>
                                     )}
@@ -1111,7 +1264,7 @@ export default function InvoiceSearch({
                                                         </p>
                                                     </div>
                                                     {/* Body — instruksi kiri, QR kanan */}
-                                                    <div className="flex flex-col gap-6 p-4 md:flex-row md:items-start md:gap-8 md:p-6">
+                                                    <div className="flex flex-col-reverse gap-6 p-4 md:flex-row md:items-start md:gap-8 md:p-6">
                                                         {/* Instruksi */}
                                                         <div className="flex-1">
                                                             {invoiceData.instructions &&
@@ -1169,7 +1322,7 @@ export default function InvoiceSearch({
                                                                         invoiceData.qr_url
                                                                     }
                                                                     alt="QR Code Pembayaran"
-                                                                    className="h-44 w-44 object-contain"
+                                                                    className="h-56 w-56 max-w-full object-contain md:h-44 md:w-44"
                                                                 />
                                                             </div>
                                                             <a
@@ -1194,7 +1347,7 @@ export default function InvoiceSearch({
                                                         Cara Pembayaran
                                                     </p>
                                                 </div>
-                                                <div className="flex flex-col gap-4 p-4 md:flex-row md:items-start md:gap-8 md:p-6">
+                                                <div className="flex flex-col-reverse gap-4 p-4 md:flex-row md:items-start md:gap-8 md:p-6">
                                                     {/* Instruksi */}
                                                     <div className="flex-1">
                                                         {invoiceData.instructions &&
@@ -1447,21 +1600,32 @@ export default function InvoiceSearch({
                             ) : (
                                 <div className="flex flex-col gap-4">
                                     {/* Banner Reward Krysta Coin */}
-                                    {invoiceData.status?.toLowerCase() === 'success' &&
+                                    {invoiceData.status?.toLowerCase() ===
+                                        'success' &&
                                         invoiceData.type === 'transaction' &&
-                                        (invoiceData.loyalty_coins ?? 0) > 0 && (
-                                        <div className="flex items-center gap-3 rounded-xl border border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 px-4 py-3">
-                                            <img src="/coin.png" alt="Coin" className="h-8 w-8 object-contain" />
-                                            <div>
-                                                <p className="text-sm font-bold text-yellow-400">
-                                                    +{invoiceData.loyalty_coins.toLocaleString('id-ID')} Krysta Coin
-                                                </p>
-                                                <p className="text-xs text-yellow-400/70">
-                                                    Reward loyalitas sudah ditambahkan ke akunmu!
-                                                </p>
+                                        (invoiceData.loyalty_coins ?? 0) >
+                                            0 && (
+                                            <div className="flex items-center gap-3 rounded-xl border border-yellow-500/30 bg-gradient-to-r from-yellow-500/10 to-amber-500/10 px-4 py-3">
+                                                <img
+                                                    src="/coin.png"
+                                                    alt="Coin"
+                                                    className="h-8 w-8 object-contain"
+                                                />
+                                                <div>
+                                                    <p className="text-sm font-bold text-yellow-400">
+                                                        +
+                                                        {invoiceData.loyalty_coins.toLocaleString(
+                                                            'id-ID',
+                                                        )}{' '}
+                                                        Krysta Coin
+                                                    </p>
+                                                    <p className="text-xs text-yellow-400/70">
+                                                        Reward loyalitas sudah
+                                                        ditambahkan ke akunmu!
+                                                    </p>
+                                                </div>
                                             </div>
-                                        </div>
-                                    )}
+                                        )}
 
                                     <Link href="/">
                                         <div className="flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-4 py-3 font-bold text-white shadow-[var(--shadow-glow)] transition hover:opacity-90 md:px-6 md:py-4">

@@ -78,13 +78,22 @@ interface GameDetailProps {
 function resolveProductIcon(
     product: Product,
     group: string,
-    rules: GameDetailProps['game']['icon_rules'] | Record<string, GameDetailProps['game']['icon_rules'][number]>,
+    rules:
+        | GameDetailProps['game']['icon_rules']
+        | Record<string, GameDetailProps['game']['icon_rules'][number]>,
 ): string | null {
     // Filament Repeater dengan ->reorderable() menyimpan sebagai object {uuid: item},
     // bukan array. Handle kedua format.
-    const rulesArray: GameDetailProps['game']['icon_rules'] = Array.isArray(rules)
+    const rulesArray: GameDetailProps['game']['icon_rules'] = Array.isArray(
+        rules,
+    )
         ? rules
-        : Object.values(rules as Record<string, GameDetailProps['game']['icon_rules'][number]>);
+        : Object.values(
+              rules as Record<
+                  string,
+                  GameDetailProps['game']['icon_rules'][number]
+              >,
+          );
 
     for (const rule of rulesArray) {
         if (rule.type === 'group') {
@@ -152,7 +161,7 @@ export default function GameDetail({
         promo_code: '',
     };
     if (game.input_fields) {
-        game.input_fields.forEach(f => {
+        game.input_fields.forEach((f) => {
             if (!(f.name in initialFormState)) {
                 initialFormState[f.name] = '';
             }
@@ -233,8 +242,14 @@ export default function GameDetail({
               flashSaleGroups as { [category: string]: Product[] },
           ).flat();
     const hasFlashSale = flashProducts.length > 0;
-    const flashEndsAt = hasFlashSale ? (flashProducts[0].flash_sale_ends_at ?? null) : null;
-    const [flashCountdown, setFlashCountdown] = useState<{ h: string; m: string; s: string } | null>(null);
+    const flashEndsAt = hasFlashSale
+        ? (flashProducts[0].flash_sale_ends_at ?? null)
+        : null;
+    const [flashCountdown, setFlashCountdown] = useState<{
+        h: string;
+        m: string;
+        s: string;
+    } | null>(null);
     useEffect(() => {
         if (!flashEndsAt) return;
         const endMs = flashEndsAt * 1000;
@@ -255,7 +270,9 @@ export default function GameDetail({
     const allProducts: Product[] = [
         ...flashProducts,
         ...(hasRegions
-            ? Object.values(regionedGroups).flatMap((cats) => Object.values(cats).flat())
+            ? Object.values(regionedGroups).flatMap((cats) =>
+                  Object.values(cats).flat(),
+              )
             : Object.values(flatGroups).flat()),
     ];
     const selectedProduct = allProducts.find((p) => p.id === data.product_id);
@@ -522,31 +539,38 @@ export default function GameDetail({
             }}
             className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[var(--color-bg-secondary)] transition-all hover:border-[var(--color-primary-hover)] ${data.product_id === product.id ? 'border-primary shadow-[0_0_15px_rgba(168,85,247,0.2)] ring-1 ring-primary' : 'border-[var(--color-border-light)]'}`}
         >
-            {product.discount_percent > 0 && (
-                product.flash_sale_ends_at ? (
+            {product.discount_percent > 0 &&
+                (product.flash_sale_ends_at ? (
                     <div className="flex items-center justify-between bg-orange-600 px-2.5 py-1 shadow-[0_0_8px_rgba(234,88,12,0.5)]">
                         <span className="text-[10px] font-bold text-white">
                             ⚡ Flash Sale {product.discount_percent}%
                         </span>
-                        {product.original_price && product.original_price > product.price && (
-                            <span className="text-[10px] text-white/70 line-through">
-                                Rp {product.original_price.toLocaleString('id-ID')}
-                            </span>
-                        )}
+                        {product.original_price &&
+                            product.original_price > product.price && (
+                                <span className="text-[10px] text-white/70 line-through">
+                                    Rp{' '}
+                                    {product.original_price.toLocaleString(
+                                        'id-ID',
+                                    )}
+                                </span>
+                            )}
                     </div>
                 ) : (
                     <div className="flex items-center justify-between bg-orange-500 px-2.5 py-1">
                         <span className="text-[10px] font-bold text-white">
                             Disc {product.discount_percent}%
                         </span>
-                        {product.original_price && product.original_price > product.price && (
-                            <span className="text-[10px] text-white/70 line-through">
-                                Rp {product.original_price.toLocaleString('id-ID')}
-                            </span>
-                        )}
+                        {product.original_price &&
+                            product.original_price > product.price && (
+                                <span className="text-[10px] text-white/70 line-through">
+                                    Rp{' '}
+                                    {product.original_price.toLocaleString(
+                                        'id-ID',
+                                    )}
+                                </span>
+                            )}
                     </div>
-                )
-            )}
+                ))}
             <div className="relative z-10 flex flex-col justify-between p-3 md:p-4">
                 <div className="mb-2 flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -742,7 +766,7 @@ export default function GameDetail({
             </Head>
 
             {/* Background Texture & Hero Graphic */}
-            <div className="relative min-h-screen pb-40 md:pb-32">
+            <div className="relative min-h-screen pb-64 md:pb-32">
                 <div className="mx-auto max-w-7xl px-3 pt-4 sm:px-6 md:pt-10 lg:px-8">
                     {/* Breadcrumbs */}
                     <div className="mb-4 flex items-center gap-1.5 text-xs text-gray-400 md:mb-6 md:gap-2 md:text-sm">
@@ -920,25 +944,61 @@ export default function GameDetail({
                                     </div>
                                 </div>
                                 <div className="space-y-4 p-5">
-                                    <div className="grid grid-cols-2 gap-4">
-                                        {game.input_fields && game.input_fields.length > 0 ? (
+                                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
+                                        {game.input_fields &&
+                                        game.input_fields.length > 0 ? (
                                             game.input_fields.map((field) => (
-                                                <div key={field.name} className={field.half_width ? 'col-span-1' : 'col-span-2'}>
+                                                <div
+                                                    key={field.name}
+                                                    className={
+                                                        field.half_width
+                                                            ? 'sm:col-span-1'
+                                                            : 'sm:col-span-2'
+                                                    }
+                                                >
                                                     <label className="mb-1 block text-xs text-white/70">
-                                                        {field.label} {field.is_required && <span className="text-red-500">*</span>}
+                                                        {field.label}{' '}
+                                                        {field.is_required && (
+                                                            <span className="text-red-500">
+                                                                *
+                                                            </span>
+                                                        )}
                                                     </label>
                                                     <input
-                                                        type={field.type === 'number' ? 'number' : 'text'}
-                                                        placeholder={field.placeholder || `Masukkan ${field.label}`}
-                                                        value={data[field.name as keyof typeof data] || ''}
-                                                        onChange={(e) => setData(field.name as any, e.target.value)}
-                                                        className="w-full rounded-md border-none bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
+                                                        type={
+                                                            field.type ===
+                                                            'number'
+                                                                ? 'number'
+                                                                : 'text'
+                                                        }
+                                                        placeholder={
+                                                            field.placeholder ||
+                                                            `Masukkan ${field.label}`
+                                                        }
+                                                        value={
+                                                            data[
+                                                                field.name as keyof typeof data
+                                                            ] || ''
+                                                        }
+                                                        onChange={(e) =>
+                                                            setData(
+                                                                field.name as any,
+                                                                e.target.value,
+                                                            )
+                                                        }
+                                                        className="w-full rounded-md border-none bg-[var(--color-bg-secondary)] px-3 py-3 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary sm:py-2"
                                                     />
                                                 </div>
                                             ))
                                         ) : (
                                             <>
-                                                <div className={game.need_zone ? 'col-span-1' : 'col-span-2'}>
+                                                <div
+                                                    className={
+                                                        game.need_zone
+                                                            ? 'sm:col-span-1'
+                                                            : 'sm:col-span-2'
+                                                    }
+                                                >
                                                     <label className="mb-1 block text-xs text-white/70">
                                                         User ID
                                                     </label>
@@ -952,17 +1012,19 @@ export default function GameDetail({
                                                                 e.target.value,
                                                             )
                                                         }
-                                                        className="w-full rounded-md border-none bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary"
+                                                        className="w-full rounded-md border-none bg-[var(--color-bg-secondary)] px-3 py-3 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary sm:py-2"
                                                     />
                                                 </div>
                                                 {game.need_zone && (
-                                                    <div className="col-span-1">
+                                                    <div className="sm:col-span-1">
                                                         <label className="mb-1 block text-xs text-white/70">
                                                             Server
                                                         </label>
                                                         <input
                                                             type="text"
-                                                            disabled={isMihoyoGame}
+                                                            disabled={
+                                                                isMihoyoGame
+                                                            }
                                                             placeholder={
                                                                 isMihoyoGame
                                                                     ? 'Otomatis dari UID'
@@ -972,17 +1034,19 @@ export default function GameDetail({
                                                                 isMihoyoGame
                                                                     ? detectMihoyoServer(
                                                                           data.user_id,
-                                                                      )?.name || ''
+                                                                      )?.name ||
+                                                                      ''
                                                                     : data.server_id
                                                             }
                                                             onChange={(e) =>
                                                                 !isMihoyoGame &&
                                                                 setData(
                                                                     'server_id',
-                                                                    e.target.value,
+                                                                    e.target
+                                                                        .value,
                                                                 )
                                                             }
-                                                            className="w-full rounded-md border-none bg-[var(--color-bg-secondary)] px-3 py-2 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary disabled:bg-[var(--color-bg-secondary)] disabled:text-white/60"
+                                                            className="w-full rounded-md border-none bg-[var(--color-bg-secondary)] px-3 py-3 text-sm text-white placeholder-gray-500 outline-none focus:ring-1 focus:ring-primary disabled:bg-[var(--color-bg-secondary)] disabled:text-white/60 sm:py-2"
                                                         />
                                                     </div>
                                                 )}
@@ -1084,7 +1148,7 @@ export default function GameDetail({
                                             value={formattedWa}
                                             onChange={handleWaChange}
                                             readOnly={phoneFromProfile}
-                                            className={`w-full rounded-md border-none px-3 py-2 text-sm text-white placeholder-gray-500 outline-none ${phoneFromProfile ? 'cursor-default bg-[var(--color-bg-card)] opacity-70' : 'bg-[var(--color-bg-secondary)] focus:ring-1 focus:ring-primary'}`}
+                                            className={`w-full rounded-md border-none px-3 py-3 text-sm text-white placeholder-gray-500 outline-none sm:py-2 ${phoneFromProfile ? 'cursor-default bg-[var(--color-bg-card)] opacity-70' : 'bg-[var(--color-bg-secondary)] focus:ring-1 focus:ring-primary'}`}
                                         />
                                         {!phoneFromProfile && (
                                             <p className="mt-2 text-xs text-white/50">
@@ -1119,86 +1183,172 @@ export default function GameDetail({
                                             {/* Flash Sale Header */}
                                             <div className="flex items-center justify-between bg-orange-500/15 px-4 py-2.5">
                                                 <div className="flex items-center gap-2">
-                                                    <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor" className="text-orange-400">
+                                                    <svg
+                                                        width="14"
+                                                        height="14"
+                                                        viewBox="0 0 24 24"
+                                                        fill="currentColor"
+                                                        className="text-orange-400"
+                                                    >
                                                         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                                                     </svg>
-                                                    <span className="text-sm font-black uppercase tracking-wide text-orange-400">Flash Sale</span>
+                                                    <span className="text-sm font-black tracking-wide text-orange-400 uppercase">
+                                                        Flash Sale
+                                                    </span>
                                                 </div>
                                                 {flashCountdown && (
                                                     <div className="flex items-center gap-1 text-xs font-bold">
-                                                        <span className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-orange-400">{flashCountdown.h}</span>
-                                                        <span className="text-orange-400">:</span>
-                                                        <span className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-orange-400">{flashCountdown.m}</span>
-                                                        <span className="text-orange-400">:</span>
-                                                        <span className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-orange-400">{flashCountdown.s}</span>
+                                                        <span className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-orange-400">
+                                                            {flashCountdown.h}
+                                                        </span>
+                                                        <span className="text-orange-400">
+                                                            :
+                                                        </span>
+                                                        <span className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-orange-400">
+                                                            {flashCountdown.m}
+                                                        </span>
+                                                        <span className="text-orange-400">
+                                                            :
+                                                        </span>
+                                                        <span className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-orange-400">
+                                                            {flashCountdown.s}
+                                                        </span>
                                                     </div>
                                                 )}
                                             </div>
                                             {/* Flash Sale Products */}
                                             <div className="grid grid-cols-2 gap-2 p-3 sm:grid-cols-3 md:gap-3">
-                                                {flashProducts.map((product) => {
-                                                    const pct = product.flash_sale_stock && product.flash_sale_stock > 0
-                                                        ? Math.min(100, Math.round((product.flash_sale_purchased / product.flash_sale_stock) * 100))
-                                                        : null;
-                                                    const outOfStock = product.flash_sale_stock !== null && product.flash_sale_purchased >= product.flash_sale_stock;
-                                                    return (
-                                                        <div
-                                                            key={product.id}
-                                                            onClick={() => {
-                                                                if (outOfStock) return;
-                                                                if (!canSelectProduct) {
-                                                                    swalWarning(!section1Complete ? 'Isi User ID dan Server terlebih dahulu.' : 'Isi nomor WhatsApp terlebih dahulu.');
-                                                                    return;
-                                                                }
-                                                                handleProductSelect(product.id);
-                                                            }}
-                                                            className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[var(--color-bg-secondary)] transition-all ${outOfStock ? 'cursor-not-allowed opacity-50' : 'hover:border-orange-500/60'} ${data.product_id === product.id ? 'border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.25)] ring-1 ring-orange-500' : 'border-orange-500/30'}`}
-                                                        >
-                                                            <div className="flex items-center justify-between bg-orange-600 px-2.5 py-1">
-                                                                <span className="text-[10px] font-bold text-white">
-                                                                    {product.discount_percent > 0 ? `Disc ${product.discount_percent}%` : '⚡ Flash Sale'}
-                                                                </span>
-                                                                {product.original_price && product.original_price > product.price && (
-                                                                    <span className="text-[10px] text-white/70 line-through">
-                                                                        Rp {product.original_price.toLocaleString('id-ID')}
+                                                {flashProducts.map(
+                                                    (product) => {
+                                                        const pct =
+                                                            product.flash_sale_stock &&
+                                                            product.flash_sale_stock >
+                                                                0
+                                                                ? Math.min(
+                                                                      100,
+                                                                      Math.round(
+                                                                          (product.flash_sale_purchased /
+                                                                              product.flash_sale_stock) *
+                                                                              100,
+                                                                      ),
+                                                                  )
+                                                                : null;
+                                                        const outOfStock =
+                                                            product.flash_sale_stock !==
+                                                                null &&
+                                                            product.flash_sale_purchased >=
+                                                                product.flash_sale_stock;
+                                                        return (
+                                                            <div
+                                                                key={product.id}
+                                                                onClick={() => {
+                                                                    if (
+                                                                        outOfStock
+                                                                    )
+                                                                        return;
+                                                                    if (
+                                                                        !canSelectProduct
+                                                                    ) {
+                                                                        swalWarning(
+                                                                            !section1Complete
+                                                                                ? 'Isi User ID dan Server terlebih dahulu.'
+                                                                                : 'Isi nomor WhatsApp terlebih dahulu.',
+                                                                        );
+                                                                        return;
+                                                                    }
+                                                                    handleProductSelect(
+                                                                        product.id,
+                                                                    );
+                                                                }}
+                                                                className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[var(--color-bg-secondary)] transition-all ${outOfStock ? 'cursor-not-allowed opacity-50' : 'hover:border-orange-500/60'} ${data.product_id === product.id ? 'border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.25)] ring-1 ring-orange-500' : 'border-orange-500/30'}`}
+                                                            >
+                                                                <div className="flex items-center justify-between bg-orange-600 px-2.5 py-1">
+                                                                    <span className="text-[10px] font-bold text-white">
+                                                                        {product.discount_percent >
+                                                                        0
+                                                                            ? `Disc ${product.discount_percent}%`
+                                                                            : '⚡ Flash Sale'}
                                                                     </span>
-                                                                )}
-                                                            </div>
-                                                            <div className="p-3">
-                                                                <div className="mb-2 flex items-start justify-between gap-2">
-                                                                    <div className="min-w-0 flex-1">
-                                                                        <div className="line-clamp-2 text-xs font-bold leading-tight text-[var(--color-warning)]">{product.clean_name}</div>
-                                                                        {product.extra && <div className="mt-0.5 truncate text-[9px] text-gray-400">{product.extra}</div>}
-                                                                    </div>
-                                                                    {(() => {
-                                                                        const iconUrl = resolveProductIcon(product, '', game.icon_rules);
-                                                                        return iconUrl ? (
-                                                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-white/5">
-                                                                                <img src={iconUrl} alt="icon" className="h-6 w-6 object-contain" />
+                                                                    {product.original_price &&
+                                                                        product.original_price >
+                                                                            product.price && (
+                                                                            <span className="text-[10px] text-white/70 line-through">
+                                                                                Rp{' '}
+                                                                                {product.original_price.toLocaleString(
+                                                                                    'id-ID',
+                                                                                )}
+                                                                            </span>
+                                                                        )}
+                                                                </div>
+                                                                <div className="p-3">
+                                                                    <div className="mb-2 flex items-start justify-between gap-2">
+                                                                        <div className="min-w-0 flex-1">
+                                                                            <div className="line-clamp-2 text-xs leading-tight font-bold text-[var(--color-warning)]">
+                                                                                {
+                                                                                    product.clean_name
+                                                                                }
                                                                             </div>
-                                                                        ) : null;
-                                                                    })()}
-                                                                </div>
-                                                                <div className="mt-2 text-sm font-bold text-white">
-                                                                    Rp {product.price.toLocaleString('id-ID')}
-                                                                </div>
-                                                                {pct !== null && (
-                                                                    <div className="mt-2">
-                                                                        <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                                                                            <div className="h-full rounded-full bg-orange-500" style={{ width: `${pct}%` }} />
+                                                                            {product.extra && (
+                                                                                <div className="mt-0.5 truncate text-[9px] text-gray-400">
+                                                                                    {
+                                                                                        product.extra
+                                                                                    }
+                                                                                </div>
+                                                                            )}
                                                                         </div>
-                                                                        <p className="mt-1 text-[10px] text-gray-500">
-                                                                            {outOfStock ? 'Out of Stock' : `${product.flash_sale_purchased} / ${product.flash_sale_stock} purchased`}
-                                                                        </p>
+                                                                        {(() => {
+                                                                            const iconUrl =
+                                                                                resolveProductIcon(
+                                                                                    product,
+                                                                                    '',
+                                                                                    game.icon_rules,
+                                                                                );
+                                                                            return iconUrl ? (
+                                                                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-white/8 bg-white/5">
+                                                                                    <img
+                                                                                        src={
+                                                                                            iconUrl
+                                                                                        }
+                                                                                        alt="icon"
+                                                                                        className="h-6 w-6 object-contain"
+                                                                                    />
+                                                                                </div>
+                                                                            ) : null;
+                                                                        })()}
                                                                     </div>
+                                                                    <div className="mt-2 text-sm font-bold text-white">
+                                                                        Rp{' '}
+                                                                        {product.price.toLocaleString(
+                                                                            'id-ID',
+                                                                        )}
+                                                                    </div>
+                                                                    {pct !==
+                                                                        null && (
+                                                                        <div className="mt-2">
+                                                                            <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
+                                                                                <div
+                                                                                    className="h-full rounded-full bg-orange-500"
+                                                                                    style={{
+                                                                                        width: `${pct}%`,
+                                                                                    }}
+                                                                                />
+                                                                            </div>
+                                                                            <p className="mt-1 text-[10px] text-gray-500">
+                                                                                {outOfStock
+                                                                                    ? 'Out of Stock'
+                                                                                    : `${product.flash_sale_purchased} / ${product.flash_sale_stock} purchased`}
+                                                                            </p>
+                                                                        </div>
+                                                                    )}
+                                                                </div>
+                                                                {data.product_id ===
+                                                                    product.id && (
+                                                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent" />
                                                                 )}
                                                             </div>
-                                                            {data.product_id === product.id && (
-                                                                <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent" />
-                                                            )}
-                                                        </div>
-                                                    );
-                                                })}
+                                                        );
+                                                    },
+                                                )}
                                             </div>
                                         </div>
                                     )}
@@ -1743,9 +1893,9 @@ export default function GameDetail({
                                                                                     method.id,
                                                                                 )
                                                                             }
-                                                                            className={`flex w-full cursor-pointer items-center justify-between rounded-lg border p-3 transition ${isChecked ? 'border-primary bg-[var(--color-bg-card)] ring-1 ring-primary' : 'border-[var(--color-border-light)] bg-[var(--color-bg-card)] hover:border-gray-500'} ${!valid && 'cursor-not-allowed opacity-50'}`}
+                                                                            className={`flex w-full cursor-pointer flex-col items-stretch gap-2 rounded-lg border p-3 text-left transition sm:flex-row sm:items-center sm:justify-between ${isChecked ? 'border-primary bg-[var(--color-bg-card)] ring-1 ring-primary' : 'border-[var(--color-border-light)] bg-[var(--color-bg-card)] hover:border-gray-500'} ${!valid && 'cursor-not-allowed opacity-50'}`}
                                                                         >
-                                                                            <div className="flex items-center gap-3">
+                                                                            <div className="flex min-w-0 items-center gap-3">
                                                                                 <div
                                                                                     className={`flex h-6 w-12 shrink-0 items-center justify-center overflow-hidden rounded ${method.is_coin ? '' : 'bg-white p-0.5'}`}
                                                                                 >
@@ -1765,8 +1915,8 @@ export default function GameDetail({
                                                                                         </span>
                                                                                     )}
                                                                                 </div>
-                                                                                <div className="text-left">
-                                                                                    <p className="text-sm font-semibold text-white">
+                                                                                <div className="min-w-0 text-left">
+                                                                                    <p className="truncate text-sm font-semibold text-white">
                                                                                         {
                                                                                             method.name
                                                                                         }
@@ -1801,7 +1951,7 @@ export default function GameDetail({
                                                                                 </div>
                                                                             </div>
 
-                                                                            <div className="text-right">
+                                                                            <div className="flex items-center justify-between border-t border-[var(--color-border-light)] pt-2 text-right sm:block sm:border-t-0 sm:pt-0">
                                                                                 <p className="text-sm font-semibold text-white">
                                                                                     Rp{' '}
                                                                                     {isCalculatingFee &&
@@ -1849,14 +1999,14 @@ export default function GameDetail({
                 </div>
             </div>
 
-            {/* Floating Action Menu (Bottom Docked) — positioned above bottom nav on mobile */}
-            <div className="fixed bottom-[60px] left-0 z-[45] w-full border-t border-[var(--color-border-light)] bg-[var(--color-bg-card)] shadow-[0_-10px_30px_rgba(0,0,0,0.5)] md:bottom-0">
-                <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-3 px-3 py-3 sm:flex-row sm:px-6 md:flex-row md:gap-4 md:px-4 md:py-4 lg:px-8">
+            {/* Floating Action Menu (Bottom Docked) */}
+            <div className="fixed bottom-0 left-0 z-[45] w-full border-t border-[var(--color-border-light)] bg-[var(--color-bg-card)] shadow-[0_-10px_30px_rgba(0,0,0,0.5)]">
+                <div className="mx-auto flex max-w-7xl flex-col items-center justify-between gap-2 px-3 pt-2.5 pb-[calc(0.625rem+env(safe-area-inset-bottom))] sm:flex-row sm:px-6 md:flex-row md:gap-4 md:px-4 md:py-4 lg:px-8">
                     {/* Payment Breakdown & Total */}
                     <div className="w-full sm:flex-1 sm:pr-4 md:pr-8">
                         {selectedProduct && selectedPayment ? (
                             <div className="flex w-full flex-col space-y-1 pb-1 sm:space-y-1.5">
-                                <div className="flex items-center justify-between gap-2 text-xs">
+                                <div className="hidden items-center justify-between gap-2 text-xs sm:flex">
                                     <span className="shrink-0 text-gray-400">
                                         Harga Produk
                                     </span>
@@ -1867,7 +2017,7 @@ export default function GameDetail({
                                         )}
                                     </span>
                                 </div>
-                                <div className="flex items-center justify-between gap-2 text-xs">
+                                <div className="hidden items-center justify-between gap-2 text-xs sm:flex">
                                     <span className="min-w-0 truncate text-gray-400">
                                         Biaya Admin ({selectedPayment.name})
                                     </span>
@@ -1879,7 +2029,9 @@ export default function GameDetail({
                                             {(calculatedFees?.[
                                                 selectedPayment.id
                                             ] !== undefined
-                                                ? calculatedFees[selectedPayment.id]
+                                                ? calculatedFees[
+                                                      selectedPayment.id
+                                                  ]
                                                 : Math.ceil(
                                                       selectedPayment.fee_flat +
                                                           (selectedProduct.price *
@@ -1890,39 +2042,46 @@ export default function GameDetail({
                                         </span>
                                     )}
                                 </div>
-                                {appliedVoucher && appliedVoucher.discount > 0 && (
-                                    <div className="flex items-center justify-between gap-2 text-xs">
-                                        <span className="flex shrink-0 items-center gap-1 text-green-400">
-                                            🏷️ Diskon Voucher
-                                        </span>
-                                        <span className="font-semibold text-green-400">
-                                            − Rp{' '}
-                                            {appliedVoucher.discount.toLocaleString(
-                                                'id-ID',
-                                            )}
-                                        </span>
-                                    </div>
-                                )}
+                                {appliedVoucher &&
+                                    appliedVoucher.discount > 0 && (
+                                        <div className="flex items-center justify-between gap-2 text-xs">
+                                            <span className="flex shrink-0 items-center gap-1 text-green-400">
+                                                🏷️ Diskon Voucher
+                                            </span>
+                                            <span className="font-semibold text-green-400">
+                                                − Rp{' '}
+                                                {appliedVoucher.discount.toLocaleString(
+                                                    'id-ID',
+                                                )}
+                                            </span>
+                                        </div>
+                                    )}
 
-                                
                                 {/* Total Pembayaran (Stacked) */}
-                                <div className="mt-1.5 flex items-center justify-between gap-2 border-t border-[var(--color-border-light)] pt-2 sm:mt-2 sm:pt-2.5">
+                                <div className="flex items-center justify-between gap-2 sm:mt-2 sm:border-t sm:border-[var(--color-border-light)] sm:pt-2.5">
                                     <span className="text-sm font-bold text-gray-300">
                                         Total Pembayaran
                                     </span>
                                     <div className="text-base font-black text-[var(--color-warning)] sm:text-lg">
-                                        {isCalculatingFee && !selectedPayment?.is_coin ? (
+                                        {isCalculatingFee &&
+                                        !selectedPayment?.is_coin ? (
                                             <span className="inline-block h-5 w-24 animate-pulse rounded bg-white/10 sm:h-6" />
                                         ) : (
                                             `Rp ${(
                                                 selectedProduct.price -
-                                                (appliedVoucher?.discount ?? 0) +
-                                                (calculatedFees?.[selectedPayment.id] !== undefined
-                                                    ? calculatedFees[selectedPayment.id]
+                                                (appliedVoucher?.discount ??
+                                                    0) +
+                                                (calculatedFees?.[
+                                                    selectedPayment.id
+                                                ] !== undefined
+                                                    ? calculatedFees[
+                                                          selectedPayment.id
+                                                      ]
                                                     : Math.ceil(
                                                           selectedPayment.fee_flat +
                                                               ((selectedProduct.price -
-                                                                  (appliedVoucher?.discount ?? 0)) *
+                                                                  (appliedVoucher?.discount ??
+                                                                      0)) *
                                                                   selectedPayment.fee_percent) /
                                                                   100,
                                                       ))
@@ -1947,7 +2106,7 @@ export default function GameDetail({
                     <button
                         onClick={handlePurchase}
                         disabled={isCalculatingFee}
-                        className={`group relative flex w-full shrink-0 items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-6 py-2.5 text-sm font-bold text-white shadow-[var(--shadow-glow)] transition hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] md:w-auto md:px-12 md:py-3 md:text-lg ${isCalculatingFee ? 'cursor-not-allowed opacity-60 hover:shadow-[var(--shadow-glow)]' : ''}`}
+                        className={`group relative flex w-full shrink-0 items-center justify-center gap-2 overflow-hidden rounded-xl bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-6 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow)] transition hover:shadow-[0_0_30px_rgba(168,85,247,0.5)] md:w-auto md:px-12 md:text-lg ${isCalculatingFee ? 'cursor-not-allowed opacity-60 hover:shadow-[var(--shadow-glow)]' : ''}`}
                     >
                         {/* Particles effect (simulated CSS) */}
                         <div className="absolute inset-0 opacity-0 transition duration-300 group-hover:opacity-100">
@@ -2184,7 +2343,11 @@ export default function GameDetail({
                                 </button>
                                 <button
                                     onClick={submitOrder}
-                                    disabled={isSubmitting || isValidating || isCalculatingFee}
+                                    disabled={
+                                        isSubmitting ||
+                                        isValidating ||
+                                        isCalculatingFee
+                                    }
                                     className={`rounded-xl px-4 py-3.5 font-bold text-white shadow-[var(--shadow-glow)] transition ${isSubmitting || isValidating || isCalculatingFee ? 'cursor-not-allowed bg-gray-500 shadow-none' : 'bg-primary hover:bg-primary/90'}`}
                                 >
                                     {isSubmitting
@@ -2202,12 +2365,21 @@ export default function GameDetail({
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 px-4 backdrop-blur-sm">
                     <div className="w-full max-w-lg overflow-hidden rounded-2xl bg-[var(--color-bg-card)] shadow-2xl ring-1 ring-white/10">
                         <div className="flex items-center justify-between border-b border-[var(--color-border-light)] bg-[var(--color-bg-card)] px-5 py-4">
-                            <h3 className="text-lg font-bold text-white">Cara Pembelian</h3>
+                            <h3 className="text-lg font-bold text-white">
+                                Cara Pembelian
+                            </h3>
                             <button
                                 onClick={() => setShowGuideModal(false)}
                                 className="rounded-full bg-white/5 p-1.5 text-gray-400 hover:bg-white/10 hover:text-white"
                             >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                                <svg
+                                    width="20"
+                                    height="20"
+                                    viewBox="0 0 24 24"
+                                    fill="none"
+                                    stroke="currentColor"
+                                    strokeWidth="2"
+                                >
                                     <path d="M18 6L6 18M6 6l12 12" />
                                 </svg>
                             </button>
@@ -2222,13 +2394,16 @@ export default function GameDetail({
                             )}
                             {game.guide_content ? (
                                 <div
-                                    className="prose prose-invert prose-sm max-w-none text-gray-300"
-                                    dangerouslySetInnerHTML={{ __html: game.guide_content }}
+                                    className="prose prose-sm max-w-none text-gray-300 prose-invert"
+                                    dangerouslySetInnerHTML={{
+                                        __html: game.guide_content,
+                                    }}
                                 />
                             ) : (
                                 !game.guide_image && (
                                     <p className="text-center text-sm text-gray-500">
-                                        Tidak ada instruksi panduan yang tersedia untuk game ini.
+                                        Tidak ada instruksi panduan yang
+                                        tersedia untuk game ini.
                                     </p>
                                 )
                             )}
@@ -2247,9 +2422,3 @@ export default function GameDetail({
         </GuestLayout>
     );
 }
-
-
-
-
-
-
