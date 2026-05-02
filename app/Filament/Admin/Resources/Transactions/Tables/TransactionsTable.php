@@ -2,6 +2,7 @@
 
 namespace App\Filament\Admin\Resources\Transactions\Tables;
 
+use App\Jobs\ProcessFulfilmentJob;
 use App\Models\CoinTransaction;
 use App\Models\Game;
 use App\Models\Transaction;
@@ -9,13 +10,13 @@ use App\Models\User;
 use App\Services\CoinService;
 use App\Services\DigiflazzService;
 use App\Services\LoyaltyService;
-use Illuminate\Support\Facades\Log;
 use Filament\Actions\Action;
 use Filament\Actions\ActionGroup;
 use Filament\Notifications\Notification;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
+use Illuminate\Support\Facades\Log;
 
 class TransactionsTable
 {
@@ -67,11 +68,11 @@ class TransactionsTable
                     ->label('Status')
                     ->badge()
                     ->color(fn (string $state): string => match ($state) {
-                        'success'    => 'success',
-                        'failed'     => 'danger',
+                        'success' => 'success',
+                        'failed' => 'danger',
                         'processing' => 'warning',
-                        'pending'    => 'info',
-                        default      => 'gray',
+                        'pending' => 'info',
+                        default => 'gray',
                     }),
 
                 TextColumn::make('sn')
@@ -96,23 +97,76 @@ class TransactionsTable
                 SelectFilter::make('status')
                     ->label('Status Fulfilment')
                     ->options([
-                        'pending'    => 'Pending',
+                        'pending' => 'Pending',
                         'processing' => 'Processing',
-                        'success'    => 'Success',
-                        'failed'     => 'Failed',
+                        'success' => 'Success',
+                        'failed' => 'Failed',
                     ]),
 
                 SelectFilter::make('payment_status')
                     ->label('Status Pembayaran')
                     ->options([
-                        'pending'  => 'Pending',
-                        'paid'     => 'Paid',
-                        'expired'  => 'Expired',
-                        'failed'   => 'Failed',
+                        'pending' => 'Pending',
+                        'paid' => 'Paid',
+                        'expired' => 'Expired',
+                        'failed' => 'Failed',
                     ]),
             ])
             ->recordActions([
                 ActionGroup::make([
+                    Action::make('retry_fulfilment')
+                        ->label('Hit Ulang Digiflazz')
+                        ->icon('heroicon-o-paper-airplane')
+                        ->color('success')
+                        ->visible(fn (Transaction $record): bool => $record->payment_status === 'paid'
+                            && $record->fulfilment_status !== 'success')
+                        ->requiresConfirmation()
+                        ->modalHeading(fn (Transaction $record) => 'Hit ulang Digiflazz: '.$record->invoice_id)
+                        ->modalDescription('Mengirim ulang transaksi ke Digiflazz memakai ref_id invoice yang sama. Jika request lama sebenarnya sudah masuk, Digiflazz akan mengembalikan status transaksi yang sudah ada.')
+                        ->modalSubmitActionLabel('Hit Ulang')
+                        ->action(function (Transaction $record): void {
+                            try {
+                                if ($record->payment_method === 'COIN') {
+                                    $alreadyRefunded = CoinTransaction::where('reference_id', $record->invoice_id)
+                                        ->where('type', 'credit')
+                                        ->exists();
+
+                                    if ($alreadyRefunded) {
+                                        Notification::make()
+                                            ->warning()
+                                            ->title('Hit ulang dibatalkan')
+                                            ->body('Coin untuk invoice ini sudah pernah dikembalikan. Buat pesanan baru atau debit saldo ulang sebelum fulfilment.')
+                                            ->send();
+
+                                        return;
+                                    }
+                                }
+
+                                ProcessFulfilmentJob::dispatchSync($record->invoice_id, true);
+
+                                $record->refresh();
+
+                                Notification::make()
+                                    ->success()
+                                    ->title('Hit ulang selesai')
+                                    ->body('Status sekarang: '.$record->status.' / '.$record->fulfilment_status)
+                                    ->send();
+                            } catch (\Throwable $e) {
+                                Log::error('Manual Digiflazz retry failed', [
+                                    'transaction_id' => $record->id,
+                                    'invoice_id' => $record->invoice_id,
+                                    'provider_sku' => $record->provider_sku,
+                                    'message' => $e->getMessage(),
+                                ]);
+
+                                Notification::make()
+                                    ->danger()
+                                    ->title('Hit ulang gagal')
+                                    ->body($e->getMessage())
+                                    ->send();
+                            }
+                        }),
+
                     Action::make('sync_provider')
                         ->label('Sync Digiflazz')
                         ->icon('heroicon-o-arrow-path')
@@ -149,7 +203,9 @@ class TransactionsTable
                                 if (in_array($status, ['sukses', 'success', 'sandbox - sukses'], true)) {
                                     $record->update([
                                         'status' => 'success',
-                                        'sn'     => $serialNumber,
+                                        'fulfilment_status' => 'success',
+                                        'sn' => $serialNumber,
+                                        'failure_reason' => null,
                                     ]);
 
                                     $gameId = $record->product?->game_id;
@@ -167,7 +223,8 @@ class TransactionsTable
 
                                 } elseif (in_array($status, ['gagal', 'failed'], true)) {
                                     $record->update([
-                                        'status'         => 'failed',
+                                        'status' => 'failed',
+                                        'fulfilment_status' => 'failed',
                                         'failure_reason' => $failureReason,
                                     ]);
 
@@ -240,7 +297,8 @@ class TransactionsTable
                         ->modalSubmitActionLabel('Tandai Gagal')
                         ->action(function (Transaction $record, array $data): void {
                             $record->update([
-                                'status'         => 'failed',
+                                'status' => 'failed',
+                                'fulfilment_status' => 'failed',
                                 'failure_reason' => $data['failure_reason'],
                             ]);
 

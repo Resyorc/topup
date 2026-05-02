@@ -26,7 +26,10 @@ class ProcessFulfilmentJob implements ShouldBeUnique, ShouldQueue
 
     public int $uniqueFor = 300;
 
-    public function __construct(public readonly string $invoiceId) {}
+    public function __construct(
+        public readonly string $invoiceId,
+        public readonly bool $force = false,
+    ) {}
 
     public function uniqueId(): string
     {
@@ -56,7 +59,11 @@ class ProcessFulfilmentJob implements ShouldBeUnique, ShouldQueue
                 return null;
             }
 
-            if (in_array($transaction->fulfilment_status, ['success', 'failed'], true)) {
+            if ($transaction->fulfilment_status === 'success') {
+                return null;
+            }
+
+            if (! $this->force && $transaction->fulfilment_status === 'failed') {
                 return null;
             }
 
@@ -80,6 +87,7 @@ class ProcessFulfilmentJob implements ShouldBeUnique, ShouldQueue
                 'provider_name' => $providerProduct->provider_name,
                 'status' => 'processing',
                 'fulfilment_status' => 'processing',
+                'failure_reason' => null,
             ])->save();
 
             return $transaction->fresh(['product']);
