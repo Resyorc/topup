@@ -52,7 +52,9 @@ class GameForm
                                 ->imagePreviewHeight('120')
                                 ->maxParallelUploads(1)
                                 ->maxSize(2048)
-                                ->orientImagesFromExif(false),
+                                ->openable()
+                                ->orientImagesFromExif(false)
+                                ->previewable(false),
                             FileUpload::make('thumbnail')
                                 ->image()
                                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
@@ -62,7 +64,9 @@ class GameForm
                                 ->imagePreviewHeight('120')
                                 ->maxParallelUploads(1)
                                 ->maxSize(2048)
-                                ->orientImagesFromExif(false),
+                                ->openable()
+                                ->orientImagesFromExif(false)
+                                ->previewable(false),
                             Toggle::make('is_active')
                                 ->label('Status Aktif')
                                 ->required(),
@@ -163,8 +167,10 @@ class GameForm
                                                 ->itemPanelAspectRatio('1:1')
                                                 ->maxParallelUploads(1)
                                                 ->maxSize(512)
+                                                ->openable()
                                                 ->orientImagesFromExif(false)
                                                 ->panelLayout('compact')
+                                                ->previewable(false)
                                                 ->automaticallyResizeImagesMode('contain')
                                                 ->automaticallyResizeImagesToWidth('256')
                                                 ->automaticallyResizeImagesToHeight('256'),
@@ -241,7 +247,9 @@ class GameForm
                                 ->imagePreviewHeight('120')
                                 ->maxParallelUploads(1)
                                 ->maxSize(2048)
-                                ->orientImagesFromExif(false),
+                                ->openable()
+                                ->orientImagesFromExif(false)
+                                ->previewable(false),
                             RichEditor::make('guide_content')
                                 ->label('Instruksi Panduan')
                                 ->toolbarButtons([
