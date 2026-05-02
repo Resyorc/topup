@@ -4,17 +4,17 @@ namespace App\Filament\Admin\Resources\Games\Schemas;
 
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\RichEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Tabs;
+use Filament\Schemas\Components\Tabs\Tab;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Illuminate\Support\Str;
-use Filament\Schemas\Components\Tabs;
-use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Forms\Components\RichEditor;
 
 class GameForm
 {
@@ -47,12 +47,22 @@ class GameForm
                                 ->image()
                                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                 ->disk('public')
-                                ->directory('games'),
+                                ->directory('games')
+                                ->fetchFileInformation(false)
+                                ->imagePreviewHeight('120')
+                                ->maxParallelUploads(1)
+                                ->maxSize(2048)
+                                ->orientImagesFromExif(false),
                             FileUpload::make('thumbnail')
                                 ->image()
                                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                 ->disk('public')
-                                ->directory('games/thumbnails'),
+                                ->directory('games/thumbnails')
+                                ->fetchFileInformation(false)
+                                ->imagePreviewHeight('120')
+                                ->maxParallelUploads(1)
+                                ->maxSize(2048)
+                                ->orientImagesFromExif(false),
                             Toggle::make('is_active')
                                 ->label('Status Aktif')
                                 ->required(),
@@ -121,8 +131,8 @@ class GameForm
                                             Select::make('type')
                                                 ->label('Tipe Rule')
                                                 ->options([
-                                                    'group'   => 'Nama Grup/Kategori',
-                                                    'range'   => 'Rentang Jumlah',
+                                                    'group' => 'Nama Grup/Kategori',
+                                                    'range' => 'Rentang Jumlah',
                                                     'keyword' => 'Keyword Nama Produk',
                                                 ])
                                                 ->live(),
@@ -147,11 +157,30 @@ class GameForm
                                                 ->image()
                                                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                                 ->disk('public')
-                                                ->directory('icons/products'),
+                                                ->directory('icons/products')
+                                                ->fetchFileInformation(false)
+                                                ->imagePreviewHeight('64')
+                                                ->itemPanelAspectRatio('1:1')
+                                                ->maxParallelUploads(1)
+                                                ->maxSize(512)
+                                                ->orientImagesFromExif(false)
+                                                ->panelLayout('compact')
+                                                ->automaticallyResizeImagesMode('contain')
+                                                ->automaticallyResizeImagesToWidth('256')
+                                                ->automaticallyResizeImagesToHeight('256'),
                                         ])
                                         ->addActionLabel('Tambah Rule Icon')
                                         ->reorderable()
                                         ->collapsible()
+                                        ->collapsed()
+                                        ->itemLabel(function (array $state): ?string {
+                                            return match ($state['type'] ?? null) {
+                                                'group' => filled($state['match_group'] ?? null) ? 'Grup: '.$state['match_group'] : 'Rule grup',
+                                                'range' => 'Range: '.($state['amount_min'] ?? '0').' - '.($state['amount_max'] ?? 'tanpa batas'),
+                                                'keyword' => filled($state['match_keyword'] ?? null) ? 'Keyword: '.$state['match_keyword'] : 'Rule keyword',
+                                                default => null,
+                                            };
+                                        })
                                         ->defaultItems(0),
                                 ])
                                 ->collapsible(),
@@ -207,7 +236,12 @@ class GameForm
                                 ->image()
                                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                 ->disk('public')
-                                ->directory('games/guides'),
+                                ->directory('games/guides')
+                                ->fetchFileInformation(false)
+                                ->imagePreviewHeight('120')
+                                ->maxParallelUploads(1)
+                                ->maxSize(2048)
+                                ->orientImagesFromExif(false),
                             RichEditor::make('guide_content')
                                 ->label('Instruksi Panduan')
                                 ->toolbarButtons([
