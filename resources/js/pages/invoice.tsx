@@ -1,4 +1,4 @@
-import { Head, useForm, Link, router, usePage } from '@inertiajs/react';
+import { Head, useForm, Link, router } from '@inertiajs/react';
 import { useEchoPublic } from '@laravel/echo-react';
 import axios from 'axios';
 import DOMPurify from 'dompurify';
@@ -33,7 +33,6 @@ export default function InvoiceSearch({
     initialInvoiceData = null,
     searchedInvoiceId = '',
 }: InvoiceSearchProps) {
-    const { auth } = usePage<{ auth: { user: any } }>().props;
     const {
         hasReviewed: guestHasReviewed,
         markReviewed,
@@ -181,6 +180,20 @@ export default function InvoiceSearch({
         invoiceData?.status?.toLowerCase() ?? '',
     );
 
+    const resolveGuestToken = useCallback(
+        (invoiceNo?: string) => {
+            if (!invoiceNo) return null;
+
+            const localToken = getGuestToken(invoiceNo);
+            if (localToken) return localToken;
+
+            if (typeof window === 'undefined') return null;
+
+            return new URLSearchParams(window.location.search).get('guest_token');
+        },
+        [getGuestToken],
+    );
+
     const handleInvoiceUpdate = useCallback(
         (data: { status: string; payment_status: string }) => {
             setInvoiceData((prev: any) => ({
@@ -192,10 +205,11 @@ export default function InvoiceSearch({
         [],
     );
 
+
     const submit = (e: React.SyntheticEvent) => {
         e.preventDefault();
 
-        const guestToken = getGuestToken(data.invoice_id);
+        const guestToken = resolveGuestToken(data.invoice_id);
 
         router.get('/invoice', {
             invoice_id: data.invoice_id,

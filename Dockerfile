@@ -15,6 +15,7 @@ RUN apk add --no-cache \
     && apk add --no-cache --virtual .build-deps $PHPIZE_DEPS \
     && docker-php-ext-install \
         pdo_mysql \
+        pcntl \
         mbstring \
         zip \
         gd \
