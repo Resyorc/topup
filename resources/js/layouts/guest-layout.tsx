@@ -4,13 +4,10 @@ import {
     ArrowUpRight,
     Clock3,
     Gamepad2,
-    Headphones,
     LockKeyhole,
     MessageCircle,
     ReceiptText,
-    ShieldCheck,
     Tags,
-    Zap,
 } from 'lucide-react';
 import { useState, useMemo, lazy, Suspense } from 'react';
 import { Toaster } from 'sonner';
@@ -175,25 +172,6 @@ export default function GuestLayout({
     const waLink = waNumber ? `https://wa.me/${waNumber}` : null;
     const currentYear = new Date().getFullYear();
 
-    const footerHighlights = [
-        {
-            icon: Zap,
-            label: 'Proses Cepat',
-            description:
-                'Pesanan langsung diproses setelah pembayaran terkonfirmasi.',
-        },
-        {
-            icon: ShieldCheck,
-            label: 'Aman Dipakai',
-            description:
-                'Invoice, status, dan riwayat transaksi tersimpan rapi.',
-        },
-        {
-            icon: Headphones,
-            label: 'Bantuan Aktif',
-            description: 'Tim support siap bantu cek pesanan saat dibutuhkan.',
-        },
-    ];
 
     const footerNavigation = [
         { href: '/', label: 'Top Up Game', icon: Gamepad2 },
@@ -240,19 +218,59 @@ export default function GuestLayout({
 
     return (
         <>
-            <div className="relative isolate flex min-h-screen flex-col bg-[var(--color-bg-main)] pt-[116px] md:pt-[106px]">
-                <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 z-0 bg-top bg-repeat-y"
-                    style={{
-                        backgroundImage: "url('/background.png')",
-                        backgroundSize: '100vw auto',
-                    }}
-                />
-                <div
-                    aria-hidden="true"
-                    className="pointer-events-none absolute inset-0 z-0 bg-[linear-gradient(180deg,rgba(5,7,18,0.28)_0%,rgba(5,7,18,0.42)_45%,rgba(5,7,18,0.64)_100%)]"
-                />
+            <div className="relative isolate flex min-h-screen flex-col pt-[116px] md:pt-[106px]">
+                {/* Cyber background layer */}
+                <div aria-hidden="true" className="nuvelo-cyber-bg">
+                    <svg
+                        className="nuvelo-cyber-lines"
+                        viewBox="0 0 1440 900"
+                        preserveAspectRatio="xMidYMid slice"
+                        xmlns="http://www.w3.org/2000/svg"
+                    >
+                        <defs>
+                            <linearGradient id="nuveloLinePurple" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%"   stopColor="rgba(168,85,247,0)" />
+                                <stop offset="40%"  stopColor="rgba(168,85,247,0.9)" />
+                                <stop offset="60%"  stopColor="rgba(34,211,238,0.8)" />
+                                <stop offset="100%" stopColor="rgba(168,85,247,0)" />
+                            </linearGradient>
+                            <filter id="nuveloGlow" x="-50%" y="-50%" width="200%" height="200%">
+                                <feGaussianBlur stdDeviation="3" result="blur" />
+                                <feMerge>
+                                    <feMergeNode in="blur" />
+                                    <feMergeNode in="SourceGraphic" />
+                                </feMerge>
+                            </filter>
+                        </defs>
+
+                        {/* Garis dasar — static */}
+                        <g className="line-base">
+                            <path d="M -10 150 H 200 V 80  H 460 V 200 H 620" />
+                            <path d="M 1450 110 H 1210 V 210 H 1040 V 130 H 860" />
+                            <path d="M -10 430 H 160 V 350 H 400 V 490 H 580 V 380 H 740" />
+                            <path d="M 1450 490 H 1270 V 390 H 1070 V 510 H 890 V 420" />
+                            <path d="M 180 910 V 720 H 390 V 800 H 610 V 670 H 790" />
+                            <path d="M 1220 910 V 760 H 1010 V 850 H 830 V 710" />
+                        </g>
+
+                        {/* Cahaya berjalan — sama path, animasi berbeda */}
+                        <g className="line-light">
+                            <path d="M -10 150 H 200 V 80  H 460 V 200 H 620" />
+                            <path d="M 1450 110 H 1210 V 210 H 1040 V 130 H 860" />
+                            <path d="M -10 430 H 160 V 350 H 400 V 490 H 580 V 380 H 740" />
+                            <path d="M 1450 490 H 1270 V 390 H 1070 V 510 H 890 V 420" />
+                            <path d="M 180 910 V 720 H 390 V 800 H 610 V 670 H 790" />
+                            <path d="M 1220 910 V 760 H 1010 V 850 H 830 V 710" />
+                        </g>
+
+                        {/* Streak diagonal */}
+                        <g className="line-streak">
+                            <path d="M -80 -80 L 520 640" />
+                            <path d="M 720 -80 L 1360 620" />
+                            <path d="M 1620 180 L 880 910" />
+                        </g>
+                    </svg>
+                </div>
                 {/* Header Navbar */}
                 <header className="border-border-light fixed inset-x-0 top-0 z-50 border-b bg-background/80 text-foreground shadow-md backdrop-blur-sm">
                     <div className="mx-auto flex w-full max-w-7xl items-center justify-between gap-3 px-4 py-3 sm:px-6 md:gap-10 md:py-4 lg:px-8">
@@ -827,28 +845,6 @@ export default function GuestLayout({
                 {/* Footer — responsive grid: 2 columns on mobile, 4 on desktop */}
                 <footer className="border-border-light relative z-10 mt-10 border-t bg-[#1F2937]/85 px-4 pt-6 pb-10 backdrop-blur-sm md:mt-16 md:pt-10 md:pb-6">
                     <div className="mx-auto max-w-7xl px-4">
-                        <div className="mb-8 grid gap-3 md:grid-cols-3">
-                            {footerHighlights.map(
-                                ({ icon: Icon, label, description }) => (
-                                    <div
-                                        key={label}
-                                        className="flex items-start gap-3 rounded-lg border border-white/10 bg-white/[0.03] p-4"
-                                    >
-                                        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-md bg-primary/15 text-[var(--color-primary-light)]">
-                                            <Icon className="h-5 w-5" />
-                                        </span>
-                                        <span>
-                                            <span className="block text-sm font-bold text-white">
-                                                {label}
-                                            </span>
-                                            <span className="mt-1 block text-xs leading-relaxed text-gray-400">
-                                                {description}
-                                            </span>
-                                        </span>
-                                    </div>
-                                ),
-                            )}
-                        </div>
 
                         <div className="grid gap-8 border-y border-white/10 py-8 md:grid-cols-[1.25fr_0.8fr_0.9fr_0.9fr] md:gap-10">
                             <div>
