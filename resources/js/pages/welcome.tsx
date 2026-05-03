@@ -1,5 +1,5 @@
 import { Head, Link, usePage } from '@inertiajs/react';
-import { icons } from 'lucide-react';
+import { icons, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useState, useEffect, useRef } from 'react';
 import GameCard from '@/components/game-card';
 import HeroBanner from '@/components/hero-banner';
@@ -229,6 +229,10 @@ export default function Welcome({
     const [activeTab, setActiveTab] = useState<number | null>(
         categories.length > 0 ? categories[0].id : null,
     );
+    const tabScrollRef = useRef<HTMLDivElement>(null);
+    const scrollTabs = (direction: 'left' | 'right') => {
+        tabScrollRef.current?.scrollBy({ left: direction === 'left' ? -180 : 180, behavior: 'smooth' });
+    };
 
     // Limit the number of games displayed initially
     const [displayLimit, setDisplayLimit] = useState<number>(12);
@@ -356,41 +360,43 @@ export default function Welcome({
 
                 {/* ===== Main Catalog Section ===== */}
                 <section className="mb-10 md:mb-16">
-                    {/* Category Tabs — horizontally scrollable on mobile with smaller sizing */}
-                    <div className="scrollbar-hide -mx-4 mb-6 flex overflow-x-auto border-b border-border/60 px-4 md:mx-0 md:mb-8 md:px-0">
-                        {categories.map((category) => (
-                            <button
-                                key={category.id}
-                                onClick={() => handleTabChange(category.id)}
-                                className={`min-w-[110px] flex-1 border-b-2 px-4 py-3 text-center text-xs font-bold transition-all duration-300 md:min-w-[140px] md:px-6 md:py-4 md:text-sm ${
-                                    activeTab === category.id
-                                        ? 'border-primary bg-primary/5 text-client-primary'
-                                        : 'border-transparent text-gray-300 hover:bg-white/5 hover:text-white'
-                                } flex items-center justify-center gap-1.5 whitespace-nowrap md:gap-2`}
-                            >
-                                {/* Category icon */}
-                                {(() => {
-                                    const iconName = category.icon
-                                        ? category.icon
-                                              .split('-')
-                                              .map(
-                                                  (s: string) =>
-                                                      s
-                                                          .charAt(0)
-                                                          .toUpperCase() +
-                                                      s.slice(1),
-                                              )
-                                              .join('')
-                                        : 'Layers';
-                                    const LucideIcon =
-                                        icons[iconName as keyof typeof icons];
-                                    return LucideIcon ? (
-                                        <LucideIcon className="h-4 w-4 shrink-0 md:h-4.5 md:w-4.5" />
-                                    ) : null;
-                                })()}
-                                {category.name}
-                            </button>
-                        ))}
+                    {/* Category Tabs */}
+                    <div className="mb-6 flex items-center gap-3 md:mb-8">
+                        <button
+                            onClick={() => scrollTabs('left')}
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.45)] transition hover:bg-violet-500"
+                        >
+                            <ChevronLeft size={18} />
+                        </button>
+
+                        <div
+                            ref={tabScrollRef}
+                            className="scrollbar-hide flex flex-1 items-center gap-3 overflow-x-auto scroll-smooth"
+                        >
+                            {categories.map((category) => {
+                                const active = activeTab === category.id;
+                                return (
+                                    <button
+                                        key={category.id}
+                                        onClick={() => handleTabChange(category.id)}
+                                        className={`h-10 shrink-0 rounded-xl px-5 text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
+                                            active
+                                                ? 'bg-violet-600 text-white shadow-[0_0_22px_rgba(124,58,237,0.45)]'
+                                                : 'bg-white/10 text-slate-200 hover:bg-white/15 hover:text-white'
+                                        }`}
+                                    >
+                                        {category.name}
+                                    </button>
+                                );
+                            })}
+                        </div>
+
+                        <button
+                            onClick={() => scrollTabs('right')}
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.45)] transition hover:bg-violet-500"
+                        >
+                            <ChevronRight size={18} />
+                        </button>
                     </div>
 
                     {/* Games Grid — 3 columns on mobile (matching Figma design), scales up on larger screens */}

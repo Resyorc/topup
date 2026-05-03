@@ -36,7 +36,7 @@ export default function HeroBanner({ banners }: HeroBannerProps) {
 
     return (
         <div className="relative mb-10 w-full">
-            <div className="mx-auto max-w-7xl px-4 pt-10 sm:px-6 lg:px-8">
+            <div className="mx-auto max-w-7xl px-4 pt-4 sm:px-6 sm:pt-10 lg:px-8">
                 {/* Slider Track */}
                 <div className="relative aspect-3/1 overflow-hidden rounded-3xl shadow-2xl">
                     {banners.map((banner, index) => (
