@@ -62,10 +62,10 @@ function FlashSaleCard({ item }: { item: FlashSaleInfo }) {
     return (
         <Link
             href={`/order/${item.game_slug}`}
-            className={`group relative flex w-36 shrink-0 flex-col overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] transition hover:border-orange-500/50 sm:w-44 md:w-48 ${outOfStock ? 'pointer-events-none opacity-50' : ''}`}
+            className={`group relative flex w-36 shrink-0 flex-col overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] transition hover:border-primary/50 sm:w-44 md:w-48 ${outOfStock ? 'pointer-events-none opacity-50' : ''}`}
         >
             {item.discount_percent > 0 && (
-                <div className="absolute top-2 left-2 z-10 rounded-md bg-orange-500 px-1.5 py-0.5 text-[10px] font-black text-white">
+                <div className="absolute top-2 left-2 z-10 rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-black text-white">
                     -{item.discount_percent}%
                 </div>
             )}
@@ -73,8 +73,8 @@ function FlashSaleCard({ item }: { item: FlashSaleInfo }) {
                 {item.logo_url ? (
                     <img src={item.logo_url} alt={item.clean_name} className="h-12 w-12 object-contain sm:h-14 sm:w-14" />
                 ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-500/10">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-orange-400/50">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
+                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-(--color-primary-light)/50">
                             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                         </svg>
                     </div>
@@ -96,7 +96,7 @@ function FlashSaleCard({ item }: { item: FlashSaleInfo }) {
                 {pct !== null && (
                     <div>
                         <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                            <div className="h-full rounded-full bg-orange-500 transition-all" style={{ width: `${pct}%` }} />
+                            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
                         </div>
                         <p className="mt-1 text-[10px] text-gray-500">
                             {outOfStock ? 'Out of Stock' : `${item.flash_sale_purchased} / ${item.flash_sale_stock} purchased`}
@@ -164,24 +164,24 @@ function FlashSaleSection({ items }: { items: FlashSaleInfo[] }) {
             {/* Header */}
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 rounded-lg bg-orange-500/15 px-3 py-1.5">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className="text-orange-400">
+                    <div className="flex items-center gap-1.5 rounded-lg bg-primary/15 px-3 py-1.5">
+                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className="text-(--color-primary-light)">
                             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                         </svg>
-                        <span className="text-sm font-black tracking-wide text-orange-400 uppercase">Flash Sale</span>
+                        <span className="text-sm font-black tracking-wide text-(--color-primary-light) uppercase">Flash Sale</span>
                     </div>
                     {countdown && (
                         <div className="flex items-center gap-1">
                             {[countdown.h, countdown.m, countdown.s].map((val, i) => (
                                 <span key={i} className="flex items-center gap-1">
-                                    <span className="min-w-7 rounded bg-[var(--color-bg-card)] px-1.5 py-0.5 text-center font-mono text-xs font-bold text-orange-400">{val}</span>
-                                    {i < 2 && <span className="text-orange-400 font-bold">:</span>}
+                                    <span className="min-w-7 rounded bg-[var(--color-bg-card)] px-1.5 py-0.5 text-center font-mono text-xs font-bold text-(--color-primary-light)">{val}</span>
+                                    {i < 2 && <span className="text-(--color-primary-light) font-bold">:</span>}
                                 </span>
                             ))}
                         </div>
                     )}
                 </div>
-                <p className="text-[11px] font-semibold text-orange-400/60 uppercase tracking-wider">Persediaan terbatas!</p>
+                <p className="text-[11px] font-semibold text-(--color-primary-light)/60 uppercase tracking-wider">Persediaan terbatas!</p>
             </div>
 
             {/* Cards */}
