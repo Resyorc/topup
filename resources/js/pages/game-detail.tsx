@@ -541,13 +541,13 @@ export default function GameDetail({
         >
             {product.discount_percent > 0 &&
                 (product.flash_sale_ends_at ? (
-                    <div className="flex items-center justify-between bg-orange-600 px-2.5 py-1 shadow-[0_0_8px_rgba(234,88,12,0.5)]">
-                        <span className="text-[10px] font-bold text-white">
+                    <div className="flex items-center justify-between bg-[var(--color-highlight)] px-2.5 py-1 shadow-[0_0_8px_rgba(245,158,11,0.35)]">
+                        <span className="text-[10px] font-bold text-black">
                             ⚡ Flash Sale {product.discount_percent}%
                         </span>
                         {product.original_price &&
                             product.original_price > product.price && (
-                                <span className="text-[10px] text-white/70 line-through">
+                                <span className="text-[10px] text-black/70 line-through">
                                     Rp{' '}
                                     {product.original_price.toLocaleString(
                                         'id-ID',
@@ -556,13 +556,13 @@ export default function GameDetail({
                             )}
                     </div>
                 ) : (
-                    <div className="flex items-center justify-between bg-orange-500 px-2.5 py-1">
-                        <span className="text-[10px] font-bold text-white">
+                    <div className="flex items-center justify-between bg-[var(--color-warning)] px-2.5 py-1">
+                        <span className="text-[10px] font-bold text-black">
                             Disc {product.discount_percent}%
                         </span>
                         {product.original_price &&
                             product.original_price > product.price && (
-                                <span className="text-[10px] text-white/70 line-through">
+                                <span className="text-[10px] text-black/70 line-through">
                                     Rp{' '}
                                     {product.original_price.toLocaleString(
                                         'id-ID',
@@ -766,15 +766,15 @@ export default function GameDetail({
             </Head>
 
             {/* Background Texture & Hero Graphic */}
-            <div className="relative min-h-screen pb-64 md:pb-32">
+            <div className="relative min-h-screen pb-[calc(11rem+env(safe-area-inset-bottom))] sm:pb-44 md:pb-32">
                 <div className="mx-auto max-w-7xl px-3 pt-4 sm:px-6 md:pt-10 lg:px-8">
                     {/* Breadcrumbs */}
-                    <div className="mb-4 flex items-center gap-1.5 text-xs text-gray-400 md:mb-6 md:gap-2 md:text-sm">
-                        <span>Beranda</span>
+                    <div className="mb-4 flex min-w-0 items-center gap-1.5 overflow-hidden text-xs text-gray-400 md:mb-6 md:gap-2 md:text-sm">
+                        <span className="shrink-0">Beranda</span>
                         <span>›</span>
-                        <span>Top Up</span>
+                        <span className="shrink-0">Top Up</span>
                         <span>›</span>
-                        <span className="font-semibold text-white">
+                        <span className="min-w-0 truncate font-semibold text-white">
                             {game.name}
                         </span>
 
@@ -1179,38 +1179,38 @@ export default function GameDetail({
                                 <div className="space-y-6 p-4">
                                     {/* ===== Flash Sale Block ===== */}
                                     {hasFlashSale && (
-                                        <div className="overflow-hidden rounded-xl border-2 border-orange-500/60 bg-[var(--color-bg-main)]">
+                                        <div className="overflow-hidden rounded-xl border-2 border-[var(--color-highlight-border)] bg-[var(--color-bg-main)]">
                                             {/* Flash Sale Header */}
-                                            <div className="flex items-center justify-between bg-orange-500/15 px-4 py-2.5">
+                                            <div className="flex items-center justify-between bg-[var(--color-highlight-soft)] px-4 py-2.5">
                                                 <div className="flex items-center gap-2">
                                                     <svg
                                                         width="14"
                                                         height="14"
                                                         viewBox="0 0 24 24"
                                                         fill="currentColor"
-                                                        className="text-orange-400"
+                                                        className="text-[var(--color-highlight)]"
                                                     >
                                                         <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                                                     </svg>
-                                                    <span className="text-sm font-black tracking-wide text-orange-400 uppercase">
+                                                    <span className="text-sm font-black tracking-wide text-[var(--color-highlight)] uppercase">
                                                         Flash Sale
                                                     </span>
                                                 </div>
                                                 {flashCountdown && (
                                                     <div className="flex items-center gap-1 text-xs font-bold">
-                                                        <span className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-orange-400">
+                                                        <span className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-[var(--color-highlight)]">
                                                             {flashCountdown.h}
                                                         </span>
-                                                        <span className="text-orange-400">
+                                                        <span className="text-[var(--color-highlight)]">
                                                             :
                                                         </span>
-                                                        <span className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-orange-400">
+                                                        <span className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-[var(--color-highlight)]">
                                                             {flashCountdown.m}
                                                         </span>
-                                                        <span className="text-orange-400">
+                                                        <span className="text-[var(--color-highlight)]">
                                                             :
                                                         </span>
-                                                        <span className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-orange-400">
+                                                        <span className="rounded bg-black/30 px-1.5 py-0.5 font-mono text-[var(--color-highlight)]">
                                                             {flashCountdown.s}
                                                         </span>
                                                     </div>
@@ -1260,10 +1260,10 @@ export default function GameDetail({
                                                                         product.id,
                                                                     );
                                                                 }}
-                                                                className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[var(--color-bg-secondary)] transition-all ${outOfStock ? 'cursor-not-allowed opacity-50' : 'hover:border-orange-500/60'} ${data.product_id === product.id ? 'border-orange-500 shadow-[0_0_15px_rgba(249,115,22,0.25)] ring-1 ring-orange-500' : 'border-orange-500/30'}`}
+                                                                className={`group relative cursor-pointer overflow-hidden rounded-xl border bg-[var(--color-bg-secondary)] transition-all ${outOfStock ? 'cursor-not-allowed opacity-50' : 'hover:border-[var(--color-highlight-border)]'} ${data.product_id === product.id ? 'border-[var(--color-highlight)] shadow-[0_0_15px_rgba(245,158,11,0.25)] ring-1 ring-[var(--color-highlight)]' : 'border-[var(--color-highlight-border)]'}`}
                                                             >
-                                                                <div className="flex items-center justify-between bg-orange-600 px-2.5 py-1">
-                                                                    <span className="text-[10px] font-bold text-white">
+                                                                <div className="flex items-center justify-between bg-[var(--color-highlight)] px-2.5 py-1">
+                                                                    <span className="text-[10px] font-bold text-black">
                                                                         {product.discount_percent >
                                                                         0
                                                                             ? `Disc ${product.discount_percent}%`
@@ -1272,7 +1272,7 @@ export default function GameDetail({
                                                                     {product.original_price &&
                                                                         product.original_price >
                                                                             product.price && (
-                                                                            <span className="text-[10px] text-white/70 line-through">
+                                                                            <span className="text-[10px] text-black/70 line-through">
                                                                                 Rp{' '}
                                                                                 {product.original_price.toLocaleString(
                                                                                     'id-ID',
@@ -1327,7 +1327,7 @@ export default function GameDetail({
                                                                         <div className="mt-2">
                                                                             <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
                                                                                 <div
-                                                                                    className="h-full rounded-full bg-orange-500"
+                                                                                    className="h-full rounded-full bg-[var(--color-highlight)]"
                                                                                     style={{
                                                                                         width: `${pct}%`,
                                                                                     }}
@@ -1343,7 +1343,7 @@ export default function GameDetail({
                                                                 </div>
                                                                 {data.product_id ===
                                                                     product.id && (
-                                                                    <div className="pointer-events-none absolute inset-0 bg-gradient-to-br from-orange-500/10 to-transparent" />
+                                                                    <div className="pointer-events-none absolute inset-0 bg-[var(--color-highlight-soft)]" />
                                                                 )}
                                                             </div>
                                                         );
@@ -2334,10 +2334,10 @@ export default function GameDetail({
                                 </div>
                             </div>
 
-                            <div className="grid grid-cols-2 gap-4">
+                            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-4">
                                 <button
                                     onClick={() => setShowModal(false)}
-                                    className="rounded-xl border border-red-500/30 bg-transparent px-4 py-3.5 font-bold text-red-500 transition hover:bg-red-500/10"
+                                    className="rounded-xl border border-red-500/30 bg-transparent px-3 py-3 text-sm font-bold text-red-500 transition hover:bg-red-500/10 sm:px-4 sm:py-3.5 sm:text-base"
                                 >
                                     Batalkan Pesanan!
                                 </button>
@@ -2348,7 +2348,7 @@ export default function GameDetail({
                                         isValidating ||
                                         isCalculatingFee
                                     }
-                                    className={`rounded-xl px-4 py-3.5 font-bold text-white shadow-[var(--shadow-glow)] transition ${isSubmitting || isValidating || isCalculatingFee ? 'cursor-not-allowed bg-gray-500 shadow-none' : 'bg-primary hover:bg-primary/90'}`}
+                                    className={`rounded-xl px-3 py-3 text-sm font-bold text-white shadow-[var(--shadow-glow)] transition sm:px-4 sm:py-3.5 sm:text-base ${isSubmitting || isValidating || isCalculatingFee ? 'cursor-not-allowed bg-gray-500 shadow-none' : 'bg-primary hover:bg-primary/90'}`}
                                 >
                                     {isSubmitting
                                         ? 'Memproses...'

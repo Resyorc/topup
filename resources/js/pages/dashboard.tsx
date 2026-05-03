@@ -402,7 +402,76 @@ export default function Dashboard() {
                     List Transaksi Terbaru
                 </h2>
 
-                <div className="overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)]">
+                <div className="space-y-3 md:hidden">
+                    {recentTransactions.length === 0 ? (
+                        <div className="rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] px-4 py-8 text-center text-sm text-gray-400">
+                            Belum ada transaksi.
+                        </div>
+                    ) : (
+                        recentTransactions.map((transaction) => {
+                            const statusBadge = getTransactionStatusBadge(
+                                transaction.status,
+                            );
+
+                            return (
+                                <Link
+                                    key={transaction.invoice_id}
+                                    href={`/invoice?invoice_id=${encodeURIComponent(transaction.invoice_id)}`}
+                                    className="block rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] p-4 transition hover:border-[var(--color-accent-border)] hover:bg-white/[0.03]"
+                                >
+                                    <div className="mb-3 flex items-start justify-between gap-3">
+                                        <div className="min-w-0">
+                                            <p className="truncate font-mono text-xs font-semibold text-gray-300">
+                                                {transaction.invoice_id}
+                                            </p>
+                                            <p className="mt-1 text-sm font-bold text-white">
+                                                {transaction.game_name}
+                                            </p>
+                                        </div>
+                                        <span
+                                            className={`${statusBadge.className} shrink-0 rounded px-2 py-1 text-[10px] font-bold uppercase`}
+                                        >
+                                            {statusBadge.label}
+                                        </span>
+                                    </div>
+
+                                    <div className="grid grid-cols-2 gap-3 border-t border-[var(--color-border-light)] pt-3 text-xs">
+                                        <div className="min-w-0">
+                                            <p className="text-gray-500">
+                                                Item
+                                            </p>
+                                            <p className="mt-0.5 line-clamp-2 font-medium text-gray-300">
+                                                {transaction.product_name}
+                                            </p>
+                                        </div>
+                                        <div className="text-right">
+                                            <p className="text-gray-500">
+                                                Harga
+                                            </p>
+                                            <p className="mt-0.5 font-bold text-[var(--color-warning)]">
+                                                {formatCurrency(
+                                                    transaction.amount,
+                                                )}
+                                            </p>
+                                        </div>
+                                        <div className="col-span-2 flex items-center justify-between gap-3 text-gray-400">
+                                            <span>Tanggal</span>
+                                            <span className="text-right">
+                                                {transaction.created_at
+                                                    ? formatDate(
+                                                          transaction.created_at,
+                                                      )
+                                                    : '-'}
+                                            </span>
+                                        </div>
+                                    </div>
+                                </Link>
+                            );
+                        })
+                    )}
+                </div>
+
+                <div className="hidden overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] md:block">
                     <div className="overflow-x-auto">
                         <table className="w-full text-left text-sm">
                             <thead className="border-b border-[var(--color-border-light)] bg-white/10 text-xs font-bold text-gray-300 uppercase">
@@ -488,7 +557,3 @@ export default function Dashboard() {
         </UserLayout>
     );
 }
-
-
-
-

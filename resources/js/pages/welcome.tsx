@@ -54,34 +54,54 @@ interface WelcomeProps {
 }
 
 function FlashSaleCard({ item }: { item: FlashSaleInfo }) {
-    const pct = item.flash_sale_stock && item.flash_sale_stock > 0
-        ? Math.min(100, Math.round((item.flash_sale_purchased / item.flash_sale_stock) * 100))
-        : null;
-    const outOfStock = item.flash_sale_stock !== null && item.flash_sale_purchased >= item.flash_sale_stock;
+    const pct =
+        item.flash_sale_stock && item.flash_sale_stock > 0
+            ? Math.min(
+                  100,
+                  Math.round(
+                      (item.flash_sale_purchased / item.flash_sale_stock) * 100,
+                  ),
+              )
+            : null;
+    const outOfStock =
+        item.flash_sale_stock !== null &&
+        item.flash_sale_purchased >= item.flash_sale_stock;
 
     return (
         <Link
             href={`/order/${item.game_slug}`}
-            className={`group relative flex w-36 shrink-0 flex-col overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] transition hover:border-primary/50 sm:w-44 md:w-48 ${outOfStock ? 'pointer-events-none opacity-50' : ''}`}
+            className={`group relative flex w-36 shrink-0 flex-col overflow-hidden rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] transition hover:border-[var(--color-highlight-border)] sm:w-44 md:w-48 ${outOfStock ? 'pointer-events-none opacity-50' : ''}`}
         >
             {item.discount_percent > 0 && (
-                <div className="absolute top-2 left-2 z-10 rounded-md bg-primary px-1.5 py-0.5 text-[10px] font-black text-white">
+                <div className="absolute top-2 left-2 z-10 rounded-md bg-[var(--color-highlight)] px-1.5 py-0.5 text-[10px] font-black text-slate-950">
                     -{item.discount_percent}%
                 </div>
             )}
             <div className="flex h-20 items-center justify-center bg-[var(--color-bg-main)] sm:h-24">
                 {item.logo_url ? (
-                    <img src={item.logo_url} alt={item.clean_name} className="h-12 w-12 object-contain sm:h-14 sm:w-14" />
+                    <img
+                        src={item.logo_url}
+                        alt={item.clean_name}
+                        className="h-12 w-12 object-contain sm:h-14 sm:w-14"
+                    />
                 ) : (
-                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-primary/10">
-                        <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" className="text-(--color-primary-light)/50">
+                    <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[var(--color-highlight-soft)]">
+                        <svg
+                            width="24"
+                            height="24"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="text-[var(--color-highlight)]"
+                        >
                             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                         </svg>
                     </div>
                 )}
             </div>
             <div className="flex flex-1 flex-col gap-1.5 p-2.5">
-                <p className="line-clamp-2 text-[11px] font-semibold leading-tight text-white sm:text-xs">{item.name}</p>
+                <p className="line-clamp-2 text-[11px] leading-tight font-semibold text-white sm:text-xs">
+                    {item.name}
+                </p>
                 <p className="text-[10px] text-gray-500">{item.game_name}</p>
                 <div className="mt-auto">
                     <p className="text-xs font-black text-white sm:text-sm">
@@ -96,10 +116,15 @@ function FlashSaleCard({ item }: { item: FlashSaleInfo }) {
                 {pct !== null && (
                     <div>
                         <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                            <div className="h-full rounded-full bg-primary transition-all" style={{ width: `${pct}%` }} />
+                            <div
+                                className="h-full rounded-full bg-[var(--color-highlight)] transition-all"
+                                style={{ width: `${pct}%` }}
+                            />
                         </div>
                         <p className="mt-1 text-[10px] text-gray-500">
-                            {outOfStock ? 'Out of Stock' : `${item.flash_sale_purchased} / ${item.flash_sale_stock} purchased`}
+                            {outOfStock
+                                ? 'Out of Stock'
+                                : `${item.flash_sale_purchased} / ${item.flash_sale_stock} purchased`}
                         </p>
                     </div>
                 )}
@@ -109,12 +134,18 @@ function FlashSaleCard({ item }: { item: FlashSaleInfo }) {
 }
 
 function FlashSaleSection({ items }: { items: FlashSaleInfo[] }) {
-    const [countdown, setCountdown] = useState<{ h: string; m: string; s: string } | null>(null);
+    const [countdown, setCountdown] = useState<{
+        h: string;
+        m: string;
+        s: string;
+    } | null>(null);
     const trackRef = useRef<HTMLDivElement>(null);
     const pausedRef = useRef(false);
     const rafRef = useRef<number>(0);
 
-    const endMs = items[0]?.flash_sale_ends_at ? items[0].flash_sale_ends_at * 1000 : null;
+    const endMs = items[0]?.flash_sale_ends_at
+        ? items[0].flash_sale_ends_at * 1000
+        : null;
 
     // Countdown
     useEffect(() => {
@@ -164,24 +195,45 @@ function FlashSaleSection({ items }: { items: FlashSaleInfo[] }) {
             {/* Header */}
             <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-3">
-                    <div className="flex items-center gap-1.5 rounded-lg bg-primary/15 px-3 py-1.5">
-                        <svg width="13" height="13" viewBox="0 0 24 24" fill="currentColor" className="text-(--color-primary-light)">
+                    <div className="flex items-center gap-1.5 rounded-lg bg-[var(--color-highlight-soft)] px-3 py-1.5">
+                        <svg
+                            width="13"
+                            height="13"
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            className="text-[var(--color-highlight)]"
+                        >
                             <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z" />
                         </svg>
-                        <span className="text-sm font-black tracking-wide text-(--color-primary-light) uppercase">Flash Sale</span>
+                        <span className="text-sm font-black tracking-wide text-[var(--color-highlight)] uppercase">
+                            Flash Sale
+                        </span>
                     </div>
                     {countdown && (
                         <div className="flex items-center gap-1">
-                            {[countdown.h, countdown.m, countdown.s].map((val, i) => (
-                                <span key={i} className="flex items-center gap-1">
-                                    <span className="min-w-7 rounded bg-[var(--color-bg-card)] px-1.5 py-0.5 text-center font-mono text-xs font-bold text-(--color-primary-light)">{val}</span>
-                                    {i < 2 && <span className="text-(--color-primary-light) font-bold">:</span>}
-                                </span>
-                            ))}
+                            {[countdown.h, countdown.m, countdown.s].map(
+                                (val, i) => (
+                                    <span
+                                        key={i}
+                                        className="flex items-center gap-1"
+                                    >
+                                        <span className="min-w-7 rounded bg-[var(--color-bg-card)] px-1.5 py-0.5 text-center font-mono text-xs font-bold text-[var(--color-highlight)]">
+                                            {val}
+                                        </span>
+                                        {i < 2 && (
+                                            <span className="font-bold text-[var(--color-highlight)]">
+                                                :
+                                            </span>
+                                        )}
+                                    </span>
+                                ),
+                            )}
                         </div>
                     )}
                 </div>
-                <p className="text-[11px] font-semibold text-(--color-primary-light)/60 uppercase tracking-wider">Persediaan terbatas!</p>
+                <p className="text-[11px] font-semibold tracking-wider text-[var(--color-highlight)] uppercase opacity-70">
+                    Persediaan terbatas!
+                </p>
             </div>
 
             {/* Cards */}
@@ -189,14 +241,28 @@ function FlashSaleSection({ items }: { items: FlashSaleInfo[] }) {
                 // Marquee mode: overflow hidden, auto-scroll, pause on hover/touch
                 <div
                     className="overflow-hidden"
-                    onMouseEnter={() => { pausedRef.current = true; }}
-                    onMouseLeave={() => { pausedRef.current = false; }}
-                    onTouchStart={() => { pausedRef.current = true; }}
-                    onTouchEnd={() => { pausedRef.current = false; }}
+                    onMouseEnter={() => {
+                        pausedRef.current = true;
+                    }}
+                    onMouseLeave={() => {
+                        pausedRef.current = false;
+                    }}
+                    onTouchStart={() => {
+                        pausedRef.current = true;
+                    }}
+                    onTouchEnd={() => {
+                        pausedRef.current = false;
+                    }}
                 >
-                    <div ref={trackRef} className="flex gap-3 will-change-transform">
+                    <div
+                        ref={trackRef}
+                        className="flex gap-3 will-change-transform"
+                    >
                         {displayItems.map((item, i) => (
-                            <FlashSaleCard key={`${item.id}-${i}`} item={item} />
+                            <FlashSaleCard
+                                key={`${item.id}-${i}`}
+                                item={item}
+                            />
                         ))}
                     </div>
                 </div>
@@ -231,7 +297,10 @@ export default function Welcome({
     );
     const tabScrollRef = useRef<HTMLDivElement>(null);
     const scrollTabs = (direction: 'left' | 'right') => {
-        tabScrollRef.current?.scrollBy({ left: direction === 'left' ? -180 : 180, behavior: 'smooth' });
+        tabScrollRef.current?.scrollBy({
+            left: direction === 'left' ? -180 : 180,
+            behavior: 'smooth',
+        });
     };
 
     // Limit the number of games displayed initially
@@ -319,7 +388,7 @@ export default function Welcome({
                                     Trending Games
                                 </h2>
                                 <div className="mt-1 flex items-baseline gap-2">
-                                    <span className="text-lg font-bold text-client-primary md:text-xl">
+                                    <span className="text-lg font-bold text-[var(--color-highlight)] md:text-xl">
                                         {trendingTotalSold.toLocaleString(
                                             'id-ID',
                                         )}
@@ -365,7 +434,7 @@ export default function Welcome({
                         {/* Arrow — mobile only */}
                         <button
                             onClick={() => scrollTabs('left')}
-                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.45)] transition hover:bg-violet-500 md:hidden"
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-accent)] text-[var(--color-accent-foreground)] shadow-[var(--shadow-accent-glow)] transition hover:bg-[var(--color-accent-hover)] md:hidden"
                         >
                             <ChevronLeft size={18} />
                         </button>
@@ -379,10 +448,12 @@ export default function Welcome({
                                 return (
                                     <button
                                         key={category.id}
-                                        onClick={() => handleTabChange(category.id)}
-                                        className={`h-10 shrink-0 rounded-xl px-5 text-sm font-semibold transition-all duration-300 whitespace-nowrap ${
+                                        onClick={() =>
+                                            handleTabChange(category.id)
+                                        }
+                                        className={`h-10 shrink-0 rounded-xl px-5 text-sm font-semibold whitespace-nowrap transition-all duration-300 ${
                                             active
-                                                ? 'bg-violet-600 text-white shadow-[0_0_22px_rgba(124,58,237,0.45)]'
+                                                ? 'bg-[var(--color-accent)] text-[var(--color-accent-foreground)] shadow-[var(--shadow-accent-glow)]'
                                                 : 'bg-white/10 text-slate-200 hover:bg-white/15 hover:text-white'
                                         }`}
                                     >
@@ -395,7 +466,7 @@ export default function Welcome({
                         {/* Arrow — mobile only */}
                         <button
                             onClick={() => scrollTabs('right')}
-                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.45)] transition hover:bg-violet-500 md:hidden"
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[var(--color-accent)] text-[var(--color-accent-foreground)] shadow-[var(--shadow-accent-glow)] transition hover:bg-[var(--color-accent-hover)] md:hidden"
                         >
                             <ChevronRight size={18} />
                         </button>
@@ -461,7 +532,3 @@ export default function Welcome({
         </GuestLayout>
     );
 }
-
-
-
-

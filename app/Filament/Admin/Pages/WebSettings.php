@@ -58,9 +58,6 @@ class WebSettings extends Page implements HasForms
             'sitemap_url'          => Setting::get('sitemap_url', url('/sitemap.xml')),
 
             // Tab 3
-            'wa_bubble_enabled'    => (bool) Setting::get('wa_bubble_enabled', false),
-            'wa_bubble_number'     => Setting::get('wa_bubble_number', ''),
-            'wa_bubble_message'    => Setting::get('wa_bubble_message', 'Halo CS Nuvelo, saya butuh bantuan.'),
             'sosmed_links'         => json_decode(Setting::get('sosmed_links', '[]'), true),
 
             // Tab 4 — Global Pricing
@@ -127,19 +124,6 @@ class WebSettings extends Page implements HasForms
                         Tabs\Tab::make('Widget & Footer')
                             ->icon('heroicon-o-chat-bubble-left-right')
                             ->schema([
-                                Toggle::make('wa_bubble_enabled')
-                                    ->label('Aktifkan Widget Chat WA')
-                                    ->helperText('Menampilkan tombol WhatsApp melayang di pojok kanan bawah layar pengunjung.')
-                                    ->columnSpanFull(),
-                                TextInput::make('wa_bubble_number')
-                                    ->label('Nomor WhatsApp CS')
-                                    ->helperText('Gunakan kode negara (tanpa +), misal: 628123456789')
-                                    ->numeric(),
-                                Textarea::make('wa_bubble_message')
-                                    ->label('Pesan Awal Otomatis')
-                                    ->rows(2)
-                                    ->columnSpanFull(),
-
                                 Repeater::make('sosmed_links')
                                     ->label('Tautan Sosial Media')
                                     ->helperText('Tambahkan platform sosial media. Platform yang dikenali (instagram, tiktok, youtube, twitter/x, facebook, whatsapp) akan tampil dengan ikon otomatis.')

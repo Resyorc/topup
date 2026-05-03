@@ -172,7 +172,6 @@ export default function GuestLayout({
     const waLink = waNumber ? `https://wa.me/${waNumber}` : null;
     const currentYear = new Date().getFullYear();
 
-
     const footerNavigation = [
         { href: '/', label: 'Top Up Game', icon: Gamepad2 },
         { href: '/invoice', label: 'Cek Invoice', icon: ReceiptText },
@@ -214,10 +213,19 @@ export default function GuestLayout({
         if (href === '/') return currentUrl === '/';
         return currentUrl.startsWith(href);
     };
-
+    const mobileNavBase =
+        'flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition';
+    const mobileNavActive =
+        'border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] text-[var(--color-accent)]';
+    const mobileNavInactive = 'text-gray-300 hover:bg-white/5 hover:text-white';
+    const layoutTopPadding = mobileSearchOpen
+        ? 'pt-[132px] md:pt-[106px]'
+        : 'pt-[76px] md:pt-[106px]';
     return (
         <>
-            <div className="relative isolate flex min-h-screen flex-col pt-[116px] md:pt-[106px]">
+            <div
+                className={`relative isolate flex min-h-screen flex-col ${layoutTopPadding}`}
+            >
                 {/* Cyber background layer */}
                 <div aria-hidden="true" className="nuvelo-cyber-bg">
                     <svg
@@ -226,7 +234,6 @@ export default function GuestLayout({
                         preserveAspectRatio="xMidYMid slice"
                         xmlns="http://www.w3.org/2000/svg"
                     >
-
                         {/* Garis dasar — static */}
                         <g className="line-base">
                             <path d="M -10 150 H 200 V 80  H 460 V 200 H 620" />
@@ -352,7 +359,7 @@ export default function GuestLayout({
                                 <div className="flex items-center gap-2 md:gap-3">
                                     <Link
                                         href="/dashboard"
-                                        className={`hidden h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 transition md:flex ${isActive('/dashboard') ? 'border-primary bg-primary/20 text-white shadow-[0_0_12px_rgba(131,39,216,0.35)]' : 'border-primary/40 bg-white/10 text-gray-300 hover:bg-white/20'}`}
+                                        className={`hidden h-10 w-10 items-center justify-center overflow-hidden rounded-full border-2 transition md:flex ${isActive('/dashboard') ? 'border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-[var(--color-accent)] shadow-[var(--shadow-accent-glow)]' : 'border-[var(--color-brand-border)] bg-white/10 text-gray-300 hover:bg-white/20'}`}
                                         aria-label="Buka dashboard"
                                     >
                                         {auth?.user?.avatar_url ? (
@@ -391,7 +398,7 @@ export default function GuestLayout({
                                     {/* Daftar button — desktop only (unchanged) */}
                                     <Link
                                         href="/register"
-                                        className="hidden rounded-md bg-primary px-4 py-2 text-sm font-semibold text-white shadow-[var(--shadow-glow)] transition hover:hue-rotate-15 md:inline-block"
+                                        className="hidden rounded-md bg-[var(--gradient-primary)] px-4 py-2 text-sm font-semibold text-white shadow-[var(--shadow-glow)] transition hover:hue-rotate-15 md:inline-block"
                                     >
                                         Daftar
                                     </Link>
@@ -412,7 +419,7 @@ export default function GuestLayout({
                     )}
 
                     {/* Sub-Header Navigation with Ticker */}
-                    <div className="w-full border-t border-b border-primary/30 bg-primary/40 text-sm font-medium shadow-inner backdrop-blur-sm select-none">
+                    <div className="hidden w-full border-t border-b border-[var(--color-highlight-border)] bg-[var(--color-highlight-soft)] text-sm font-medium shadow-inner backdrop-blur-sm select-none md:block">
                         <div className="mx-auto flex w-full max-w-7xl items-center gap-6 px-4 md:px-8">
                             {/* Static Links — hidden on mobile (bottom nav handles navigation), visible on desktop */}
                             <div className="hidden shrink-0 items-center gap-8 md:flex">
@@ -573,7 +580,7 @@ export default function GuestLayout({
                             <Link
                                 href="/"
                                 onClick={() => setMobileMenuOpen(false)}
-                                className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${isActive('/') ? 'border border-primary/30 bg-primary/20 text-primary' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                className={`${mobileNavBase} ${isActive('/') ? mobileNavActive : mobileNavInactive}`}
                             >
                                 <svg
                                     width="20"
@@ -594,7 +601,7 @@ export default function GuestLayout({
                             <Link
                                 href="/invoice"
                                 onClick={() => setMobileMenuOpen(false)}
-                                className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${isActive('/invoice') ? 'border border-primary/30 bg-primary/20 text-primary' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                className={`${mobileNavBase} ${isActive('/invoice') ? mobileNavActive : mobileNavInactive}`}
                             >
                                 <svg
                                     width="20"
@@ -620,7 +627,7 @@ export default function GuestLayout({
                             <Link
                                 href="/blog"
                                 onClick={() => setMobileMenuOpen(false)}
-                                className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${isActive('/blog') ? 'border border-primary/30 bg-primary/20 text-primary' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                className={`${mobileNavBase} ${isActive('/blog') ? mobileNavActive : mobileNavInactive}`}
                             >
                                 <svg
                                     width="20"
@@ -647,7 +654,7 @@ export default function GuestLayout({
                                     <Link
                                         href="/dashboard"
                                         onClick={() => setMobileMenuOpen(false)}
-                                        className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${currentUrl === '/dashboard' ? 'border border-primary/30 bg-primary/20 text-primary' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                        className={`${mobileNavBase} ${currentUrl === '/dashboard' ? mobileNavActive : mobileNavInactive}`}
                                     >
                                         <svg
                                             width="20"
@@ -694,7 +701,7 @@ export default function GuestLayout({
                                     <Link
                                         href="/dashboard/transactions"
                                         onClick={() => setMobileMenuOpen(false)}
-                                        className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${currentUrl.includes('/dashboard/transactions') ? 'border border-primary/30 bg-primary/20 text-primary' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                        className={`${mobileNavBase} ${currentUrl.includes('/dashboard/transactions') ? mobileNavActive : mobileNavInactive}`}
                                     >
                                         <svg
                                             width="20"
@@ -716,7 +723,7 @@ export default function GuestLayout({
                                     <Link
                                         href="/dashboard/coin-history"
                                         onClick={() => setMobileMenuOpen(false)}
-                                        className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${currentUrl.includes('/dashboard/coin-history') ? 'border border-primary/30 bg-primary/20 text-primary' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                        className={`${mobileNavBase} ${currentUrl.includes('/dashboard/coin-history') ? mobileNavActive : mobileNavInactive}`}
                                     >
                                         <svg
                                             width="20"
@@ -738,7 +745,7 @@ export default function GuestLayout({
                                     <Link
                                         href="/dashboard/settings"
                                         onClick={() => setMobileMenuOpen(false)}
-                                        className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${currentUrl.includes('/dashboard/settings') ? 'border border-primary/30 bg-primary/20 text-primary' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                        className={`${mobileNavBase} ${currentUrl.includes('/dashboard/settings') ? mobileNavActive : mobileNavInactive}`}
                                     >
                                         <svg
                                             width="20"
@@ -762,7 +769,7 @@ export default function GuestLayout({
                                             onClick={() =>
                                                 setMobileMenuOpen(false)
                                             }
-                                            className={`flex items-center gap-3 rounded-xl px-4 py-3 font-semibold transition ${currentUrl.includes('/dashboard/api-credentials') ? 'border border-primary/30 bg-primary/20 text-primary' : 'text-gray-300 hover:bg-white/5 hover:text-white'}`}
+                                            className={`${mobileNavBase} ${currentUrl.includes('/dashboard/api-credentials') ? mobileNavActive : mobileNavInactive}`}
                                         >
                                             <svg
                                                 width="20"
@@ -816,7 +823,7 @@ export default function GuestLayout({
                                     <Link
                                         href="/register"
                                         onClick={() => setMobileMenuOpen(false)}
-                                        className="w-full rounded-xl bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-4 py-3 text-center font-bold text-white shadow-[var(--shadow-glow)] transition hover:opacity-90"
+                                        className="w-full rounded-xl bg-[var(--gradient-primary)] px-4 py-3 text-center font-bold text-white shadow-[var(--shadow-glow)] transition hover:opacity-90"
                                     >
                                         Daftar Akun Baru
                                     </Link>
@@ -827,9 +834,8 @@ export default function GuestLayout({
                 </div>
 
                 {/* Footer — responsive grid: 2 columns on mobile, 4 on desktop */}
-                <footer className="border-border-light relative z-10 mt-10 border-t bg-[#1F2937]/85 px-4 pt-6 pb-10 md:backdrop-blur-sm md:mt-16 md:pt-10 md:pb-6">
+                <footer className="border-border-light relative z-10 mt-10 border-t bg-[#1F2937]/85 px-4 pt-6 pb-10 md:mt-16 md:pt-10 md:pb-6 md:backdrop-blur-sm">
                     <div className="mx-auto max-w-7xl px-4">
-
                         <div className="grid gap-8 border-y border-white/10 py-8 md:grid-cols-[1.25fr_0.8fr_0.9fr_0.9fr] md:gap-10">
                             <div>
                                 <Link
@@ -949,7 +955,7 @@ export default function GuestLayout({
                                                         rel="noopener noreferrer"
                                                         aria-label={item.label}
                                                         title={item.label}
-                                                        className="flex h-9 w-9 items-center justify-center rounded-md border border-white/10 bg-white/[0.04] text-gray-300 transition hover:border-primary/50 hover:bg-primary/20 hover:text-white"
+                                                        className="flex h-9 w-9 items-center justify-center rounded-md border border-white/10 bg-white/[0.04] text-gray-300 transition hover:border-[var(--color-accent-border)] hover:bg-[var(--color-accent-soft)] hover:text-white"
                                                     >
                                                         <SosmedIcon
                                                             platform={
@@ -983,7 +989,7 @@ export default function GuestLayout({
                                                 <div
                                                     key={`${channel.code || channel.name}-${index}`}
                                                     title={channel.name}
-                                                    className="flex h-13 min-w-28 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white px-4 py-2 shadow-sm"
+                                                    className="flex h-[52px] min-w-28 shrink-0 items-center justify-center rounded-md border border-white/10 bg-white px-4 py-2 shadow-sm"
                                                 >
                                                     {channel.icon_url ? (
                                                         <img
@@ -1203,25 +1209,6 @@ export default function GuestLayout({
                     },
                 }}
             />
-
-            {webSetting?.waBubble?.enabled && webSetting?.waBubble?.number && (
-                <a
-                    href={`https://wa.me/${webSetting.waBubble.number}?text=${encodeURIComponent(webSetting.waBubble.message || '')}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="fixed right-4 bottom-[88px] z-[290] flex h-13 w-13 items-center justify-center rounded-full bg-[#25D366] text-white shadow-[0_0_20px_rgba(37,211,102,0.4)] transition hover:scale-105 hover:bg-[#20bd5a] md:right-6"
-                    aria-label="Hubungi kami via WhatsApp"
-                >
-                    <svg
-                        xmlns="http://www.w3.org/2000/svg"
-                        viewBox="0 0 24 24"
-                        fill="currentColor"
-                        className="h-7 w-7"
-                    >
-                        <path d="M12.031 6.172c-3.181 0-5.767 2.586-5.768 5.766-.001 1.298.38 2.27 1.019 3.287l-.582 2.128 2.182-.573c.978.58 1.911.928 3.145.929 3.178 0 5.767-2.587 5.768-5.766.001-3.187-2.575-5.77-5.764-5.771zm3.392 8.244c-.144.405-.837.774-1.17.824-.299.045-.677.063-1.092-.069-.252-.08-.575-.187-.988-.365-1.739-.751-2.874-2.502-2.961-2.617-.087-.116-.708-.94-.708-1.793s.448-1.273.607-1.446c.159-.173.346-.217.462-.217l.332.006c.106.005.249-.04.39.298.144.347.491 1.2.534 1.287.043.087.072.188.014.304-.058.116-.087.188-.173.289l-.26.304c-.087.086-.177.18-.076.354.101.174.449.741.964 1.201.662.591 1.221.774 1.394.86s.274.072.376-.043c.101-.116.433-.506.549-.68.116-.173.231-.145.39-.087s1.011.477 1.184.564.289.13.332.202c.045.072.045.419-.1.824zm-3.423-14.416c-6.627 0-12 5.373-12 12s5.373 12 12 12 12-5.373 12-12-5.373-12-12-12zm.029 18.88c-1.161 0-2.305-.292-3.318-.844l-3.677.964.984-3.595c-.607-1.052-.927-2.246-.926-3.468.001-3.825 3.113-6.937 6.937-6.937 3.825 0 6.938 3.112 6.938 6.937-.001 3.825-3.113 6.938-6.938 6.938z" />
-                    </svg>
-                </a>
-            )}
 
             <Suspense fallback={null}>
                 <LiveChat context={chatContext} />

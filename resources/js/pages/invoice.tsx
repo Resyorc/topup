@@ -499,7 +499,7 @@ export default function InvoiceSearch({
                                 <div className="flex border-b border-[var(--color-border-light)]">
                                     <button
                                         onClick={() => setSearchMode('invoice')}
-                                        className={`flex-1 px-6 py-4 text-sm font-bold transition ${searchMode === 'invoice' ? 'border-b-2 border-primary bg-white/5 text-white' : 'text-gray-400 hover:text-white'}`}
+                                        className={`flex-1 px-4 py-3.5 text-sm font-bold transition sm:px-6 sm:py-4 ${searchMode === 'invoice' ? 'border-b-2 border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-white' : 'text-gray-400 hover:text-white'}`}
                                     >
                                         Nomor Invoice
                                     </button>
@@ -509,7 +509,7 @@ export default function InvoiceSearch({
                                             setPhoneResults(null);
                                             setPhoneError(null);
                                         }}
-                                        className={`flex-1 px-6 py-4 text-sm font-bold transition ${searchMode === 'phone' ? 'border-b-2 border-primary bg-white/5 text-white' : 'text-gray-400 hover:text-white'}`}
+                                        className={`flex-1 px-4 py-3.5 text-sm font-bold transition sm:px-6 sm:py-4 ${searchMode === 'phone' ? 'border-b-2 border-[var(--color-accent)] bg-[var(--color-accent-soft)] text-white' : 'text-gray-400 hover:text-white'}`}
                                     >
                                         Nomor WhatsApp
                                     </button>
@@ -533,7 +533,7 @@ export default function InvoiceSearch({
                                                         )
                                                     }
                                                     placeholder="Contoh: INV-1234567890"
-                                                    className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-4 text-white placeholder-gray-500 transition outline-none focus:border-primary focus:ring-primary"
+                                                    className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-4 text-white placeholder-gray-500 transition outline-none focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                                                     required
                                                 />
                                                 <p className="mt-2 text-xs text-gray-500">
@@ -571,7 +571,7 @@ export default function InvoiceSearch({
                                                         setPhoneError(null);
                                                     }}
                                                     placeholder="Contoh: 08123456789"
-                                                    className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-4 text-white placeholder-gray-500 transition outline-none focus:border-primary"
+                                                    className="block w-full rounded-lg border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] p-4 text-white placeholder-gray-500 transition outline-none focus:border-[var(--color-accent)] focus:ring-[var(--color-accent)]"
                                                     required
                                                 />
                                                 <p className="mt-2 text-xs text-gray-500">
@@ -619,10 +619,10 @@ export default function InvoiceSearch({
                                                                             ? `&guest_token=${encodeURIComponent(getGuestToken(r.invoice_id) ?? '')}`
                                                                             : '')
                                                                     }
-                                                                    className="flex items-center justify-between rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] px-4 py-3 transition hover:border-primary"
+                                                                    className="flex items-center justify-between gap-3 rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-secondary)] px-4 py-3 transition hover:border-[var(--color-accent-border)]"
                                                                 >
-                                                                    <div>
-                                                                        <div className="text-xs font-bold text-white">
+                                                                    <div className="min-w-0">
+                                                                        <div className="truncate text-xs font-bold text-white">
                                                                             {
                                                                                 r.invoice_id
                                                                             }
@@ -633,7 +633,7 @@ export default function InvoiceSearch({
                                                                             }
                                                                         </div>
                                                                     </div>
-                                                                    <div className="text-right">
+                                                                    <div className="shrink-0 text-right">
                                                                         <div className="text-sm font-bold text-white">
                                                                             Rp{' '}
                                                                             {r.amount.toLocaleString(
@@ -984,7 +984,7 @@ export default function InvoiceSearch({
                                                     : 'Username'}
                                             </span>
                                             <span>:</span>
-                                            <span>
+                                            <span className="min-w-0 break-words">
                                                 {invoiceData.account.username}
                                             </span>
 
@@ -992,7 +992,7 @@ export default function InvoiceSearch({
                                                 {isCoinTopup ? 'Tipe' : 'ID'}
                                             </span>
                                             <span>:</span>
-                                            <span>
+                                            <span className="min-w-0 break-words">
                                                 {invoiceData.account.id}
                                             </span>
 
@@ -1002,7 +1002,7 @@ export default function InvoiceSearch({
                                                     : 'Server'}
                                             </span>
                                             <span>:</span>
-                                            <span>
+                                            <span className="min-w-0 break-words">
                                                 {isCoinTopup
                                                     ? 'QRIS'
                                                     : invoiceData.account
@@ -1021,8 +1021,8 @@ export default function InvoiceSearch({
                                             Jenis Pembelian
                                         </h3>
                                         <div className="flex items-center gap-2">
-                                            <div>
-                                                <p className="text-base leading-tight font-bold text-[var(--color-warning)]">
+                                            <div className="min-w-0">
+                                                <p className="text-base leading-tight font-bold break-words text-[var(--color-warning)]">
                                                     {invoiceData.product.name}
                                                 </p>
                                                 <p className="text-xs text-gray-400">
@@ -1266,7 +1266,7 @@ export default function InvoiceSearch({
                                                     {/* Body — instruksi kiri, QR kanan */}
                                                     <div className="flex flex-col-reverse gap-6 p-4 md:flex-row md:items-start md:gap-8 md:p-6">
                                                         {/* Instruksi */}
-                                                        <div className="flex-1">
+                                                        <div className="min-w-0 flex-1">
                                                             {invoiceData.instructions &&
                                                                 invoiceData.instructions.map(
                                                                     (
@@ -1300,6 +1300,7 @@ export default function InvoiceSearch({
                                                                                                 •
                                                                                             </span>
                                                                                             <span
+                                                                                                className="min-w-0 break-words"
                                                                                                 dangerouslySetInnerHTML={{
                                                                                                     __html: DOMPurify.sanitize(
                                                                                                         step,
@@ -1316,13 +1317,13 @@ export default function InvoiceSearch({
                                                         </div>
                                                         {/* QR Code */}
                                                         <div className="flex shrink-0 flex-col items-center gap-3">
-                                                            <div className="rounded-xl bg-white p-3 shadow-lg">
+                                                            <div className="w-full max-w-64 rounded-xl bg-white p-3 shadow-lg">
                                                                 <img
                                                                     src={
                                                                         invoiceData.qr_url
                                                                     }
                                                                     alt="QR Code Pembayaran"
-                                                                    className="h-56 w-56 max-w-full object-contain md:h-44 md:w-44"
+                                                                    className="h-auto w-full object-contain md:h-44 md:w-44"
                                                                 />
                                                             </div>
                                                             <a
@@ -1330,7 +1331,7 @@ export default function InvoiceSearch({
                                                                     invoiceData.qr_url
                                                                 }
                                                                 download="qrcode-pembayaran.png"
-                                                                className="w-full rounded-lg bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-4 py-2.5 text-center text-sm font-bold text-white transition hover:opacity-90"
+                                                                className="w-full rounded-lg bg-[var(--gradient-accent)] px-4 py-2.5 text-center text-sm font-bold text-[var(--color-accent-foreground)] shadow-[var(--shadow-accent-glow)] transition hover:opacity-90"
                                                             >
                                                                 Unduh Kode QR
                                                             </a>
@@ -1349,7 +1350,7 @@ export default function InvoiceSearch({
                                                 </div>
                                                 <div className="flex flex-col-reverse gap-4 p-4 md:flex-row md:items-start md:gap-8 md:p-6">
                                                     {/* Instruksi */}
-                                                    <div className="flex-1">
+                                                    <div className="min-w-0 flex-1">
                                                         {invoiceData.instructions &&
                                                             invoiceData.instructions.map(
                                                                 (
@@ -1381,6 +1382,7 @@ export default function InvoiceSearch({
                                                                                             •
                                                                                         </span>
                                                                                         <span
+                                                                                            className="min-w-0 break-words"
                                                                                             dangerouslySetInnerHTML={{
                                                                                                 __html: DOMPurify.sanitize(
                                                                                                     step,
@@ -1396,7 +1398,7 @@ export default function InvoiceSearch({
                                                             )}
                                                     </div>
                                                     {/* Tombol Bayar */}
-                                                    <div className="flex shrink-0 flex-col items-center justify-center gap-3 md:min-w-[180px]">
+                                                    <div className="flex w-full shrink-0 flex-col items-center justify-center gap-3 md:w-auto md:min-w-[180px]">
                                                         <a
                                                             href={
                                                                 invoiceData.pay_url
@@ -1498,13 +1500,13 @@ export default function InvoiceSearch({
                                         {!invoiceData.pay_url &&
                                             !invoiceData.qr_url &&
                                             invoiceData.pay_code && (
-                                                <div className="flex flex-col gap-2 rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-6 md:py-4">
-                                                    <span className="text-sm font-semibold text-gray-300">
+                                                <div className="flex min-w-0 flex-col gap-2 rounded-xl border border-[var(--color-border-light)] bg-[var(--color-bg-card)] px-4 py-3 sm:flex-row sm:items-center sm:justify-between md:px-6 md:py-4">
+                                                    <span className="text-sm font-semibold break-words text-gray-300">
                                                         Nomor Pembayaran —{' '}
                                                         {invoiceData.method}
                                                     </span>
-                                                    <div className="flex items-center gap-3">
-                                                        <span className="font-mono font-bold break-all text-[var(--color-warning)]">
+                                                    <div className="flex min-w-0 items-center gap-3">
+                                                        <span className="min-w-0 font-mono font-bold break-all text-[var(--color-warning)]">
                                                             {
                                                                 invoiceData.pay_code
                                                             }
@@ -1516,7 +1518,7 @@ export default function InvoiceSearch({
                                                                     invoiceData.pay_code,
                                                                 )
                                                             }
-                                                            className="text-gray-400 transition hover:text-white"
+                                                            className="shrink-0 text-gray-400 transition hover:text-white"
                                                             title="Salin"
                                                         >
                                                             <svg
@@ -1663,7 +1665,7 @@ export default function InvoiceSearch({
                                                 onClick={() =>
                                                     setShowReviewModal(true)
                                                 }
-                                                className="flex w-full items-center justify-center gap-2 rounded-xl border border-primary/30 bg-primary/10 px-4 py-3 font-bold text-primary transition hover:bg-primary/20"
+                                                className="flex w-full items-center justify-center gap-2 rounded-xl border border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] px-4 py-3 font-bold text-[var(--color-accent)] transition hover:bg-[var(--color-accent-soft)]"
                                             >
                                                 <span className="text-lg">
                                                     ★
@@ -1781,7 +1783,7 @@ export default function InvoiceSearch({
                                                     }
                                                     className={`rounded-full border px-3 py-1.5 text-xs font-medium transition ${
                                                         reviewTags.includes(tag)
-                                                            ? 'border-primary bg-primary/20 text-primary'
+                                                            ? 'border-[var(--color-accent-border)] bg-[var(--color-accent-soft)] text-[var(--color-accent)]'
                                                             : 'border-[var(--color-border-light)] text-gray-400 hover:border-gray-500'
                                                     }`}
                                                 >
@@ -1794,7 +1796,7 @@ export default function InvoiceSearch({
                             )}
 
                             {/* Buttons */}
-                            <div className="mt-5 grid grid-cols-2 gap-3">
+                            <div className="mt-5 grid grid-cols-1 gap-3 sm:grid-cols-2">
                                 <button
                                     onClick={() => setShowReviewModal(false)}
                                     className="rounded-xl border border-[var(--color-border-light)] bg-transparent px-4 py-3 font-bold text-gray-300 transition hover:bg-white/5"
@@ -1812,7 +1814,7 @@ export default function InvoiceSearch({
                                             reviewRating === 0 ||
                                             isSubmittingReview
                                                 ? 'cursor-not-allowed bg-gray-600'
-                                                : 'bg-gradient-to-r from-primary to-[var(--color-primary-light)] hover:opacity-90'
+                                                : 'bg-[var(--gradient-accent)] text-[var(--color-accent-foreground)] hover:opacity-90'
                                         }`}
                                     >
                                         {isSubmittingReview
