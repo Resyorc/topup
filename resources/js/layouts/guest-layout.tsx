@@ -827,7 +827,7 @@ export default function GuestLayout({
                 </div>
 
                 {/* Footer — responsive grid: 2 columns on mobile, 4 on desktop */}
-                <footer className="border-border-light relative z-10 mt-10 border-t bg-[#1F2937]/85 px-4 pt-6 pb-10 backdrop-blur-sm md:mt-16 md:pt-10 md:pb-6">
+                <footer className="border-border-light relative z-10 mt-10 border-t bg-[#1F2937]/85 px-4 pt-6 pb-10 md:backdrop-blur-sm md:mt-16 md:pt-10 md:pb-6">
                     <div className="mx-auto max-w-7xl px-4">
 
                         <div className="grid gap-8 border-y border-white/10 py-8 md:grid-cols-[1.25fr_0.8fr_0.9fr_0.9fr] md:gap-10">

@@ -340,8 +340,8 @@
 .line-light path:nth-child(2) { animation-duration: 7s;   animation-delay: -1.5s; }
 .line-light path:nth-child(3) { animation-duration: 6.2s; animation-delay: -2.4s; }
 .line-light path:nth-child(4) { animation-duration: 8s;   animation-delay: -3s;   }
-.line-light path:nth-child(5) { animation-duration: 7.5s; animation-delay: -1s;   }
-.line-light path:nth-child(6) { animation-duration: 6.8s; animation-delay: -2s;   }
+.line-light path:nth-child(5) { animation: none; opacity: 0; }
+.line-light path:nth-child(6) { animation: none; opacity: 0; }
 
 .line-streak path {
     fill: none;
@@ -377,6 +377,25 @@ main, #root, #__next, .app, .page {
 @keyframes nuveloGlowFloat {
     from { transform: translate3d(0, 0, 0) scale(1); }
     to   { transform: translate3d(-80px, 60px, 0) scale(1.08); }
+}
+
+/* ===== MOBILE PERFORMANCE: disable heavy decorative effects on small screens ===== */
+@media (max-width: 767px) {
+    .nuvelo-cyber-bg::before {
+        display: none;
+    }
+    .nuvelo-cyber-bg::after {
+        animation: none;
+        opacity: 0.6;
+    }
+    .line-light path,
+    .line-streak path {
+        animation: none;
+        opacity: 0;
+    }
+    .line-base path {
+        opacity: 0.08;
+    }
 }
 
 /* ===================================================== */
@@ -555,7 +574,7 @@ main, #root, #__next, .app, .page {
 
 @layer utilities {
     .glass-effect {
-        @apply bg-secondary/80 backdrop-blur-[3px] border border-[var(--color-border-light)];
+        @apply bg-secondary/80 backdrop-blur-[3px] border border-(--color-border-light);
     }
     .scrollbar-hide::-webkit-scrollbar {
         display: none;

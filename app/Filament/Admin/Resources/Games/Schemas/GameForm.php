@@ -48,25 +48,21 @@ class GameForm
                                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                 ->disk('public')
                                 ->directory('games')
-                                ->fetchFileInformation(false)
                                 ->imagePreviewHeight('120')
                                 ->maxParallelUploads(1)
                                 ->maxSize(2048)
                                 ->openable()
-                                ->orientImagesFromExif(false)
-                                ->previewable(false),
+                                ->orientImagesFromExif(false),
                             FileUpload::make('thumbnail')
                                 ->image()
                                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                 ->disk('public')
                                 ->directory('games/thumbnails')
-                                ->fetchFileInformation(false)
                                 ->imagePreviewHeight('120')
                                 ->maxParallelUploads(1)
                                 ->maxSize(2048)
                                 ->openable()
-                                ->orientImagesFromExif(false)
-                                ->previewable(false),
+                                ->orientImagesFromExif(false),
                             Toggle::make('is_active')
                                 ->label('Status Aktif')
                                 ->required(),
@@ -162,7 +158,6 @@ class GameForm
                                                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                                 ->disk('public')
                                                 ->directory('icons/products')
-                                                ->fetchFileInformation(false)
                                                 ->imagePreviewHeight('64')
                                                 ->itemPanelAspectRatio('1:1')
                                                 ->maxParallelUploads(1)
@@ -170,7 +165,6 @@ class GameForm
                                                 ->openable()
                                                 ->orientImagesFromExif(false)
                                                 ->panelLayout('compact')
-                                                ->previewable(false)
                                                 ->automaticallyResizeImagesMode('contain')
                                                 ->automaticallyResizeImagesToWidth('256')
                                                 ->automaticallyResizeImagesToHeight('256'),
@@ -243,13 +237,11 @@ class GameForm
                                 ->acceptedFileTypes(['image/jpeg', 'image/png', 'image/webp'])
                                 ->disk('public')
                                 ->directory('games/guides')
-                                ->fetchFileInformation(false)
                                 ->imagePreviewHeight('120')
                                 ->maxParallelUploads(1)
                                 ->maxSize(2048)
                                 ->openable()
-                                ->orientImagesFromExif(false)
-                                ->previewable(false),
+                                ->orientImagesFromExif(false),
                             RichEditor::make('guide_content')
                                 ->label('Instruksi Panduan')
                                 ->toolbarButtons([
