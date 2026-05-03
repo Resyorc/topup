@@ -177,7 +177,6 @@ export default function GuestLayout({
         { href: '/', label: 'Top Up Game', icon: Gamepad2 },
         { href: '/invoice', label: 'Cek Invoice', icon: ReceiptText },
         { href: '/blog', label: 'Blog', icon: Tags },
-        { href: '/reseller', label: 'Program Reseller', icon: ArrowUpRight },
     ];
 
     const footerTrust = [
@@ -227,21 +226,6 @@ export default function GuestLayout({
                         preserveAspectRatio="xMidYMid slice"
                         xmlns="http://www.w3.org/2000/svg"
                     >
-                        <defs>
-                            <linearGradient id="nuveloLinePurple" x1="0%" y1="0%" x2="100%" y2="0%">
-                                <stop offset="0%"   stopColor="rgba(168,85,247,0)" />
-                                <stop offset="40%"  stopColor="rgba(168,85,247,0.9)" />
-                                <stop offset="60%"  stopColor="rgba(34,211,238,0.8)" />
-                                <stop offset="100%" stopColor="rgba(168,85,247,0)" />
-                            </linearGradient>
-                            <filter id="nuveloGlow" x="-50%" y="-50%" width="200%" height="200%">
-                                <feGaussianBlur stdDeviation="3" result="blur" />
-                                <feMerge>
-                                    <feMergeNode in="blur" />
-                                    <feMergeNode in="SourceGraphic" />
-                                </feMerge>
-                            </filter>
-                        </defs>
 
                         {/* Garis dasar — static */}
                         <g className="line-base">
@@ -428,7 +412,7 @@ export default function GuestLayout({
                     )}
 
                     {/* Sub-Header Navigation with Ticker */}
-                    <div className="w-full border-t border-b border-primary/30 bg-primary/40 text-sm font-medium shadow-inner backdrop-blur-lg select-none">
+                    <div className="w-full border-t border-b border-primary/30 bg-primary/40 text-sm font-medium shadow-inner backdrop-blur-sm select-none">
                         <div className="mx-auto flex w-full max-w-7xl items-center gap-6 px-4 md:px-8">
                             {/* Static Links — hidden on mobile (bottom nav handles navigation), visible on desktop */}
                             <div className="hidden shrink-0 items-center gap-8 md:flex">

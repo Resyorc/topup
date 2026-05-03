@@ -551,7 +551,7 @@ export default function InvoiceSearch({
                                                 disabled={processing}
                                                 className="w-full rounded-lg bg-gradient-to-r from-primary to-[var(--color-primary-light)] px-6 py-4 text-lg font-bold text-white shadow-[var(--shadow-glow)] transition hover:opacity-90 disabled:opacity-50"
                                             >
-                                                Cari Pesanan
+                                                Cari Transaksi
                                             </button>
                                         </form>
                                     ) : (

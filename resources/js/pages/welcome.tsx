@@ -362,16 +362,17 @@ export default function Welcome({
                 <section className="mb-10 md:mb-16">
                     {/* Category Tabs */}
                     <div className="mb-6 flex items-center gap-3 md:mb-8">
+                        {/* Arrow — mobile only */}
                         <button
                             onClick={() => scrollTabs('left')}
-                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.45)] transition hover:bg-violet-500"
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.45)] transition hover:bg-violet-500 md:hidden"
                         >
                             <ChevronLeft size={18} />
                         </button>
 
                         <div
                             ref={tabScrollRef}
-                            className="scrollbar-hide flex flex-1 items-center gap-3 overflow-x-auto scroll-smooth"
+                            className="scrollbar-hide flex flex-1 items-center gap-3 overflow-x-auto scroll-smooth md:flex-wrap md:overflow-visible"
                         >
                             {categories.map((category) => {
                                 const active = activeTab === category.id;
@@ -391,9 +392,10 @@ export default function Welcome({
                             })}
                         </div>
 
+                        {/* Arrow — mobile only */}
                         <button
                             onClick={() => scrollTabs('right')}
-                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.45)] transition hover:bg-violet-500"
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-violet-600 text-white shadow-[0_0_20px_rgba(124,58,237,0.45)] transition hover:bg-violet-500 md:hidden"
                         >
                             <ChevronRight size={18} />
                         </button>

@@ -301,15 +301,13 @@
     top: 180px;
     width: 620px;
     height: 620px;
-    background: conic-gradient(
-        from 180deg,
-        rgba(124, 58, 237, 0.22),
-        rgba(34, 211, 238, 0.12),
-        transparent,
-        rgba(217, 70, 239, 0.18)
+    border-radius: 50%;
+    background: radial-gradient(circle,
+        rgba(124, 58, 237, 0.18) 0%,
+        rgba(217, 70, 239, 0.10) 50%,
+        transparent 70%
     );
-    filter: blur(90px);
-    opacity: 0.6;
+    will-change: transform;
     animation: nuveloGlowFloat 12s ease-in-out infinite alternate;
 }
 
@@ -329,13 +327,13 @@
 
 .line-light path {
     fill: none;
-    stroke: url(#nuveloLinePurple);
-    stroke-width: 2.2;
+    stroke: rgba(168, 85, 247, 0.75);
+    stroke-width: 2;
     stroke-linecap: round;
     stroke-linejoin: round;
     stroke-dasharray: 90 780;
     stroke-dashoffset: 0;
-    filter: url(#nuveloGlow);
+    will-change: stroke-dashoffset;
     animation: nuveloLineFlow 5.5s linear infinite;
 }
 
@@ -347,11 +345,11 @@
 
 .line-streak path {
     fill: none;
-    stroke: rgba(34, 211, 238, 0.28);
+    stroke: rgba(168, 85, 247, 0.30);
     stroke-width: 1.2;
     stroke-linecap: round;
     stroke-dasharray: 120 900;
-    filter: url(#nuveloGlow);
+    will-change: stroke-dashoffset;
     animation: nuveloStreakFlow 9s linear infinite;
 }
 
