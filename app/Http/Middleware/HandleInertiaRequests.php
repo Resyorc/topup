@@ -3,9 +3,11 @@
 namespace App\Http\Middleware;
 
 use App\Models\BroadcastMessage;
+use App\Services\TripayService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Cache;
 use Inertia\Middleware;
+use Throwable;
 
 class HandleInertiaRequests extends Middleware
 {
@@ -42,7 +44,7 @@ class HandleInertiaRequests extends Middleware
             'name' => config('app.name'),
             'auth' => [
                 'user' => $request->user() ? array_merge($request->user()->toArray(), [
-                    'avatar_url'        => $request->user()->avatar_url,
+                    'avatar_url' => $request->user()->avatar_url,
                     'api_access_enabled' => (bool) $request->user()->api_access_enabled,
                 ]) : null,
             ],
@@ -54,7 +56,7 @@ class HandleInertiaRequests extends Middleware
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
             'appUrl' => rtrim(config('app.url'), '/'),
             'webSetting' => fn () => [
-                'logo' => \App\Models\Setting::get('web_logo') ? asset('storage/' . \App\Models\Setting::get('web_logo')) : null,
+                'logo' => \App\Models\Setting::get('web_logo') ? asset('storage/'.\App\Models\Setting::get('web_logo')) : null,
                 'themeColor' => \App\Models\Setting::get('web_theme_color', '#10b981'),
                 'waBubble' => [
                     'enabled' => (bool) \App\Models\Setting::get('wa_bubble_enabled', false),
@@ -67,6 +69,74 @@ class HandleInertiaRequests extends Middleware
                     'siteKey' => \App\Models\Setting::get('turnstile_site_key'),
                 ],
             ],
+            'footerPaymentChannels' => fn () => $this->footerPaymentChannels(),
         ];
+    }
+
+    private function footerPaymentChannels(): array
+    {
+        $cacheKey = 'tripay_footer_payment_channels';
+        $cached = Cache::get($cacheKey);
+
+        if (is_array($cached)) {
+            return $cached;
+        }
+
+        try {
+            $channels = $this->resolveTripayFooterPaymentChannels();
+
+            Cache::put($cacheKey, $channels, 1800);
+
+            return $channels;
+        } catch (Throwable $e) {
+            report($e);
+            Cache::put($cacheKey, [], 300);
+
+            return [];
+        }
+    }
+
+    private function resolveTripayFooterPaymentChannels(): array
+    {
+        if (! config('services.tripay.api_key')) {
+            return [];
+        }
+
+        $channels = [];
+
+        foreach ((new TripayService)->getPaymentChannels() as $channel) {
+            if (! filter_var($channel['active'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+                continue;
+            }
+
+            $code = (string) ($channel['code'] ?? '');
+            $name = (string) ($channel['name'] ?? $code);
+
+            if ($name === '') {
+                continue;
+            }
+
+            $group = str_contains(strtoupper($name), 'QRIS')
+                ? 'QRIS'
+                : (string) ($channel['group'] ?? 'Lainnya');
+
+            $channels[] = [
+                'code' => $code,
+                'name' => $name,
+                'group' => $group ?: 'Lainnya',
+                'icon_url' => $channel['icon_url'] ?? null,
+            ];
+        }
+
+        $order = array_flip(['QRIS', 'E-Wallet', 'Virtual Account', 'Convenience Store']);
+        usort($channels, function (array $a, array $b) use ($order): int {
+            $groupComparison = ($order[$a['group']] ?? PHP_INT_MAX) <=> ($order[$b['group']] ?? PHP_INT_MAX);
+
+            return $groupComparison !== 0
+                ? $groupComparison
+                : strnatcasecmp((string) $a['name'], (string) $b['name']);
+        });
+
+        return $channels;
     }
 }
